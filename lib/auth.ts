@@ -57,47 +57,16 @@ export class ForbiddenError extends Error {
 // Returns the session user or null. Never throws — for optional-auth pages
 // (e.g. a location page renders for signed-out visitors too).
 export async function getSessionUser(): Promise<SessionUser | null> {
-  // --- TEMPORARY DEV ACTOR (delete when real auth lands) ---------------------
-  // Lets moderation be built + used before auth exists. Engineered so it CANNOT
-  // run in production: it hard-throws if NODE_ENV is production, and it's off
-  // unless DEV_ADMIN=1 is explicitly set. This is a scaffold, not a login.
-  const devActor = maybeDevActor();
-  if (devActor) return devActor;
-  // ---------------------------------------------------------------------------
+  // Real Auth.js v5 session. Imported lazily to avoid a circular import
+  // (auth.ts imports lib/db, which is fine; this keeps the module graph clean).
+  const { auth } = await import("@/auth");
+  const session = await auth();
+  if (!session?.user) return null;
 
-  // TODO Phase 1: read + verify the session cookie, load the user.
-  //   const session = await auth();
-  //   if (!session?.user) return null;
-  //   return { id, email, role };
-  return null; // safe default
-}
+  const u = session.user as { id?: string; email?: string; role?: string };
+  if (!u.id || !u.email || !u.role) return null;
 
-// TEMPORARY. Returns a hardcoded ADMIN dev actor ONLY when:
-//   - NODE_ENV is NOT production (hard-throws if it somehow is), AND
-//   - DEV_ADMIN=1 is set in the environment (explicit opt-in).
-// Delete this entire function the moment real auth exists. If you ever see the
-// warning below in a real deployment, something is very wrong — stop and fix it.
-function maybeDevActor(): SessionUser | null {
-  if (process.env.DEV_ADMIN !== "1") return null;
-
-  if (process.env.NODE_ENV === "production") {
-    // Refuse, loudly. A dev backdoor in production is a critical failure.
-    throw new Error(
-      "DEV_ADMIN is set in production. This is a security backdoor and must " +
-        "never run in prod. Unset DEV_ADMIN and implement real auth.",
-    );
-  }
-
-  console.warn(
-    "\n\x1b[33m[DEV_ADMIN] Using a fake ADMIN actor — no real authentication. " +
-      "For local development only.\x1b[0m\n",
-  );
-
-  return {
-    id: "dev-admin",
-    email: "dev@localhost",
-    role: "ADMIN",
-  };
+  return { id: u.id, email: u.email, role: u.role as Role };
 }
 
 // Any authenticated explorer. Use for: uploading a moment, rating, chatting.

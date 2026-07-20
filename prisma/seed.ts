@@ -15,22 +15,25 @@
 import "dotenv/config";
 import { PrismaClient } from "../app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const db = new PrismaClient({ adapter });
 
 async function main() {
-  // The dev-admin user, matching the TEMPORARY dev actor in lib/auth.ts.
-  // The audit log's actorId is an FK to a real User row, so this must exist for
-  // moderation actions to record. Delete alongside the dev actor when real auth
-  // lands. Password is a placeholder — there's no login path to this account.
+  // A real admin account you can log in with (email/password). Replaces the
+  // former dev-actor now that auth is real. Change the password after first
+  // login on any real deployment. Local dev credentials:
+  //   email:    admin@localhost
+  //   password: admin1234
+  const adminHash = await bcrypt.hash("admin1234", 10);
   await db.user.upsert({
     where: { id: "dev-admin" },
-    update: {},
+    update: { password: adminHash, role: "ADMIN", status: "ACTIVE" },
     create: {
       id: "dev-admin",
-      email: "dev@localhost",
-      password: "!no-login-dev-actor!", // not a usable credential
+      email: "admin@localhost",
+      password: adminHash,
       role: "ADMIN",
       status: "ACTIVE",
     },
