@@ -1,0 +1,863 @@
+// Australia Is Beautiful — schema (Prisma 7)
+// Connection string is in prisma.config.ts, NOT here (Prisma 7 change).
+//
+// Principles:
+// - Columns you FILTER/SORT by are relational. Json (JSONB) is for
+//   fetch-and-render content only. Every Json field has a Zod schema in
+//   lib/schemas/ and is validated on write AND read.
+// - The LOCATION is the main character. Ratings, moments, chat, and activities
+//   all hang off Location. Nothing hangs off User for public display.
+// - Moderation state exists on every user-submitted model FROM DAY ONE.
+// - PostGIS: `geog geography(Point,4326)` is added to Location by a manual
+//   migration (Prisma has no native geography type) and queried with raw SQL
+//   for radius/nearest search. lat/lng below are the plain-render source of
+//   truth; the geography column is the INDEX. See docs/DATA_CONTRACT.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+// A User exists to contribute and to moderate. It is NEVER publicly browsable.
+// There is no profile page, no follower count, no public contribution list.
+// Public display name for any contribution is derived from `role`
+// ("Shared by an Explorer") + optional verification — never from identity.
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  password     String                          // hashed (argon2/bcrypt)
+  role         Role       @default(EXPLORER)
+  status       UserStatus @default(ACTIVE)
+
+  // Verification proves IDENTITY ONLY. It grants no reach, ranking, or
+  // promotion. Enforce that in query layer: never sort/boost by this.
+  isVerified   Boolean    @default(false)
+  verifiedName String?                         // e.g. "Parks Victoria". Shown
+                                               // ONLY as "✓ Verified Contributor"
+                                               // context on a contribution.
+  partnerId    String?
+  partner      Partner?   @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+
+  moments        Moment[]
+  ratings        Rating[]
+  reactions      Reaction[]
+  chatMessages   ChatMessage[]
+  savedLocations SavedLocation[]
+  activityJoins  ActivityJoin[]
+  submittedLocations Location[]      @relation("LocationSubmitter")
+  verificationRequests VerificationRequest[]
+
+  // Moderation actions taken BY this user (admin/moderator)
+  moderatedLocations Location[]      @relation("LocationModerator")
+  moderatedMoments   Moment[]        @relation("MomentModerator")
+  resolvedReports    Report[]        @relation("ReportResolver")
+  reviewedVerifications VerificationRequest[] @relation("VerificationReviewer")
+
+  // Items currently claimed (leased) by this moderator
+  claimedLocations Location[] @relation("LocationClaimer")
+  claimedMoments   Moment[]   @relation("MomentClaimer")
+  claimedReports   Report[]   @relation("ReportClaimer")
+
+  auditEntries     ModerationAudit[] @relation("AuditActor")
+  escalationsRaised Escalation[]     @relation("EscalationRaiser")
+  escalationsClosed Escalation[]     @relation("EscalationCloser")
+  reviewedClusters  LocationRequestCluster[] @relation("ClusterReviewer")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([role, status])
+}
+
+enum Role {
+  EXPLORER    // default: any signed-up contributor
+  CURATOR     // approves LOCATIONS only. Never sees the moment queue.
+  MODERATOR   // reviews the moment/report queues. Implies CURATOR's powers.
+  ADMIN       // full control
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+// Why something was rejected. This is NOT cosmetic — it drives the cooldown
+// (see `cooldownUntil` below). A free-text reason can't be branched on, so the
+// kind is an enum and the prose lives alongside it.
+//
+// The FIXABLE case is the important one: if we told someone "your coordinates
+// are wrong" and then blocked resubmission for 30 days, we blocked the exact
+// correction we asked for. On a platform already short of contributors, that's
+// a self-inflicted wound. FIXABLE gets NO cooldown, by design.
+enum RejectionKind {
+  OUT_OF_SCOPE   // the answer won't change — long cooldown
+  FIXABLE        // we want this back, corrected — NO cooldown
+  DUPLICATE      // already exists — long cooldown
+  ABUSE          // bad faith — longest cooldown, consider suspension
+}
+
+// ---------------------------------------------------------------------------
+// Location — the main character
+// ---------------------------------------------------------------------------
+
+model Location {
+  id          String         @id @default(cuid())
+  slug        String         @unique          // /location/uluru
+  name        String
+  // Short intro shown at the top of the destination page.
+  intro       String
+  category    LocationCategory                // filterable -> relational
+  status      LocationStatus @default(PENDING)
+
+  // Plain coords: the render source of truth + the input a manual migration
+  // uses to maintain the PostGIS `geog` column (see file header).
+  latitude    Float
+  longitude   Float
+  state       AuState                          // filterable -> relational
+  suburb      String?
+  address     String?
+
+  // JSONB: render-only extras (opening hours, access notes, facilities,
+  // best-time-to-visit, accessibility). Zod: LocationDetailsSchema.
+  // Nothing in here is ever filtered on — promote to a column if it needs to be.
+  details     Json?
+
+  // Denormalized rating cache. Recomputed on rating write; never trusted as
+  // the source of truth (Rating rows are). Exists so the browse/map view
+  // doesn't aggregate on every request.
+  ratingAvg   Float          @default(0)
+  ratingCount Int            @default(0)
+
+  // Ratings stay hidden until this threshold is met, to avoid misleading
+  // scores. Per-location so a flagship spot can differ if ever needed.
+  ratingThreshold Int        @default(20)
+
+  // The location's face — the photo that says "go here" better than any UI.
+  // Curator picks it; falls back to the first approved file of the newest
+  // approved+public moment when null.
+  //
+  // Points at a MomentMedia, not a Moment: a moment is a SET now, and the hero
+  // is one specific frame. "The hero is this walk" isn't a thing you can render.
+  //
+  // Deliberately NOT "most reactions": ranking by engagement makes contributors
+  // optimise for reactions, which is the popularity contest this product exists
+  // to avoid — just scoped to one location. Editorial choice, or recency. Never
+  // a leaderboard.
+  //
+  // The hero renders WITHOUT a contributor label. At that size a label would
+  // make one person's contribution markedly more visible than everyone else's.
+  // Once a photo becomes the location's face, it belongs to the place.
+  //
+  // No FK relation: a hard link would fight MomentMedia's cascade delete, and a
+  // hero that vanishes should quietly fall back to recency, not error. Resolve
+  // in the query and re-check the file is still APPROVED and its moment public.
+  heroMediaId String?
+
+  // --- Curation / moderation trail ---
+  submittedById String?
+  submittedBy   User?    @relation("LocationSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  // Queue claiming — see Moment.claimedById for the full reasoning.
+  claimedById   String?
+  claimedBy     User?    @relation("LocationClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt     DateTime?
+  claimExpiresAt DateTime?
+
+  moderatedById String?
+  moderatedBy   User?    @relation("LocationModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderatedAt   DateTime?
+  rejectionKind RejectionKind?
+  rejectionReason String?
+
+  // Resubmission cooldown, set on rejection from rejectionKind.
+  // SCOPE: this is per-LOCATION, not per-user. A rejected submission blocks
+  // resubmitting THIS place — it must never block the submitter from proposing
+  // a different one. Someone whose shopfront was rejected may have a genuine
+  // hidden gem next week; punishing them for the first costs a contributor.
+  // Null (the FIXABLE case) means resubmit whenever — that's the point.
+  cooldownUntil DateTime?
+
+  partnerId String?
+  partner   Partner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+
+  moments        Moment[]
+  ratings        Rating[]
+  chatMessages   ChatMessage[]
+  activities     Activity[]
+  savedBy        SavedLocation[]
+  requestClusters LocationRequestCluster[] @relation("ClusterLocation")
+  reports        Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, category])
+  @@index([status, state])
+  @@index([status, ratingAvg])
+  @@index([status, claimExpiresAt])     // unclaimed/expired items in the queue
+}
+
+enum LocationStatus {
+  PENDING     // submitted, awaiting review — NOT public
+  UNDER_REVIEW
+  APPROVED    // public
+  REJECTED
+  ARCHIVED
+}
+
+enum AuState {
+  NSW
+  VIC
+  QLD
+  WA
+  SA
+  TAS
+  ACT
+  NT
+}
+
+// Curated categories. Generic retail/offices/convenience stores are out of
+// scope BY DESIGN — they belong on Google Maps and don't serve exploration.
+enum LocationCategory {
+  BEACH
+  NATIONAL_PARK
+  WATERFALL
+  MOUNTAIN
+  LOOKOUT
+  UNIVERSITY
+  MUSEUM
+  HISTORIC_SITE
+  ZOO
+  CULTURAL_ATTRACTION
+  SPORTING_VENUE
+  MARKET
+  HIDDEN_GEM
+  OTHER
+}
+
+// ---------------------------------------------------------------------------
+// Moments — photos / videos / written experiences attached to a location
+// ---------------------------------------------------------------------------
+
+// A Moment is a CONTRIBUTION, not a file. One trip to a place, one caption,
+// one set of photos — because that's how people actually shoot: carpark, saddle,
+// beach, wallabies. Forcing one-file-per-moment would mean five captions and
+// five moderation decisions for a single walk.
+//
+// Media lives in MomentMedia (below), ordered, many-per-moment.
+model Moment {
+  id         String       @id @default(cuid())
+  locationId String
+  location   Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  type       MomentType
+  status     MomentStatus @default(PENDING)
+
+  media      MomentMedia[]
+
+  caption     String?
+
+  // Contributor's own privacy control (dashboard). Independent of moderation:
+  // a moment must be APPROVED *and* isPublic to be visible.
+  isPublic   Boolean      @default(true)
+
+  reactionCount Int       @default(0)   // denormalized cache
+
+  // --- Queue claiming (multi-moderator safety) ---
+  // Without this, two moderators open the same photo and both act on it — one
+  // approves, one rejects, last write wins silently. Claim = a short LEASE, not
+  // a lock: claimExpiresAt lets an abandoned claim (closed tab, lunch) return to
+  // the queue automatically. Never require a manual unclaim.
+  // The queue query filters: claimedById IS NULL OR claimExpiresAt < now().
+  // Claim + act must be one transaction, re-checking the lease on write.
+  claimedById   String?
+  claimedBy     User?     @relation("MomentClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt     DateTime?
+  claimExpiresAt DateTime?
+
+  moderatedById String?
+  moderatedBy   User?     @relation("MomentModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+  moderatedAt   DateTime?
+  rejectionKind RejectionKind?
+  rejectionReason String?
+  // NOTE: deliberately NO cooldownUntil here. A rejected photo says nothing
+  // about the next photo — they're independent decisions. Blocking uploads
+  // because one was rejected punishes a contributor for a single bad frame,
+  // and contributors are the scarce resource. Spam is handled by rate limits
+  // (SECURITY.md §11); bad faith is handled by ABUSE + suspension.
+
+  reactions Reaction[]
+  reports   Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // The main feed query: approved+public moments for a location, newest first.
+  @@index([locationId, status, isPublic, createdAt])
+  @@index([userId, createdAt])          // powers the PRIVATE dashboard only
+  @@index([status, createdAt])          // powers the moderation queue
+  @@index([status, claimExpiresAt])     // unclaimed/expired items in the queue
+}
+
+enum MomentType {
+  PHOTO
+  VIDEO
+  EXPERIENCE   // text-only
+}
+
+// One file in a moment's set. Ordered, individually moderated.
+//
+// PER-FILE STATUS is the important decision here. All-or-nothing moderation
+// means one bad frame in a set of five kills four good photos — and the
+// contributor, who did nothing wrong, watches their whole walk get rejected.
+// Per-file costs the moderator more clicks; all-or-nothing costs contributors,
+// who are the scarce resource.
+//
+// Consequence to hold onto: the moderation UI reviews FILES, not moments. The
+// queue is a grid of images, and a moment's parent status is DERIVED — approved
+// once at least one file is approved and the rest are decided. Never set the
+// parent status by hand.
+model MomentMedia {
+  id       String      @id @default(cuid())
+  momentId String
+  moment   Moment      @relation(fields: [momentId], references: [id], onDelete: Cascade)
+
+  // Position in the set. Contributor's chosen order — the first photo is the
+  // one they'd have picked if forced to pick one, so it leads the carousel.
+  position Int
+
+  // Storage keys, not public URLs — the app signs/derives URLs at render time
+  // so hotlinking and easy redistribution stay hard (D7).
+  mediaKey String
+  thumbKey String?
+
+  // JSONB: dimensions, blurhash, byteSize, mimeType, and the exifStripped
+  // receipt. Zod: MomentMediaMetaSchema. EXIF/GPS MUST be stripped on upload —
+  // "remembers experiences, not movements" (D8). A file whose meta won't parse
+  // cannot be published.
+  mediaMeta Json
+
+  status   MediaStatus @default(PENDING)
+  rejectionKind RejectionKind?
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([momentId, position])
+  @@index([momentId, status, position])   // render an approved set in order
+  @@index([status, createdAt])            // the file-level moderation queue
+}
+
+enum MediaStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REMOVED      // taken down after publication
+}
+
+enum MomentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REMOVED      // taken down after publication
+}
+
+// Reactions, not comments. No threads, no replies — by design. And a reaction
+// is on the whole MOMENT, not per-file: a moment is one contribution, and
+// per-photo reactions would create an implicit ranking WITHIN a set (photo #2
+// beats photo #4), which is the ordering the product avoids everywhere else.
+//
+// The reaction is deliberately NOT a "love"/heart. A heart means "I like this
+// person's post" — but there is no person here, and appreciation is about the
+// PLACE and the usefulness of the contribution, not affection for a contributor.
+// The heart is the most people-first icon there is; it carries the wrong meaning
+// for a place-first product.
+//
+// V1: ONE reaction. The mechanic is familiar (single tap, count up, tap to
+// undo — the muscle memory everyone has from other apps), but the icon/word
+// means "worth it" / "good contribution to this place" (a star or bookmark-style
+// mark), never a like. One tap is also LESS friction than a multi-way choice,
+// which matters because reactions are already a weak signal on a platform with
+// no follower payoff. See docs/UX_PATTERNS.md and D21.
+//
+// The `type` enum is kept for forward-compatibility ONLY. V1 writes a single
+// value. The BEAUTIFUL/HELPFUL split (photo vs. field-note) is a possible
+// LATER refinement — it maps nicely onto the caption-is-the-product thesis
+// (a place with 40 beautiful + 3 helpful is photogenic but under-documented) —
+// but it adds friction, so it waits until reactions see enough use to justify
+// it. Do NOT surface three choices in v1.
+model Reaction {
+  id       String       @id @default(cuid())
+  momentId String
+  moment   Moment       @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     ReactionType @default(WORTH_IT)
+  createdAt DateTime    @default(now())
+
+  @@unique([momentId, userId])   // one reaction per user per moment
+  @@index([momentId])
+}
+
+enum ReactionType {
+  WORTH_IT     // the ONLY value v1 writes — "worth it / good contribution"
+  // --- forward-compat, NOT surfaced in v1 (see model comment) ---
+  BEAUTIFUL    // later: the photo landed
+  HELPFUL      // later: the field note was useful
+}
+
+// ---------------------------------------------------------------------------
+// Ratings — belong to LOCATIONS, never to users
+// ---------------------------------------------------------------------------
+
+model Rating {
+  id         String   @id @default(cuid())
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score      Int                              // 1..5, enforced by Zod + a CHECK
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([locationId, userId])  // one rating per explorer per location
+  @@index([locationId])
+}
+
+// ---------------------------------------------------------------------------
+// Live community — one chat per location. Discussion belongs to the PLACE.
+// ---------------------------------------------------------------------------
+
+model ChatMessage {
+  id         String     @id @default(cuid())
+  locationId String
+  location   Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  body       String
+  status     ChatStatus @default(VISIBLE)
+  createdAt  DateTime   @default(now())
+
+  reports Report[]
+
+  @@index([locationId, createdAt])
+  @@index([status, createdAt])
+}
+
+enum ChatStatus {
+  VISIBLE
+  HIDDEN     // moderator-removed
+}
+
+// ---------------------------------------------------------------------------
+// Activities — real-world meetups at a location
+// ---------------------------------------------------------------------------
+
+model Activity {
+  id         String         @id @default(cuid())
+  locationId String
+  location   Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  title      String
+  description String?
+  startsAt   DateTime
+  status     ActivityStatus @default(PENDING)
+  capacity   Int?
+
+  joins ActivityJoin[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([locationId, startsAt])
+  @@index([status, startsAt])
+}
+
+enum ActivityStatus {
+  PENDING
+  APPROVED
+  CANCELLED
+  COMPLETED
+}
+
+model ActivityJoin {
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt   DateTime @default(now())
+
+  @@id([activityId, userId])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// Explorer's private dashboard
+// ---------------------------------------------------------------------------
+
+// Private to the user. Never exposed publicly — a saved list is not a profile.
+model SavedLocation {
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  savedAt    DateTime @default(now())
+
+  @@id([userId, locationId])
+  @@index([userId, savedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Partners — support locations. They are NOT social entities.
+// Cannot be followed, messaged, or friended.
+// ---------------------------------------------------------------------------
+
+model Partner {
+  id       String      @id @default(cuid())
+  name     String
+  type     PartnerType
+  website  String?
+  contactEmail String?
+  isActive Boolean     @default(true)
+
+  locations Location[]
+  users     User[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type, isActive])
+}
+
+enum PartnerType {
+  TOURISM_ORG
+  UNIVERSITY
+  MUSEUM
+  NATIONAL_PARK
+  ATTRACTION
+  ACCOMMODATION
+  CULTURAL_INSTITUTION
+  OTHER
+}
+
+// ---------------------------------------------------------------------------
+// Moderation & trust
+// ---------------------------------------------------------------------------
+
+model VerificationRequest {
+  id        String             @id @default(cuid())
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  claimedName String
+  // JSONB: submitted evidence refs (doc keys, links). Zod: VerificationEvidenceSchema.
+  evidence  Json?
+  status    VerificationStatus @default(PENDING)
+
+  reviewedById String?
+  reviewedBy   User?     @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  rejectionKind RejectionKind?
+  notes        String?
+
+  // Reapplication cooldown, set on rejection from rejectionKind.
+  // SCOPE: per-USER, unlike Location's — the claim here is about identity, and
+  // identity doesn't change in a week. Evidence rarely does either, so an
+  // immediate reapply is noise for a queue an ADMIN has to work personally.
+  // FIXABLE ("send a letterhead, not a screenshot") → null: we asked for the
+  // fix, we must accept it back.
+  // Enforce on submit by checking the user's most recent request.
+  cooldownUntil DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])   // enforce the cooldown on submit
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Polymorphic report target. Kept loose (targetType/targetId) because reports
+// are low-volume and written by users; the FK relations above exist for the
+// common cases so the moderation queue can join efficiently.
+model Report {
+  id         String       @id @default(cuid())
+  targetType ReportTarget
+  targetId   String
+  reason     ReportReason
+  detail     String?
+  status     ReportStatus @default(OPEN)
+
+  locationId    String?
+  location      Location?    @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  momentId      String?
+  moment        Moment?      @relation(fields: [momentId], references: [id], onDelete: Cascade)
+  chatMessageId String?
+  chatMessage   ChatMessage? @relation(fields: [chatMessageId], references: [id], onDelete: Cascade)
+
+  // Queue claiming — see Moment.claimedById for the full reasoning.
+  claimedById   String?
+  claimedBy     User?     @relation("ReportClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt     DateTime?
+  claimExpiresAt DateTime?
+
+  resolvedById String?
+  resolvedBy   User?     @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+  @@index([status, claimExpiresAt])
+}
+
+enum ReportTarget {
+  LOCATION
+  MOMENT
+  CHAT_MESSAGE
+  ACTIVITY
+}
+
+enum ReportReason {
+  INAPPROPRIATE
+  COPYRIGHT
+  WRONG_LOCATION
+  SPAM
+  SAFETY
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
+// ---------------------------------------------------------------------------
+// Location requests — "request a new location" from explorers
+// ---------------------------------------------------------------------------
+
+// A location request from an explorer. Individual requests are DEMAND SIGNALS,
+// not reviewable items on their own — they attach to a LocationRequestCluster
+// (below), which is what you actually review. This is the fix for "the same
+// unwanted place gets requested fifty times": you review the CLUSTER once, and
+// your decision sticks to it, so re-requests never re-enter your queue.
+model LocationRequest {
+  id        String   @id @default(cuid())
+  clusterId String
+  cluster   LocationRequestCluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+
+  // What THIS requester submitted. The pin they dropped + optional field note.
+  // The note is the real-explorer signal: "been here twice, north track is the
+  // good one" is self-evidently from someone who's been — no tracking needed to
+  // know it (you can't verify presence without tracking, and don't try).
+  name      String
+  note      String?
+  latitude  Float
+  longitude Float
+
+  // Optional: if the requester used "near me" to place the pin. Just a flag that
+  // this pin was self-located — NOT a stored position, NOT a movement record.
+  // "Remembers experiences, not movements" (D8).
+  fromNearMe Boolean @default(false)
+
+  // The user can CLEAR a request from their own dashboard — but this is a HIDE,
+  // not a delete. The row stays so its demand still counts in the cluster (one
+  // person tidying their list must not un-want the place for everyone). It just
+  // drops out of their "places you suggested" view. Nothing to reclaim anyway —
+  // a request row is tiny and carries no media. Contrast with moments, where
+  // delete removes the actual FILE (the real storage + the real obligation).
+  hiddenByUser Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@index([clusterId, createdAt])
+}
+
+// The reviewable unit: a distinct requested PLACE, with all its requests behind
+// it as demand. Requests cluster into this by PROXIMITY (pins within a small
+// radius, via PostGIS ST_DWithin) plus loose name similarity as a tiebreaker.
+//
+// Two jobs, both save you work (docs/UX_PATTERNS.md, request flow):
+//  1. WANTED places — requestCount surfaces high-demand places to the TOP of
+//     your review queue. Demand is a PRIORITY signal, never auto-approval:
+//     popularity isn't quality (a much-requested cafe still fails the rubric).
+//     You still decide, still apply the rubric, still write the real content.
+//  2. UNWANTED places — once you REJECT a cluster, the decision STICKS. Future
+//     requests for the same place join the rejected cluster silently and never
+//     re-enter your queue. The requester gets an instant honest answer instead
+//     of a submit that lands on your desk for the fiftieth time.
+model LocationRequestCluster {
+  id        String   @id @default(cuid())
+
+  // Cluster centroid — the representative pin. Updated as requests join (a
+  // running average is fine; precision isn't the point, grouping is). The
+  // PostGIS geog column + ST_DWithin lookup live on a manual migration, same
+  // pattern as Location (DATA_CONTRACT §6).
+  latitude  Float
+  longitude Float
+  // Best-guess display name (first request's, or the most common). You'll
+  // rewrite it properly if you approve — the request name is a pointer, not final.
+  displayName String
+
+  status    ClusterStatus @default(OPEN)
+  requestCount Int      @default(0)   // denormalized demand; bumped on join
+
+  // Decision that STICKS. Set when you review; future requests read it.
+  reviewedById String?
+  reviewedBy   User?    @relation("ClusterReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt   DateTime?
+  rejectionKind RejectionKind?
+  rejectionReason String?
+  // If APPROVED and turned into a real place, link it — so "is this on the map
+  // yet?" is answerable and further requests point at the live location.
+  locationId String?
+  location   Location? @relation("ClusterLocation", fields: [locationId], references: [id], onDelete: SetNull)
+
+  requests  LocationRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, requestCount])   // your queue: open clusters, most-wanted first
+}
+
+enum ClusterStatus {
+  OPEN        // awaiting your review; accrues requests
+  APPROVED    // became a real location (see locationId)
+  REJECTED    // decision sticks; new requests join silently, don't re-queue
+}
+
+// ---------------------------------------------------------------------------
+// Moderation audit — append-only
+// ---------------------------------------------------------------------------
+
+// Every moderator/admin action, forever. The per-item `moderatedById` fields
+// answer "who last touched this?"; they CANNOT answer "what did this moderator
+// do last week?", "why is this rejection rate 60%?", or "who granted that role?"
+// — because they're overwritten on each action.
+//
+// Rules:
+// - APPEND ONLY. Never update, never delete. Not even to fix a typo in `note`.
+// - Written in the SAME transaction as the action it records. An action that
+//   isn't audited didn't happen.
+// - This survives the content it describes: a deleted Moment's audit rows stay
+//   (targetId is a loose string, not an FK, deliberately).
+model ModerationAudit {
+  id        String       @id @default(cuid())
+  actorId   String
+  actor     User         @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  action    AuditAction
+  targetType ReportTarget
+  targetId  String                            // loose: outlives the target
+
+  // JSONB: before/after for the fields that changed, plus the reason string.
+  // Zod: AuditDetailSchema. NEVER put media bytes or full rows in here.
+  detail    Json?
+  note      String?
+
+  createdAt DateTime     @default(now())
+
+  @@index([actorId, createdAt])       // "what did this moderator do?"
+  @@index([targetType, targetId])     // "what happened to this item?"
+  @@index([action, createdAt])        // "rejection rate over time"
+}
+
+enum AuditAction {
+  APPROVE
+  REJECT
+  REMOVE
+  RESTORE
+  CLAIM
+  RELEASE
+  EDIT
+  ROLE_GRANT          // admin only — the highest-risk action on the platform
+  ROLE_REVOKE
+  VERIFY_GRANT
+  VERIFY_REVOKE
+  USER_SUSPEND
+  USER_REINSTATE
+  ESCALATE
+}
+
+// ---------------------------------------------------------------------------
+// Escalation — the path for things a moderator must not handle alone
+// ---------------------------------------------------------------------------
+
+// Some uploads are not a moderation decision. CSAM, credible threats, apparent
+// self-harm — a moderator hitting "reject" on those is the WRONG outcome: the
+// content vanishes, nobody is told, no record reaches a person who can act.
+//
+// Any UGC platform hits this. Having no path is a decision to handle it badly
+// at 2am. See docs/MODERATION.md for what each severity requires.
+//
+// Note: preservation vs. deletion is legally fraught and jurisdiction-specific.
+// `preserved` records intent; get real Australian legal advice on what you are
+// obliged to retain, report, and to whom, BEFORE this fires for real.
+model Escalation {
+  id         String            @id @default(cuid())
+  raisedById String
+  raisedBy   User              @relation("EscalationRaiser", fields: [raisedById], references: [id], onDelete: Restrict)
+
+  severity   EscalationSeverity
+  category   EscalationCategory
+  targetType ReportTarget
+  targetId   String
+  detail     String
+
+  status     EscalationStatus  @default(OPEN)
+
+  // Did we preserve evidence rather than hard-delete? See the note above.
+  preserved  Boolean           @default(false)
+  // Was an external authority notified, and when. Free-form on purpose — the
+  // right body varies by category and this must never be automated.
+  reportedTo String?
+  reportedAt DateTime?
+
+  closedById String?
+  closedBy   User?             @relation("EscalationCloser", fields: [closedById], references: [id], onDelete: SetNull)
+  closedAt   DateTime?
+  resolution String?
+
+  createdAt  DateTime          @default(now())
+
+  @@index([status, severity, createdAt])
+  @@index([raisedById, createdAt])
+}
+
+enum EscalationSeverity {
+  URGENT      // stop and act now: CSAM, credible threat, imminent harm
+  HIGH        // same-day: doxxing, targeted harassment, legal threat
+  NORMAL      // routine: a judgement call the moderator wants a second opinion on
+}
+
+enum EscalationCategory {
+  CSAM                 // → ADMIN + authorities. Never a moderator decision.
+  CREDIBLE_THREAT
+  SELF_HARM
+  DOXXING
+  LEGAL_THREAT
+  CULTURAL_SENSITIVITY // e.g. a site with photography restrictions
+  JUDGEMENT_CALL
+  OTHER
+}
+
+enum EscalationStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+}
