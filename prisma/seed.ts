@@ -20,6 +20,22 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const db = new PrismaClient({ adapter });
 
 async function main() {
+  // The dev-admin user, matching the TEMPORARY dev actor in lib/auth.ts.
+  // The audit log's actorId is an FK to a real User row, so this must exist for
+  // moderation actions to record. Delete alongside the dev actor when real auth
+  // lands. Password is a placeholder — there's no login path to this account.
+  await db.user.upsert({
+    where: { id: "dev-admin" },
+    update: {},
+    create: {
+      id: "dev-admin",
+      email: "dev@localhost",
+      password: "!no-login-dev-actor!", // not a usable credential
+      role: "ADMIN",
+      status: "ACTIVE",
+    },
+  });
+
   const location = await db.location.upsert({
     where: { slug: "manallack-reserve-seddon" },
     update: {},
@@ -112,6 +128,73 @@ async function main() {
     });
 
     console.log(`Seeded a moment with ${moment.media.length} photos.`);
+  }
+
+  // A couple of PENDING moments, so the moderation queue has something to review.
+  // These simulate real submissions awaiting a decision. Idempotent-ish: only
+  // seeded if there are currently no pending moments.
+  const pendingCount = await db.moment.count({
+    where: { locationId: location.id, status: "PENDING" },
+  });
+
+  if (pendingCount === 0) {
+    await db.moment.create({
+      data: {
+        locationId: location.id,
+        type: "PHOTO",
+        status: "PENDING", // awaiting moderation
+        isPublic: true,
+        caption:
+          "Took the dog here Sunday morning — busier than I expected, lots of families. The grass near the north end was a bit muddy after the rain.",
+        media: {
+          create: [
+            {
+              position: 0,
+              mediaKey: "/media/seed/manallack-1.svg",
+              thumbKey: "/media/seed/manallack-1.svg",
+              status: "PENDING",
+              mediaMeta: {
+                width: 1200,
+                height: 800,
+                byteSize: 1000,
+                mimeType: "image/webp",
+                exifStripped: true,
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    await db.moment.create({
+      data: {
+        locationId: location.id,
+        type: "PHOTO",
+        status: "PENDING",
+        isPublic: true,
+        caption:
+          "Evening walk. Nice light but honestly not much here — it's a small local park, not a destination.",
+        media: {
+          create: [
+            {
+              position: 0,
+              mediaKey: "/media/seed/manallack-2.svg",
+              thumbKey: "/media/seed/manallack-2.svg",
+              status: "PENDING",
+              mediaMeta: {
+                width: 1200,
+                height: 800,
+                byteSize: 1000,
+                mimeType: "image/webp",
+                exifStripped: true,
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    console.log("Seeded 2 pending moments for the moderation queue.");
   }
 
   console.log("Seeded: Manallack Reserve, Seddon VIC");
