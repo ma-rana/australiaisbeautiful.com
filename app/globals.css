@@ -1,26 +1,80 @@
 @import "tailwindcss";
 
+/* Australia Is Beautiful — a field-guide aesthetic.
+   Muted eucalyptus + red-earth ochre, warm paper, an editorial serif for
+   place names. Calm and documented, never social-media loud. The place is
+   the hero; the field note is the product. */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Landscape palette — muted, honest, not tourism-saturated */
+  --paper: #faf9f6;      /* warm off-white */
+  --paper-2: #f2f0e9;    /* faint card tint */
+  --ink: #1a1c1a;        /* near-black, warm green undertone */
+  --stone: #8a8578;      /* warm grey — secondary text, hairlines */
+  --stone-2: #d9d5cb;    /* light border */
+  --eucalypt: #4a5d43;   /* muted eucalyptus — primary accent, sparing */
+  --ochre: #b06a3f;      /* dry red-earth — tiny doses only */
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --border: var(--stone-2);
+  --muted: var(--stone);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14150f;     /* deep olive-black */
+    --paper-2: #1c1e15;
+    --ink: #e8e6dd;       /* warm off-white text */
+    --stone: #918c7e;
+    --stone-2: #2e3126;
+    --eucalypt: #8fa382;  /* lighter in dark mode for contrast */
+    --ochre: #cc8a5f;
+
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --border: var(--stone-2);
+    --muted: var(--stone);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-stone: var(--stone);
+  --color-border-soft: var(--border);
+  --color-muted: var(--muted);
+  --color-eucalypt: var(--eucalypt);
+  --color-ochre: var(--ochre);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Fraunces = characterful literary serif for display (place names, field
+     notes). Inter = clean humanist body. Loaded via next/font in layout. */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* A specimen-label device: the locality/coordinate line, set like a naturalist's
+   tag. Letterspaced, small, quiet — the signature detail. */
+.specimen-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

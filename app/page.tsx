@@ -1,11 +1,8 @@
-// app/page.tsx — the home / browse page.
+// app/page.tsx — home / browse, as a field-guide index.
 //
-// Open to everyone, no account needed (the open-browse rule, UX_PATTERNS §7b).
-// A server component that reads approved locations and lists them, each linking
-// to its location page. v1 is a grid of places; the map is a later phase.
-//
-// Framed emptiness, never a blank void: if there are no locations yet, say so
-// as curation-in-progress, not as absence.
+// Open to everyone (UX_PATTERNS §7b). The place is the hero: names set in the
+// display serif, each entry tagged with a specimen-style locality label. Calm,
+// documented, deliberately unlike a social feed.
 
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -21,45 +18,71 @@ export default async function Home() {
       intro: true,
       suburb: true,
       state: true,
+      latitude: true,
+      longitude: true,
     },
   });
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      {/* The product's promise, stated plainly. The place is the point. */}
-      <header>
-        <h1 className="text-4xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-          Australia Is Beautiful
+    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-20 sm:px-8">
+      {/* Masthead — the promise, stated plainly, set with editorial weight. */}
+      <header className="border-b border-[var(--border)] pb-10">
+        <p className="specimen-label">A field guide to real places</p>
+        <h1
+          className="mt-4 text-5xl leading-[1.05] tracking-tight text-[var(--ink)] sm:text-6xl"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Australia
+          <br />
+          Is Beautiful
         </h1>
-        <p className="mt-3 text-lg text-neutral-600 dark:text-neutral-400">
-          Discover Australia through real experiences.
+        <p className="mt-6 max-w-md text-lg leading-relaxed text-[var(--muted)]">
+          Discover Australia through real experiences — honest photos and field
+          notes from the places themselves.
         </p>
       </header>
 
-      <section className="mt-12">
+      {/* The index of places. */}
+      <section className="mt-4">
         {locations.length === 0 ? (
-          // Empty state as curation, not absence.
-          <p className="text-neutral-500">
+          <p className="py-16 text-[var(--muted)]">
             The first places are being added. Check back soon.
           </p>
         ) : (
-          <ul className="space-y-6">
-            {locations.map((loc) => (
+          <ul>
+            {locations.map((loc, i) => (
               <li key={loc.id}>
                 <Link
                   href={`/location/${loc.slug}`}
-                  className="group block rounded-lg border border-neutral-200 p-5 transition-colors hover:border-neutral-400 dark:border-neutral-800 dark:hover:border-neutral-600"
+                  className="group flex flex-col gap-2 border-b border-[var(--border)] py-8 transition-colors sm:flex-row sm:items-baseline sm:gap-8"
                 >
-                  <p className="text-xs uppercase tracking-wide text-neutral-500">
-                    {loc.suburb ? `${loc.suburb}, ` : ""}
-                    {loc.state}
-                  </p>
-                  <h2 className="mt-1 text-xl font-medium text-neutral-900 group-hover:underline dark:text-neutral-100">
-                    {loc.name}
-                  </h2>
-                  <p className="mt-2 line-clamp-2 text-neutral-600 dark:text-neutral-400">
-                    {loc.intro}
-                  </p>
+                  {/* Left rail: index number + specimen locality label. The
+                      numbering is real here — an ordered index of entries. */}
+                  <div className="flex shrink-0 items-baseline gap-3 sm:w-40 sm:flex-col sm:gap-1">
+                    <span
+                      className="text-sm tabular-nums text-[var(--ochre)]"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="specimen-label">
+                      {loc.suburb ? `${loc.suburb} · ` : ""}
+                      {loc.state}
+                    </span>
+                  </div>
+
+                  {/* Entry body */}
+                  <div className="min-w-0 flex-1">
+                    <h2
+                      className="text-2xl text-[var(--ink)] decoration-[var(--eucalypt)] decoration-1 underline-offset-4 group-hover:underline sm:text-3xl"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {loc.name}
+                    </h2>
+                    <p className="mt-2 line-clamp-2 leading-relaxed text-[var(--muted)]">
+                      {loc.intro}
+                    </p>
+                  </div>
                 </Link>
               </li>
             ))}
