@@ -211,6 +211,9 @@ model Location {
   @@index([status, state])
   @@index([status, ratingAvg])
   @@index([status, claimExpiresAt])     // unclaimed/expired items in the queue
+  // The PostGIS GIST spatial index (created in the manual migration). Declared
+  // with type: Gist so Prisma knows it exists and won't drop it as drift.
+  @@index([geog], type: Gist)
 }
 
 enum LocationStatus {
@@ -746,6 +749,7 @@ model LocationRequestCluster {
   updatedAt DateTime @updatedAt
 
   @@index([status, requestCount])   // your queue: open clusters, most-wanted first
+  @@index([geog], type: Gist)       // PostGIS GIST spatial index (manual migration)
 }
 
 enum ClusterStatus {
