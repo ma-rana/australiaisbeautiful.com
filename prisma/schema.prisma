@@ -126,6 +126,13 @@ model Location {
   suburb      String?
   address     String?
 
+  // PostGIS geography column, maintained by a trigger from lat/lng (see the
+  // manual migration 20260720070239_postgis_and_checks). Declared as
+  // Unsupported so Prisma KNOWS it exists and won't try to drop it as drift,
+  // but Prisma never reads/writes it — spatial queries use $queryRaw, and the
+  // trigger keeps it in sync. lat/lng remain the render source of truth.
+  geog        Unsupported("geography(Point, 4326)")?
+
   // JSONB: render-only extras (opening hours, access notes, facilities,
   // best-time-to-visit, accessibility). Zod: LocationDetailsSchema.
   // Nothing in here is ever filtered on — promote to a column if it needs to be.
@@ -713,6 +720,11 @@ model LocationRequestCluster {
   // Best-guess display name (first request's, or the most common). You'll
   // rewrite it properly if you approve — the request name is a pointer, not final.
   displayName String
+
+  // PostGIS geography column, trigger-maintained from lat/lng (manual migration
+  // 20260720070239_postgis_and_checks). Unsupported = Prisma knows it exists,
+  // won't drop it, never touches it. ST_DWithin clustering uses $queryRaw.
+  geog      Unsupported("geography(Point, 4326)")?
 
   status    ClusterStatus @default(OPEN)
   requestCount Int      @default(0)   // denormalized demand; bumped on join
