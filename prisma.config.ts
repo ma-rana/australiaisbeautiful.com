@@ -12,8 +12,11 @@ import { defineConfig } from "prisma/config";
 
 export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
+  // Migrations dir + seed command. Prisma 7 reads `seed` for `npx prisma db seed`.
+  // tsx runs the TypeScript seed file directly (dev dependency).
   migrations: {
     path: path.join("prisma", "migrations"),
+    seed: "tsx prisma/seed.ts",
   },
   // The datasource URL comes from the environment. lib/env.ts validates it on
   // app boot; here Prisma reads it directly for migrate/generate.
