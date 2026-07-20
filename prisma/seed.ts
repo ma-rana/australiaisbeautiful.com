@@ -20,7 +20,7 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const db = new PrismaClient({ adapter });
 
 async function main() {
-  await db.location.upsert({
+  const location = await db.location.upsert({
     where: { slug: "manallack-reserve-seddon" },
     update: {},
     create: {
@@ -48,6 +48,71 @@ async function main() {
       },
     },
   });
+
+  // A seeded MOMENT with two placeholder photos, so we can build and see the
+  // moment grid + full-screen viewer against real data. These are PLACEHOLDERS
+  // (SVG) — the real park photos come later through the actual upload flow.
+  //
+  // Only seed the moment if this location has none yet (keeps re-runs idempotent).
+  const existingMoments = await db.moment.count({
+    where: { locationId: location.id },
+  });
+
+  if (existingMoments === 0) {
+    const moment = await db.moment.create({
+      data: {
+        locationId: location.id,
+        // No userId: a seeded moment has no contributor account. In the app,
+        // real moments carry a private userId; here it's null (SetNull-friendly).
+        type: "PHOTO",
+        status: "APPROVED",
+        isPublic: true,
+        caption:
+          "Late afternoon at the reserve — quiet on a weekday, good light through the trees near the Hyde St end. Parking's easy on the street.",
+        media: {
+          create: [
+            {
+              position: 0,
+              // Storage KEY, not a URL. For local dev these placeholders live
+              // in /public/media/seed/, so the key doubles as the public path.
+              mediaKey: "/media/seed/manallack-1.svg",
+              thumbKey: "/media/seed/manallack-1.svg",
+              status: "APPROVED",
+              mediaMeta: {
+                width: 1200,
+                height: 800,
+                byteSize: 1000,
+                mimeType: "image/webp", // placeholder value; real uploads set this
+                exifStripped: true,
+              },
+            },
+            {
+              position: 1,
+              mediaKey: "/media/seed/manallack-2.svg",
+              thumbKey: "/media/seed/manallack-2.svg",
+              status: "APPROVED",
+              mediaMeta: {
+                width: 1200,
+                height: 800,
+                byteSize: 1000,
+                mimeType: "image/webp",
+                exifStripped: true,
+              },
+            },
+          ],
+        },
+      },
+      include: { media: true },
+    });
+
+    // Set the location's hero to the first photo of this moment.
+    await db.location.update({
+      where: { id: location.id },
+      data: { heroMediaId: moment.media[0].id },
+    });
+
+    console.log(`Seeded a moment with ${moment.media.length} photos.`);
+  }
 
   console.log("Seeded: Manallack Reserve, Seddon VIC");
 }

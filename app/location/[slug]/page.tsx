@@ -1,20 +1,22 @@
 // app/location/[slug]/page.tsx — a single location page.
 //
-// The FIRST real product page: reads a Location from the database and shows it.
-// A server component that queries Prisma directly (App Router pattern).
+// Reads a Location + its approved, public moments and renders them. A server
+// component that queries Prisma directly; the interactive viewer is a separate
+// client component (MomentGrid).
 //
-// NEXT.JS 16 NOTE: in recent Next, `params` is a Promise and must be awaited.
-// If your Next version differs, this is the line to check against current docs.
-//
-// This is deliberately minimal — no auth, no moments, no map yet. It proves the
-// database → page pipeline with real data (Manallack Reserve). Everything else
-// (hero, moment grid, ratings, chat) layers onto this frame later.
+// NEXT.JS 16: `params` is a Promise and must be awaited.
 
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
+import { MomentGrid, type ViewerMoment } from "./MomentGrid";
 
-// Next 16: params is async.
+// For local dev, a media key IS a public path under /public. Later this becomes
+// a signed URL (D7). Centralised here so there's one place to change.
+function resolveMediaSrc(key: string): string {
+  return key; // dev: keys are already "/media/seed/..." public paths
+}
+
 export default async function LocationPage({
   params,
 }: {
@@ -24,21 +26,42 @@ export default async function LocationPage({
 
   const location = await db.location.findUnique({
     where: { slug },
+    include: {
+      moments: {
+        // Only approved + public moments, newest first (the public feed rule).
+        where: { status: "APPROVED", isPublic: true },
+        orderBy: { createdAt: "desc" },
+        include: {
+          media: {
+            where: { status: "APPROVED" },
+            orderBy: { position: "asc" },
+          },
+        },
+      },
+    },
   });
 
-  // Not found, or not public yet — a signed-out visitor must never see a
-  // PENDING/REJECTED location. (Later: allow staff to preview non-public ones.)
   if (!location || location.status !== "APPROVED") {
     notFound();
   }
 
-  // Parse the render-only JSONB safely (the pattern from lib/schemas).
   const details = LocationDetailsSchema.parse(location.details ?? {});
+
+  // Shape moments for the client viewer (only what it needs; nothing private).
+  const moments: ViewerMoment[] = location.moments
+    .filter((m) => m.media.length > 0)
+    .map((m) => ({
+      id: m.id,
+      caption: m.caption,
+      createdAt: m.createdAt.toISOString(),
+      media: m.media.map((mm) => ({
+        id: mm.id,
+        src: resolveMediaSrc(mm.mediaKey),
+      })),
+    }));
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      {/* The place is the main character. Name + intro lead; no contributor,
-          no author, no chrome competing with the place. */}
       <p className="text-sm uppercase tracking-wide text-neutral-500">
         {location.suburb ? `${location.suburb}, ` : ""}
         {location.state}
@@ -52,7 +75,6 @@ export default async function LocationPage({
         {location.intro}
       </p>
 
-      {/* A quiet facts row — only what we actually know. */}
       <dl className="mt-8 space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
         {location.address && (
           <div>
@@ -62,7 +84,6 @@ export default async function LocationPage({
             <dd>{location.address}</dd>
           </div>
         )}
-
         {details.entryFee?.free && (
           <div>
             <dt className="font-medium text-neutral-800 dark:text-neutral-200">
@@ -71,7 +92,6 @@ export default async function LocationPage({
             <dd>Free</dd>
           </div>
         )}
-
         {details.bestTimeToVisit && (
           <div>
             <dt className="font-medium text-neutral-800 dark:text-neutral-200">
@@ -82,15 +102,11 @@ export default async function LocationPage({
         )}
       </dl>
 
-      {/* Where the moment grid will go, once uploads exist. Framed emptiness,
-          not a blank void — this is the honest empty state from the UX design. */}
       <section className="mt-12 border-t border-neutral-200 pt-8 dark:border-neutral-800">
         <h2 className="text-sm font-medium text-neutral-500">
           Experiences here
         </h2>
-        <p className="mt-2 text-neutral-500">
-          No photos yet — this place is waiting for its first moment.
-        </p>
+        <MomentGrid moments={moments} />
       </section>
     </main>
   );
