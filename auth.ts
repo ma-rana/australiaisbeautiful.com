@@ -19,10 +19,39 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
+// The session cookie is scoped to the PARENT domain so it's valid on both the
+// public site and the admin subdomain (admin.* is where the moderation queue
+// lives; the cookie set on the apex must be sent there too). A leading dot means
+// "this domain and all subdomains".
+//   dev:  .localhost   → localhost + admin.localhost
+//   prod: .australiaisbeautiful.com → apex + admin subdomain
+// Configurable via AUTH_COOKIE_DOMAIN; falls back sensibly by NODE_ENV.
+const cookieDomain =
+  process.env.AUTH_COOKIE_DOMAIN ??
+  (process.env.NODE_ENV === "production"
+    ? ".australiaisbeautiful.com"
+    : ".localhost");
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/signin", // our custom sign-in page
+  },
+  // Share the session cookie across subdomains (public + admin).
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-authjs.session-token"
+          : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        domain: cookieDomain,
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   providers: [
     Credentials({
