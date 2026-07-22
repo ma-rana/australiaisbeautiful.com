@@ -77,6 +77,18 @@ export async function approveCluster(
     };
   }
 
+  // A PLACE MUST HAVE A FACE to go live (lib/location-image.ts). At approval a
+  // brand-new place has no contributions yet, so this means: upload a cover.
+  // A blank card on the map tells a visitor nothing and looks broken.
+  const hasCover = coverFile instanceof File && coverFile.size > 0;
+  if (!hasCover) {
+    return {
+      ok: false,
+      error:
+        "A place needs a cover image before it can go live. Add one to publish this place.",
+    };
+  }
+
   try {
     const cluster = await db.locationRequestCluster.findUnique({
       where: { id: clusterId },

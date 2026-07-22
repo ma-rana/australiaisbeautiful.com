@@ -76,6 +76,7 @@ export default async function EditLocationPage({
       <EditLocationForm
         location={{
           id: location.id,
+          slug: location.slug,
           name: location.name,
           intro: location.intro,
           category: location.category,

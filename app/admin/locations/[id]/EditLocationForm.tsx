@@ -25,6 +25,7 @@ const FACILITIES = [
 
 type LocationInput = {
   id: string;
+  slug: string;
   name: string;
   intro: string;
   category: string;
@@ -110,7 +111,26 @@ export function EditLocationForm({
       if (res.ok) {
         setSaved(true);
         setCover(null);
-      } else setError(res.error);
+        // Scroll the confirmation into view so it can't be missed on a long form.
+        setTimeout(
+          () => document.getElementById("save-status")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          }),
+          50,
+        );
+        // Clear the confirmation after a while so it doesn't linger as stale.
+        setTimeout(() => setSaved(false), 6000);
+      } else {
+        setError(res.error);
+        setTimeout(
+          () => document.getElementById("save-status")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          }),
+          50,
+        );
+      }
     });
   };
 
@@ -305,16 +325,59 @@ export function EditLocationForm({
         </div>
       </section>
 
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      {saved && <p className="text-sm text-green-700 dark:text-green-400">Saved.</p>}
+      {/* Save status — a proper banner, scrolled into view, not a whisper. */}
+      <div id="save-status" className="space-y-3">
+        {error && (
+          <div className="flex items-start gap-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 dark:border-red-900/60 dark:bg-red-950/30">
+            <span className="mt-0.5 text-lg leading-none text-red-600 dark:text-red-400">
+              ✕
+            </span>
+            <div>
+              <p className="font-medium text-red-800 dark:text-red-300">
+                Couldn&apos;t save
+              </p>
+              <p className="mt-0.5 text-sm text-red-700 dark:text-red-300/90">
+                {error}
+              </p>
+            </div>
+          </div>
+        )}
 
-      <button
-        onClick={onSave}
-        disabled={isPending}
-        className="w-full rounded-md bg-neutral-900 px-4 py-3 font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
-      >
-        {isPending ? "Saving…" : "Save changes"}
-      </button>
+        {saved && (
+          <div className="flex items-start gap-3 rounded-lg border border-green-300 bg-green-50 px-4 py-3 dark:border-green-900/60 dark:bg-green-950/30">
+            <span className="mt-0.5 text-lg leading-none text-green-700 dark:text-green-400">
+              ✓
+            </span>
+            <div>
+              <p className="font-medium text-green-800 dark:text-green-300">
+                Changes saved
+              </p>
+              <p className="mt-0.5 text-sm text-green-700 dark:text-green-300/90">
+                This place is updated and live.{" "}
+                <a
+                  href={`/location/${location.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-4"
+                >
+                  View the page ↗
+                </a>
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Sticky save bar — always reachable on a long form. */}
+      <div className="sticky bottom-0 -mx-6 border-t border-neutral-200 bg-[var(--background)]/95 px-6 py-4 backdrop-blur dark:border-neutral-800">
+        <button
+          onClick={onSave}
+          disabled={isPending}
+          className="w-full rounded-md bg-neutral-900 px-4 py-3 font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+        >
+          {isPending ? "Saving…" : "Save changes"}
+        </button>
+      </div>
     </div>
   );
 }

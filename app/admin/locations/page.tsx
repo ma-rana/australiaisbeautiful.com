@@ -53,6 +53,17 @@ export default async function LocationsIndex() {
     : [];
   const heroById = new Map(heroes.map((h) => [h.id, h.thumbKey ?? h.mediaKey]));
 
+  // Places that are LIVE but have no face — they render as blank cards to the
+  // public. Not hidden (silently pulling published content is worse), but
+  // surfaced here so they can be fixed. New places can't be published without
+  // an image; these are from before the rule, or had their hero removed.
+  const needsImage = locations.filter(
+    (l) =>
+      l.status === "APPROVED" &&
+      !l.coverThumbKey &&
+      !(l.heroMediaId && heroById.has(l.heroMediaId)),
+  );
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="flex items-baseline justify-between border-b border-neutral-200 pb-4 dark:border-neutral-800">
@@ -78,7 +89,21 @@ export default async function LocationsIndex() {
           No places yet. Approve a request to add the first.
         </p>
       ) : (
-        <ul className="mt-6 divide-y divide-neutral-200 dark:divide-neutral-800">
+        <>
+          {needsImage.length > 0 && (
+            <div className="mt-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm dark:border-amber-800/60 dark:bg-amber-950/30">
+              <p className="font-medium text-amber-900 dark:text-amber-200">
+                {needsImage.length}{" "}
+                {needsImage.length === 1 ? "place is" : "places are"} live with no
+                image
+              </p>
+              <p className="mt-1 text-amber-800 dark:text-amber-300/90">
+                They show as blank cards to visitors. Add a cover, or set a
+                contributed photo as the face.
+              </p>
+            </div>
+          )}
+          <ul className="mt-6 divide-y divide-neutral-200 dark:divide-neutral-800">
           {locations.map((loc) => {
             const face =
               (loc.heroMediaId ? heroById.get(loc.heroMediaId) : null) ??
@@ -94,8 +119,8 @@ export default async function LocationsIndex() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={face} alt="" className="h-14 w-20 shrink-0 rounded object-cover" />
                   ) : (
-                    <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded bg-neutral-100 text-[0.6rem] text-neutral-400 dark:bg-neutral-800">
-                      no photo
+                    <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded border border-amber-300 bg-amber-50 text-[0.6rem] text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300">
+                      needs image
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
@@ -112,7 +137,8 @@ export default async function LocationsIndex() {
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
     </main>
   );

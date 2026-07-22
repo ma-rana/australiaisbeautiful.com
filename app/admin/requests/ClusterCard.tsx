@@ -176,7 +176,9 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
               photo takes over. But without this, a new place is a blank card. */}
           <div>
             <p className="mb-1 text-xs text-neutral-500">
-              Cover image — holds the place until someone photographs it
+              Cover image <span className="text-red-600 dark:text-red-400">— required</span>.
+              A place can&apos;t go live without one; it holds the space until
+              someone photographs it.
             </p>
             <input
               ref={coverRef}
@@ -359,7 +361,8 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
           <div className="flex gap-2 pt-1">
             <button
               onClick={onApprove}
-              disabled={isPending}
+              disabled={isPending || !cover}
+              title={!cover ? "A cover image is required to publish" : undefined}
               className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
             >
               {isPending ? "…" : "Publish this place"}

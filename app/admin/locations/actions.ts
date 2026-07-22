@@ -20,6 +20,7 @@ import { requireCurator } from "@/lib/auth";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
 import { processImage } from "@/lib/media/process";
 import { getStorage, coverKey } from "@/lib/media/storage";
+import { locationHasFace } from "@/lib/location-image";
 import { revalidatePath } from "next/cache";
 
 export type EditResult = { ok: true } | { ok: false; error: string };
@@ -46,7 +47,14 @@ export async function updateLocation(
   try {
     const existing = await db.location.findUnique({
       where: { id: locationId },
-      select: { id: true, slug: true, coverKey: true, coverThumbKey: true },
+      select: {
+        id: true,
+        slug: true,
+        status: true,
+        coverKey: true,
+        coverThumbKey: true,
+        heroMediaId: true,
+      },
     });
     if (!existing) return { ok: false, error: "That place no longer exists." };
 
@@ -73,6 +81,21 @@ export async function updateLocation(
       await storage.put(dKey, processed.result.display, "image/webp");
       await storage.put(tKey, processed.result.thumb, "image/webp");
       newCover = { display: dKey, thumb: tKey };
+    }
+
+    // A PUBLISHED place must have a face (lib/location-image.ts). Block a save
+    // that would leave a live place with nothing to show. Not retroactive:
+    // places already live without an image are flagged in the admin list, not
+    // hidden — silently removing published content is worse.
+    if (existing.status === "APPROVED" && !newCover) {
+      const hasFace = await locationHasFace(locationId);
+      if (!hasFace) {
+        return {
+          ok: false,
+          error:
+            "This place is live but has no image. Upload a cover, or set one of its contributed photos as the face, before saving.",
+        };
+      }
     }
 
     const details = LocationDetailsSchema.parse({
