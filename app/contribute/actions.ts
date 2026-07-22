@@ -3,15 +3,25 @@
 // app/contribute/actions.ts — the upload server action.
 //
 // Orchestrates the pipeline (MEDIA.md): requireUser → Zod boundary → per-file
-// process (strip EXIF, re-encode, variants) → store → DB write as PENDING.
+// process (strip EXIF, re-encode, variants) → store → DB write → PUBLISHED.
 //
-// Invariants (order matters):
-//   - strip before store, store before DB, DB PENDING before anything public.
-//   - the moment cuid is issued by the DB and is what the storage key uses, so
-//     we create the Moment row first (as PENDING), then process+store its media,
-//     then attach MomentMedia rows.
-//   - nothing here is public: status PENDING until a moderator approves it, which
-//     is the queue you already built.
+// MODERATION MODEL (deliberate):
+//   - LOCATION REQUESTS are gated — whether a place belongs on the map is
+//     editorial judgement and needs approval before it exists.
+//   - MOMENTS on an already-approved place publish IMMEDIATELY. The curation
+//     happens at the map level, not on what people say about places that are
+//     already there.
+//
+// Why: the scarcest resource is people willing to contribute. Pre-moderating
+// every photo means the first-ever contributor uploads into silence and waits a
+// day — the worst possible first experience for the exact behaviour the product
+// most needs. Publishing immediately gives them "I added something to this
+// place", which is the feeling that brings them back.
+//
+// The safety net is POST-publication: everything lands in a review list the
+// moderator works through, plus user reports, plus removal at any time. If abuse
+// ever appears, the tightening move is trusted-after-first (a brand-new user's
+// first moment reviewed, instant thereafter) — not blanket pre-moderation.
 
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
@@ -80,9 +90,19 @@ export async function createMoment(formData: FormData): Promise<UploadResult> {
     processed.push(result.result);
   }
 
-  // 5. Create the Moment (PENDING) to get its cuid, then store files under keys
-  //    derived from that cuid, then attach MomentMedia rows. Wrapped so a
-  //    storage failure doesn't leave a medialess moment.
+  // 5. Create the Moment (PUBLISHED) to get its cuid, then store files under
+  //    keys derived from that cuid, then attach MomentMedia rows.
+  //
+  // MODERATION MODEL: moments publish IMMEDIATELY on an already-approved place.
+  // The editorial gate is on WHICH PLACES EXIST (location requests are
+  // reviewed), not on what people say about places that are already live. A
+  // contributor uploading into a day of silence is the worst possible first
+  // experience for the exact behaviour this product most needs; instant
+  // publication gives them "it's there" straight away.
+  //
+  // Safety is POST-publication: everything lands in the admin review list, plus
+  // reports, plus removal. Tighten to review-first-upload-then-trusted if abuse
+  // ever appears — but don't pay the momentum cost before there's a problem.
   const storage = getStorage();
   try {
     const moment = await db.moment.create({
@@ -90,7 +110,7 @@ export async function createMoment(formData: FormData): Promise<UploadResult> {
         locationId: location.id,
         userId: user.id, // private FK; never shown publicly
         type: "PHOTO",
-        status: "PENDING", // the queue reviews it before it's public
+        status: "APPROVED", // live immediately — reviewable/removable after
         isPublic,
         caption: caption || null,
       },
@@ -118,13 +138,15 @@ export async function createMoment(formData: FormData): Promise<UploadResult> {
           position: i,
           mediaKey: displayKey,
           thumbKey: thumbKey,
-          status: "PENDING",
+          status: "APPROVED", // live with its parent moment; removable after
           mediaMeta: p.meta, // includes exifStripped: true (the receipt)
         },
       });
     }
 
-    revalidatePath("/admin/moments"); // the new item shows in the queue
+    // The moment is live immediately: refresh the place it's on, and the
+    // admin review list where a moderator sees what was just published.
+    revalidatePath("/admin/moments");
     return { ok: true, momentId: moment.id };
   } catch (e) {
     return {

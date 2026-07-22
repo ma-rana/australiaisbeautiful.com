@@ -1,21 +1,18 @@
 "use server";
 
-// app/admin/actions.ts — moderation server actions.
+// app/admin/actions.ts — moderation actions.
 //
-// The real moderation core (MODERATION.md §3, §4, §6b):
-// - Every action runs requireModerator() — the real gate (currently satisfied
-//   by the temporary dev actor; hardens automatically when auth lands).
-// - Approve/reject and the audit write happen in ONE transaction. An action
-//   that isn't audited didn't happen (§4).
-// - The audit log is append-only — we only ever create rows, never update/delete.
-// - Reject requires a kind + reason (RejectSchema) and the kind drives any
-//   cooldown (§6b). Moments themselves have NO cooldown, but the reason is still
-//   recorded for the contributor and the audit trail.
+// MODERATION MODEL: moments publish immediately, so these are POST-publication
+// actions. The meaningful one is REMOVE — taking down something that's live and
+// shouldn't be. (There's no "approve": it's already public.)
 //
-// NOTE on the lease: the full claim/lease mechanic (§3) matters once there's
-// more than one moderator. For the solo dev phase we act directly, but the
-// approve/reject writes are still written defensively (updateMany guarded by
-// current status) so they're race-safe and lease-ready to extend later.
+// Rules that still hold (MODERATION.md §4):
+// - Every action runs requireModerator() — the real gate.
+// - The action and its audit row happen in ONE transaction. An action that
+//   isn't audited didn't happen.
+// - The audit log is append-only — only ever created, never updated/deleted.
+// - Removal requires a kind + reason (RejectSchema): the contributor is told
+//   plainly why, and the record explains it later.
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -24,43 +21,51 @@ import { RejectSchema } from "@/lib/schemas/cooldown";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
-// Approve a moment: set it APPROVED, approve its pending media, write an audit
-// row — all in one transaction.
-export async function approveMoment(momentId: string): Promise<ActionResult> {
+// Remove a live moment: set it REMOVED, remove its media, write an audit row —
+// all in one transaction. This is the takedown path for content that published
+// immediately but shouldn't stay up.
+export async function removeMoment(
+  momentId: string,
+  input: { kind: string; reason: string },
+): Promise<ActionResult> {
   const actor = await requireModerator();
+
+  const parsed = RejectSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "A removal needs a kind and a clear reason." };
+  }
+  const { kind, reason } = parsed.data;
 
   try {
     await db.$transaction(async (tx) => {
-      // Guarded update: only transitions a PENDING moment. If it's already been
-      // decided (another moderator, a stale tab), count === 0 and we abort.
+      // Guarded: only takes down something currently live. If it's already been
+      // removed (another moderator, a stale tab), count === 0 and we abort.
       const updated = await tx.moment.updateMany({
-        where: { id: momentId, status: "PENDING" },
+        where: { id: momentId, status: "APPROVED" },
         data: {
-          status: "APPROVED",
+          status: "REMOVED",
+          rejectionKind: kind,
+          rejectionReason: reason,
           moderatedById: actor.id,
           moderatedAt: new Date(),
-          claimedById: null,
-          claimedAt: null,
-          claimExpiresAt: null,
         },
       });
       if (updated.count === 0) {
-        throw new Error("Already reviewed by someone else.");
+        throw new Error("Already actioned by someone else.");
       }
 
-      // Approve the moment's pending media too (per-file status, MEDIA policy).
       await tx.momentMedia.updateMany({
-        where: { momentId, status: "PENDING" },
-        data: { status: "APPROVED" },
+        where: { momentId },
+        data: { status: "REMOVED", rejectionKind: kind, rejectionReason: reason },
       });
 
-      // Append-only audit, same transaction.
       await tx.moderationAudit.create({
         data: {
           actorId: actor.id,
-          action: "APPROVE",
+          action: "REMOVE",
           targetType: "MOMENT",
           targetId: momentId,
+          note: `${kind}: ${reason}`,
         },
       });
     });
@@ -72,53 +77,38 @@ export async function approveMoment(momentId: string): Promise<ActionResult> {
   }
 }
 
-// Reject a moment: requires a kind + reason. Moments carry NO cooldown (a bad
-// frame says nothing about the next), but the reason is recorded for the
-// contributor and the audit trail.
-export async function rejectMoment(
-  momentId: string,
-  input: { kind: string; reason: string },
-): Promise<ActionResult> {
+// Restore a removed moment (a takedown reconsidered). Audited like everything
+// else — reversals are part of the record, not a way to erase one.
+export async function restoreMoment(momentId: string): Promise<ActionResult> {
   const actor = await requireModerator();
-
-  // Validate the rejection (kind + reason) at the boundary.
-  const parsed = RejectSchema.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false, error: "A rejection needs a kind and a clear reason." };
-  }
-  const { kind, reason } = parsed.data;
 
   try {
     await db.$transaction(async (tx) => {
       const updated = await tx.moment.updateMany({
-        where: { id: momentId, status: "PENDING" },
+        where: { id: momentId, status: "REMOVED" },
         data: {
-          status: "REJECTED",
-          rejectionKind: kind,
-          rejectionReason: reason,
+          status: "APPROVED",
+          rejectionKind: null,
+          rejectionReason: null,
           moderatedById: actor.id,
           moderatedAt: new Date(),
-          claimedById: null,
-          claimedAt: null,
-          claimExpiresAt: null,
         },
       });
       if (updated.count === 0) {
-        throw new Error("Already reviewed by someone else.");
+        throw new Error("That moment isn't in a removed state.");
       }
 
       await tx.momentMedia.updateMany({
-        where: { momentId, status: "PENDING" },
-        data: { status: "REJECTED", rejectionKind: kind, rejectionReason: reason },
+        where: { momentId },
+        data: { status: "APPROVED", rejectionKind: null, rejectionReason: null },
       });
 
       await tx.moderationAudit.create({
         data: {
           actorId: actor.id,
-          action: "REJECT",
+          action: "RESTORE",
           targetType: "MOMENT",
           targetId: momentId,
-          note: `${kind}: ${reason}`,
         },
       });
     });

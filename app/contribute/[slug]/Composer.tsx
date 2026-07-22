@@ -67,17 +67,17 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
     });
   };
 
-  // Honest pending-state confirmation (UX_PATTERNS §7f) — not "posted", but
-  // "pending review", so silence never reads as "it vanished".
+  // Honest confirmation — the moment is LIVE now (moments publish immediately
+  // on approved places; review happens after, not as a gate).
   if (submitted) {
     return (
       <div className="mt-8 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
         <p className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-          Thanks — your photos are in.
+          Thanks — it&apos;s live.
         </p>
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          They&apos;re pending review and usually go live within a day. Once
-          approved, they&apos;ll appear on the place&apos;s page.
+          Your photos and note are on the place&apos;s page now. You can edit or
+          remove them any time from your contributions.
         </p>
         <div className="mt-4 flex gap-3">
           <button

@@ -1,12 +1,15 @@
-// app/admin/moments/page.tsx — the moment moderation queue.
+// app/admin/moments/page.tsx — the moment review list.
 //
-// MODERATION.md: the queue shows CONTENT, not the contributor (§2) — no email,
-// no "all uploads by this user", userId hidden by default. A moderator reviews
-// what was uploaded and decides whether the public sees it.
+// MODERATION MODEL: moments publish IMMEDIATELY on approved places. The
+// editorial gate is on WHICH PLACES EXIST (location requests are reviewed), not
+// on contributions to places that are already live. So this is NOT a gate-queue
+// — it's a POST-publication review list: what has recently gone live, newest
+// first, so a moderator can spot and remove anything that shouldn't be there.
 //
-// Gated by requireModerator() (§2). Currently satisfied by the temporary dev
-// actor; when real auth lands, this page is protected automatically with no
-// change here.
+// Shows CONTENT, not the contributor (MODERATION.md §2) — no email, no "all
+// uploads by this user".
+//
+// Gated by requireModerator(). Staff sign in on the admin host only.
 
 import { db } from "@/lib/db";
 import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
@@ -38,12 +41,12 @@ export default async function ModerationQueue() {
     throw e;
   }
 
-  // The queue: pending moments, oldest first (fairness — first in, first
-  // reviewed), with their pending media and the location they belong to.
-  // Deliberately NO user include — content, not contributor (§2).
+  // Recently published moments — newest first, because the point is to catch
+  // what just went live. Deliberately NO user include (content, not contributor).
   const moments = await db.moment.findMany({
-    where: { status: "PENDING" },
-    orderBy: { createdAt: "asc" },
+    where: { status: "APPROVED" },
+    orderBy: { createdAt: "desc" },
+    take: 50,
     include: {
       location: { select: { name: true, suburb: true, state: true, slug: true } },
       media: { orderBy: { position: "asc" } },
@@ -65,9 +68,10 @@ export default async function ModerationQueue() {
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="flex items-baseline justify-between border-b border-neutral-200 pb-4 dark:border-neutral-800">
         <div>
-          <h1 className="text-2xl font-semibold">Moment queue</h1>
+          <h1 className="text-2xl font-semibold">Recently published</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            {queue.length} awaiting review · oldest first
+            {queue.length} live · newest first · remove anything that
+            shouldn&apos;t be here
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -77,9 +81,9 @@ export default async function ModerationQueue() {
 
       {queue.length === 0 ? (
         <div className="py-20 text-center">
-          <p className="text-lg font-medium">Queue clear</p>
+          <p className="text-lg font-medium">Nothing published yet</p>
           <p className="mt-1 text-neutral-500">
-            Nothing waiting. New uploads appear here for review.
+            Contributions appear here as soon as they go live.
           </p>
         </div>
       ) : (
