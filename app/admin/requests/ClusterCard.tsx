@@ -26,6 +26,11 @@ const CATEGORIES = [
 ];
 const STATES = ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"];
 
+const FACILITIES = [
+  "TOILETS", "PARKING", "CAFE", "PICNIC_AREA", "WHEELCHAIR_ACCESS",
+  "CAMPING", "SWIMMING", "BBQ", "DRINKING_WATER", "VISITOR_CENTRE",
+];
+
 const REJECT_KINDS = [
   { value: "OUT_OF_SCOPE", label: "Out of scope" },
   { value: "FIXABLE", label: "Fixable" },
@@ -45,6 +50,21 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
   const [category, setCategory] = useState("OTHER");
   const [state, setState] = useState("VIC");
   const [suburb, setSuburb] = useState("");
+  const [address, setAddress] = useState("");
+  const [lat, setLat] = useState(String(cluster.latitude));
+  const [lng, setLng] = useState(String(cluster.longitude));
+  const [bestTime, setBestTime] = useState("");
+  const [accessNotes, setAccessNotes] = useState("");
+  const [facilities, setFacilities] = useState<string[]>([]);
+  const [entryFree, setEntryFree] = useState(true);
+  const [entryNote, setEntryNote] = useState("");
+  const [warnings, setWarnings] = useState("");
+  const [traditionalOwners, setTraditionalOwners] = useState("");
+
+  const toggleFacility = (f: string) =>
+    setFacilities((prev) =>
+      prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f],
+    );
 
   // Reject form
   const [kind, setKind] = useState("");
@@ -54,7 +74,23 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
     setError(null);
     startTransition(async () => {
       const res = await approveCluster(cluster.id, {
-        name, intro, category, state, suburb: suburb || undefined,
+        name,
+        intro,
+        category,
+        state,
+        suburb: suburb || undefined,
+        address: address || undefined,
+        latitude: Number(lat) || undefined,
+        longitude: Number(lng) || undefined,
+        bestTimeToVisit: bestTime || undefined,
+        accessNotes: accessNotes || undefined,
+        facilities: facilities.length ? facilities : undefined,
+        entryFeeFree: entryFree,
+        entryFeeNote: entryNote || undefined,
+        warnings: warnings
+          ? warnings.split("\n").map((w) => w.trim()).filter(Boolean)
+          : undefined,
+        traditionalOwners: traditionalOwners || undefined,
       });
       if (res.ok) setDone("approved");
       else setError(res.error);
@@ -127,8 +163,10 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
       )}
 
       {mode === "approve" && (
-        <div className="space-y-3 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
+        <div className="space-y-4 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
           <p className="text-sm font-medium">Write the place properly</p>
+
+          {/* Core */}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -139,10 +177,11 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
             value={intro}
             onChange={(e) => setIntro(e.target.value)}
             rows={3}
-            placeholder="An honest intro — what someone should know before they go."
+            placeholder="An honest intro — what someone should know before they go. This is the page's voice, so write it properly."
             className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
           />
-          <div className="flex gap-2">
+
+          <div className="flex flex-wrap gap-2">
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
@@ -166,7 +205,105 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
               className="flex-1 rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
             />
           </div>
-          <div className="flex gap-2">
+
+          <input
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Address (as you'd tell someone how to find it)"
+            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+          />
+
+          {/* Coordinates — the cluster centroid is an average of requester pins,
+              so the curator places it properly. */}
+          <div>
+            <p className="mb-1 text-xs text-neutral-500">
+              Position (from requests — adjust to the real spot)
+            </p>
+            <div className="flex gap-2">
+              <input
+                value={lat}
+                onChange={(e) => setLat(e.target.value)}
+                placeholder="Latitude"
+                className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+              />
+              <input
+                value={lng}
+                onChange={(e) => setLng(e.target.value)}
+                placeholder="Longitude"
+                className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+              />
+            </div>
+          </div>
+
+          {/* Practical details — the stuff that makes a page useful */}
+          <div>
+            <p className="mb-1 text-xs text-neutral-500">Facilities</p>
+            <div className="flex flex-wrap gap-1.5">
+              {FACILITIES.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => toggleFacility(f)}
+                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                    facilities.includes(f)
+                      ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                      : "border-neutral-300 dark:border-neutral-700"
+                  }`}
+                >
+                  {f.replace(/_/g, " ").toLowerCase()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={entryFree}
+                onChange={(e) => setEntryFree(e.target.checked)}
+              />
+              Free entry
+            </label>
+            <input
+              value={entryNote}
+              onChange={(e) => setEntryNote(e.target.value)}
+              placeholder={entryFree ? "Note (optional)" : "What does it cost?"}
+              className="flex-1 rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+            />
+          </div>
+
+          <input
+            value={bestTime}
+            onChange={(e) => setBestTime(e.target.value)}
+            placeholder="Best time to visit"
+            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+          />
+
+          <textarea
+            value={accessNotes}
+            onChange={(e) => setAccessNotes(e.target.value)}
+            rows={2}
+            placeholder="Access notes — parking, gates, track condition, how to actually get in"
+            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+          />
+
+          <textarea
+            value={warnings}
+            onChange={(e) => setWarnings(e.target.value)}
+            rows={2}
+            placeholder="Warnings, one per line — rips, crocodiles, bushfire season, seasonal closures"
+            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+          />
+
+          <input
+            value={traditionalOwners}
+            onChange={(e) => setTraditionalOwners(e.target.value)}
+            placeholder="Traditional Owners (verify before publishing)"
+            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700"
+          />
+
+          <div className="flex gap-2 pt-1">
             <button
               onClick={onApprove}
               disabled={isPending}

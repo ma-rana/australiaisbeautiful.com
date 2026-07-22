@@ -17,6 +17,7 @@
 import { db } from "@/lib/db";
 import { requireCurator } from "@/lib/auth";
 import { RejectSchema } from "@/lib/schemas/cooldown";
+import { LocationDetailsSchema } from "@/lib/schemas/location";
 import { revalidatePath } from "next/cache";
 
 export type ClusterActionResult = { ok: true } | { ok: false; error: string };
@@ -42,6 +43,19 @@ export async function approveCluster(
     category: string;
     state: string;
     suburb?: string;
+    address?: string;
+    // Optional coordinate override — the cluster centroid is an average of
+    // requester pins, so the curator can place it properly.
+    latitude?: number;
+    longitude?: number;
+    // Render-only details (validated by LocationDetailsSchema before writing).
+    bestTimeToVisit?: string;
+    accessNotes?: string;
+    facilities?: string[];
+    entryFeeFree?: boolean;
+    entryFeeNote?: string;
+    warnings?: string[];
+    traditionalOwners?: string;
   },
 ): Promise<ClusterActionResult> {
   const actor = await requireCurator();
@@ -69,6 +83,23 @@ export async function approveCluster(
     if (clash) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
 
     await db.$transaction(async (tx) => {
+      // Build the render-only details JSONB and validate it (the pattern from
+      // lib/schemas: JSONB is validated on the way in, always).
+      const detailsInput = {
+        bestTimeToVisit: input.bestTimeToVisit?.trim() || undefined,
+        accessNotes: input.accessNotes?.trim() || undefined,
+        facilities: input.facilities?.length ? input.facilities : undefined,
+        entryFee:
+          input.entryFeeFree !== undefined
+            ? { free: input.entryFeeFree, note: input.entryFeeNote?.trim() || undefined }
+            : undefined,
+        warnings: input.warnings?.filter((w) => w.trim()).length
+          ? input.warnings.filter((w) => w.trim())
+          : undefined,
+        traditionalOwners: input.traditionalOwners?.trim() || undefined,
+      };
+      const details = LocationDetailsSchema.parse(detailsInput);
+
       const location = await tx.location.create({
         data: {
           slug,
@@ -77,8 +108,11 @@ export async function approveCluster(
           category: input.category as never,
           state: input.state as never,
           suburb: input.suburb?.trim() || null,
-          latitude: cluster.latitude,
-          longitude: cluster.longitude,
+          address: input.address?.trim() || null,
+          // Curator may reposition; otherwise use the cluster centroid.
+          latitude: input.latitude ?? cluster.latitude,
+          longitude: input.longitude ?? cluster.longitude,
+          details,
           status: "APPROVED",
         },
         select: { id: true },

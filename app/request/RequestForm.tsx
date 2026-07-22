@@ -76,6 +76,31 @@ export function RequestForm() {
 
   return (
     <div className="mt-8 space-y-6">
+      {/* Success state — replace the form entirely, so it's clear the thing is
+          done and there's nothing left to do. Leaving a filled form on screen
+          after a successful submit reads as "did that work?" */}
+      {result?.ok && result.status === "queued" ? (
+        <div className="rounded-lg border border-[var(--border)] p-6">
+          <p
+            className="text-xl text-[var(--ink)]"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Thanks — it&apos;s in.
+          </p>
+          <p className="mt-2 leading-relaxed text-[var(--muted)]">
+            {result.message} If it makes the map, it&apos;ll appear with a proper
+            write-up. If it doesn&apos;t, that&apos;s not a reflection on the
+            place — just on what belongs here.
+          </p>
+          <button
+            onClick={() => setResult(null)}
+            className="mt-4 rounded-md border border-[var(--border)] px-4 py-2 text-sm"
+          >
+            Suggest another place
+          </button>
+        </div>
+      ) : (
+        <>
       <div>
         <label className="block font-medium text-[var(--ink)]">
           What&apos;s it called?
@@ -174,6 +199,8 @@ export function RequestForm() {
       >
         {isPending ? "Sending…" : "Suggest this place"}
       </button>
+        </>
+      )}
     </div>
   );
 }
