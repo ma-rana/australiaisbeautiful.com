@@ -11,8 +11,8 @@
 import { db } from "@/lib/db";
 import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { ReviewCard, type QueueMoment } from "./ReviewCard";
+import { AdminSignOut } from "../AdminSignOut";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
 export default async function ModerationQueue() {
   // The real gate. Unauthenticated → admin sign-in. Authenticated-but-not-staff
@@ -70,12 +70,9 @@ export default async function ModerationQueue() {
             {queue.length} awaiting review · oldest first
           </p>
         </div>
-        <Link
-          href="/"
-          className="text-sm text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-        >
-          ← Site
-        </Link>
+        <div className="flex items-center gap-4">
+          <AdminSignOut />
+        </div>
       </header>
 
       {queue.length === 0 ? (

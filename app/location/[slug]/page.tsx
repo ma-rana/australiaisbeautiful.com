@@ -128,7 +128,18 @@ export default async function LocationPage({
 
       {/* Experiences — the living content. */}
       <section className="mt-14">
-        <h2 className="specimen-label">Experiences here</h2>
+        <div className="flex items-baseline justify-between">
+          <h2 className="specimen-label">Experiences here</h2>
+          {/* The contribute path. Viewing is open to all; contributing asks for
+              an account at the moment of intent (the gentle wall, UX §7b) — the
+              contribute page handles that redirect. */}
+          <Link
+            href={`/contribute/${slug}`}
+            className="text-sm text-[var(--eucalypt)] underline-offset-4 hover:underline"
+          >
+            Add your photos
+          </Link>
+        </div>
         <MomentGrid moments={moments} />
       </section>
     </main>
