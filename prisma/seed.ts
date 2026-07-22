@@ -39,6 +39,23 @@ async function main() {
     },
   });
 
+  // A normal EXPLORER account for testing the public side. Staff accounts are
+  // blocked from the public door (auth.ts door separation), so testing uploads
+  // needs a non-staff account. Local dev credentials:
+  //   email:    explorer@localhost
+  //   password: explorer1234
+  const explorerHash = await bcrypt.hash("explorer1234", 10);
+  await db.user.upsert({
+    where: { email: "explorer@localhost" },
+    update: { password: explorerHash, role: "EXPLORER", status: "ACTIVE" },
+    create: {
+      email: "explorer@localhost",
+      password: explorerHash,
+      role: "EXPLORER",
+      status: "ACTIVE",
+    },
+  });
+
   const location = await db.location.upsert({
     where: { slug: "manallack-reserve-seddon" },
     update: {},

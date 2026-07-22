@@ -57,10 +57,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        // Which door this sign-in came through: "public" or "admin".
+        // Sent by the sign-in pages; enforced below.
+        door: { label: "Door", type: "text" },
       },
       async authorize(credentials) {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
+        const door = (credentials?.door as string | undefined) ?? "public";
         if (!email || !password) return null;
 
         const user = await db.user.findUnique({ where: { email } });
@@ -69,6 +73,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const ok = await bcrypt.compare(password, user.password);
         if (!ok) return null;
+
+        // DOOR SEPARATION (hard): staff credentials work ONLY on the admin
+        // subdomain; explorer credentials work ONLY on the public site.
+        //
+        // Why: a stolen/phished staff password is useless against the public
+        // login surface, and staff are never habituated to typing operational
+        // credentials into the public form. Staff accounts are OPERATIONAL
+        // accounts — a staff member who also wants to contribute photos keeps a
+        // separate explorer account, deliberately.
+        const isStaff =
+          user.role === "CURATOR" ||
+          user.role === "MODERATOR" ||
+          user.role === "ADMIN";
+
+        if (door === "admin" && !isStaff) return null; // explorer at the staff door
+        if (door === "public" && isStaff) return null; // staff at the public door
 
         // What we return becomes the basis of the JWT (see callbacks).
         return { id: user.id, email: user.email, role: user.role };

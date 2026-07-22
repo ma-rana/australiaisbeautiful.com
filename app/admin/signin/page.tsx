@@ -28,23 +28,18 @@ export default function AdminSignInPage() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      // Sign in with the shared credentials provider…
+      // Sign in through the ADMIN door. auth.ts enforces that only staff
+      // accounts pass here — an explorer's credentials are refused outright.
       const res = await signIn("credentials", {
         email,
         password,
+        door: "admin",
         redirect: false,
       });
       if (res?.error) {
-        setError("Those credentials didn't match.");
-        return;
-      }
-      // …then verify this account is actually staff. A normal explorer's login
-      // succeeds as a credential, but they are NOT allowed into the admin area.
-      const meRes = await fetch("/api/admin/whoami");
-      const me = (await meRes.json()) as { role?: string };
-      const staff = me.role === "MODERATOR" || me.role === "ADMIN" || me.role === "CURATOR";
-      if (!staff) {
-        setError("This isn't an admin account. Use the main site to sign in.");
+        setError(
+          "Those credentials aren't valid for admin access. Staff accounts only.",
+        );
         return;
       }
       // On the admin host the queue is simply /moments (middleware maps it to

@@ -24,9 +24,14 @@ export default function SignInPage() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
+      // Sign in through the PUBLIC door. auth.ts enforces that STAFF accounts
+      // are refused here — operational credentials belong on the admin
+      // subdomain only. Staff who also contribute keep a separate explorer
+      // account, by design.
       const res = await signIn("credentials", {
         email,
         password,
+        door: "public",
         redirect: false,
       });
       if (res?.error) {
