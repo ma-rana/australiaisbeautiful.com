@@ -19,25 +19,23 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
-// The session cookie is scoped to the PARENT domain so it's valid on both the
-// public site and the admin subdomain (admin.* is where the moderation queue
-// lives; the cookie set on the apex must be sent there too). A leading dot means
-// "this domain and all subdomains".
-//   dev:  .localhost   → localhost + admin.localhost
-//   prod: .australiaisbeautiful.com → apex + admin subdomain
-// Configurable via AUTH_COOKIE_DOMAIN; falls back sensibly by NODE_ENV.
-const cookieDomain =
-  process.env.AUTH_COOKIE_DOMAIN ??
-  (process.env.NODE_ENV === "production"
-    ? ".australiaisbeautiful.com"
-    : ".localhost");
+// COOKIE SCOPE: deliberately NOT shared across subdomains.
+//
+// No `domain` is set, so the browser scopes the session cookie to the exact host
+// that issued it. That gives genuine isolation:
+//   - a session created on australiaisbeautiful.com is NOT sent to admin.*
+//   - a session created on admin.australiaisbeautiful.com is NOT sent to the
+//     public site (the admin credential never rides along on public requests)
+// Staff therefore sign in separately on the admin host — which is the point
+// (SECURITY.md: the admin surface is its own door, with its own session).
+//
+// Local dev: http://admin.localhost:3000 gets its own cookie, same as prod.
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
-    signIn: "/signin", // our custom sign-in page
+    signIn: "/signin", // public sign-in; the admin host has its own at /signin
   },
-  // Share the session cookie across subdomains (public + admin).
   cookies: {
     sessionToken: {
       name:
@@ -48,7 +46,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        domain: cookieDomain,
+        // NO `domain` — host-scoped by design (see the note above). Each host
+        // (public / admin) gets its own isolated session cookie.
         secure: process.env.NODE_ENV === "production",
       },
     },

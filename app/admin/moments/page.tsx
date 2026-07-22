@@ -21,7 +21,9 @@ export default async function ModerationQueue() {
     await requireModerator();
   } catch (e) {
     if (e instanceof UnauthorizedError) {
-      redirect("/admin/signin"); // not signed in → the STAFF door
+      // On the admin host, /signin IS the admin sign-in (middleware maps it to
+      // app/admin/signin). No /admin prefix in URLs — the host is the boundary.
+      redirect("/signin");
     }
     if (e instanceof ForbiddenError) {
       return (

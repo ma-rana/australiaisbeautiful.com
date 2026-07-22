@@ -40,7 +40,6 @@ export default function AdminSignInPage() {
       }
       // …then verify this account is actually staff. A normal explorer's login
       // succeeds as a credential, but they are NOT allowed into the admin area.
-      // We check via a small endpoint that returns the session role.
       const meRes = await fetch("/api/admin/whoami");
       const me = (await meRes.json()) as { role?: string };
       const staff = me.role === "MODERATOR" || me.role === "ADMIN" || me.role === "CURATOR";
@@ -48,7 +47,10 @@ export default function AdminSignInPage() {
         setError("This isn't an admin account. Use the main site to sign in.");
         return;
       }
-      router.push("/admin/moments");
+      // On the admin host the queue is simply /moments (middleware maps it to
+      // the app/admin/* files). No /admin prefix in the URL — the HOST is what
+      // makes this admin.
+      router.push("/moments");
       router.refresh();
     });
   };
