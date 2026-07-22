@@ -30,8 +30,15 @@ export function middleware(req: NextRequest) {
   const hostname = host.split(":")[0];
   const url = req.nextUrl;
 
+  // API routes are NEVER rewritten — they live at their real paths on every
+  // host. Auth.js needs /api/auth/* reachable as-is; rewriting it into
+  // /admin/api/auth/* 404s and breaks sign-in entirely.
+  if (url.pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   if (ADMIN_HOSTS.has(hostname)) {
-    // On the admin host, map every path into the app/admin/* file tree.
+    // On the admin host, map page paths into the app/admin/* file tree.
     // /moments → /admin/moments, /signin → /admin/signin, / → /admin
     if (!url.pathname.startsWith("/admin")) {
       url.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`;
