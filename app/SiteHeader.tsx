@@ -26,7 +26,11 @@ export function SiteHeader({ email }: { email: string | null }) {
             <>
               <span className="hidden text-neutral-500 sm:inline">{email}</span>
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() =>
+                  // Absolute URL from the current host — keeps the redirect on
+                  // whichever host the user is actually on (see AdminSignOut).
+                  signOut({ callbackUrl: `${window.location.origin}/` })
+                }
                 className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
               >
                 Sign out

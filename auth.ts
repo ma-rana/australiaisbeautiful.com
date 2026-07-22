@@ -76,6 +76,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    // Keep redirects on the host the request came from. Auth.js validates
+    // callbackUrl against its base URL and will otherwise bounce a signing-out
+    // admin (on admin.*) back to the public site. We allow any URL whose origin
+    // matches the request's own origin, plus the two known hosts.
+    async redirect({ url, baseUrl }) {
+      try {
+        const target = new URL(url, baseUrl);
+        const allowedHosts = new Set([
+          new URL(baseUrl).host,
+          "admin.australiaisbeautiful.com",
+          "australiaisbeautiful.com",
+          "admin.localhost:3000",
+          "localhost:3000",
+        ]);
+        if (allowedHosts.has(target.host)) return target.toString();
+      } catch {
+        // fall through to baseUrl
+      }
+      return baseUrl;
+    },
     // Put id + role into the token on sign-in, so getSessionUser can read them
     // without a DB hit on every request.
     async jwt({ token, user }) {
