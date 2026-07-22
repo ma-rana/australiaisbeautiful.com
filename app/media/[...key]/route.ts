@@ -22,9 +22,11 @@ export async function GET(
   const { key: parts } = await params;
   const key = parts.join("/");
 
-  // Only serve from the moments/ prefix (defence in depth alongside the storage
-  // driver's own path-escape guard).
-  if (!key.startsWith("moments/")) {
+  // Only serve from known media prefixes (defence in depth alongside the
+  // storage driver's own path-escape guard).
+  //   moments/ — community contributions
+  //   covers/  — curator-uploaded location covers
+  if (!key.startsWith("moments/") && !key.startsWith("covers/")) {
     return new NextResponse("Not found", { status: 404 });
   }
 

@@ -71,10 +71,16 @@ export default async function RequestQueue() {
             the decision
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 text-sm">
+          <Link
+            href="/locations"
+            className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+          >
+            Places
+          </Link>
           <Link
             href="/moments"
-            className="text-sm text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
           >
             Moments
           </Link>

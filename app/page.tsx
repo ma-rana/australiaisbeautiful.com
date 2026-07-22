@@ -20,8 +20,26 @@ export default async function Home() {
       state: true,
       latitude: true,
       longitude: true,
+      coverThumbKey: true,
+      heroMediaId: true,
     },
   });
+
+  // Resolve each place's face: a promoted COMMUNITY photo wins; the curator's
+  // provisional cover holds the space until then.
+  const heroIds = locations.map((l) => l.heroMediaId).filter((x): x is string => !!x);
+  const heroes = heroIds.length
+    ? await db.momentMedia.findMany({
+        where: { id: { in: heroIds }, status: "APPROVED" },
+        select: { id: true, thumbKey: true, mediaKey: true },
+      })
+    : [];
+  const heroById = new Map(heroes.map((h) => [h.id, h.thumbKey ?? h.mediaKey]));
+
+  const withFace = locations.map((l) => ({
+    ...l,
+    face: (l.heroMediaId ? heroById.get(l.heroMediaId) : null) ?? l.coverThumbKey ?? null,
+  }));
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-20 sm:px-8">
@@ -50,31 +68,33 @@ export default async function Home() {
           </p>
         ) : (
           <ul>
-            {locations.map((loc, i) => (
+            {withFace.map((loc, i) => (
               <li key={loc.id}>
                 <Link
                   href={`/location/${loc.slug}`}
-                  className="group flex flex-col gap-2 border-b border-[var(--border)] py-8 transition-colors sm:flex-row sm:items-baseline sm:gap-8"
+                  className="group flex flex-col gap-3 border-b border-[var(--border)] py-8 transition-colors sm:flex-row sm:gap-6"
                 >
-                  {/* Left rail: index number + specimen locality label. The
-                      numbering is real here — an ordered index of entries. */}
-                  <div className="flex shrink-0 items-baseline gap-3 sm:w-40 sm:flex-col sm:gap-1">
-                    <span
-                      className="text-sm tabular-nums text-[var(--ochre)]"
-                      style={{ fontFamily: "var(--font-display)" }}
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                  {/* The place's face */}
+                  {loc.face ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={loc.face}
+                      alt=""
+                      className="h-32 w-full shrink-0 rounded-md object-cover sm:h-24 sm:w-36"
+                    />
+                  ) : (
+                    <div className="flex h-32 w-full shrink-0 items-center justify-center rounded-md bg-[var(--paper-2)] text-xs text-[var(--muted)] sm:h-24 sm:w-36">
+                      No photo yet
+                    </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
                     <span className="specimen-label">
                       {loc.suburb ? `${loc.suburb} · ` : ""}
                       {loc.state}
                     </span>
-                  </div>
-
-                  {/* Entry body */}
-                  <div className="min-w-0 flex-1">
                     <h2
-                      className="text-2xl text-[var(--ink)] decoration-[var(--eucalypt)] decoration-1 underline-offset-4 group-hover:underline sm:text-3xl"
+                      className="mt-1 text-2xl text-[var(--ink)] decoration-[var(--eucalypt)] decoration-1 underline-offset-4 group-hover:underline sm:text-3xl"
                       style={{ fontFamily: "var(--font-display)" }}
                     >
                       {loc.name}

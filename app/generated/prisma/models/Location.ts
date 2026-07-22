@@ -58,6 +58,8 @@ export type LocationMinAggregateOutputType = {
   ratingCount: number | null
   ratingThreshold: number | null
   heroMediaId: string | null
+  coverKey: string | null
+  coverThumbKey: string | null
   submittedById: string | null
   claimedById: string | null
   claimedAt: Date | null
@@ -88,6 +90,8 @@ export type LocationMaxAggregateOutputType = {
   ratingCount: number | null
   ratingThreshold: number | null
   heroMediaId: string | null
+  coverKey: string | null
+  coverThumbKey: string | null
   submittedById: string | null
   claimedById: string | null
   claimedAt: Date | null
@@ -119,6 +123,8 @@ export type LocationCountAggregateOutputType = {
   ratingCount: number
   ratingThreshold: number
   heroMediaId: number
+  coverKey: number
+  coverThumbKey: number
   submittedById: number
   claimedById: number
   claimedAt: number
@@ -167,6 +173,8 @@ export type LocationMinAggregateInputType = {
   ratingCount?: true
   ratingThreshold?: true
   heroMediaId?: true
+  coverKey?: true
+  coverThumbKey?: true
   submittedById?: true
   claimedById?: true
   claimedAt?: true
@@ -197,6 +205,8 @@ export type LocationMaxAggregateInputType = {
   ratingCount?: true
   ratingThreshold?: true
   heroMediaId?: true
+  coverKey?: true
+  coverThumbKey?: true
   submittedById?: true
   claimedById?: true
   claimedAt?: true
@@ -228,6 +238,8 @@ export type LocationCountAggregateInputType = {
   ratingCount?: true
   ratingThreshold?: true
   heroMediaId?: true
+  coverKey?: true
+  coverThumbKey?: true
   submittedById?: true
   claimedById?: true
   claimedAt?: true
@@ -346,6 +358,8 @@ export type LocationGroupByOutputType = {
   ratingCount: number
   ratingThreshold: number
   heroMediaId: string | null
+  coverKey: string | null
+  coverThumbKey: string | null
   submittedById: string | null
   claimedById: string | null
   claimedAt: Date | null
@@ -400,6 +414,8 @@ export type LocationWhereInput = {
   ratingCount?: Prisma.IntFilter<"Location"> | number
   ratingThreshold?: Prisma.IntFilter<"Location"> | number
   heroMediaId?: Prisma.StringNullableFilter<"Location"> | string | null
+  coverKey?: Prisma.StringNullableFilter<"Location"> | string | null
+  coverThumbKey?: Prisma.StringNullableFilter<"Location"> | string | null
   submittedById?: Prisma.StringNullableFilter<"Location"> | string | null
   claimedById?: Prisma.StringNullableFilter<"Location"> | string | null
   claimedAt?: Prisma.DateTimeNullableFilter<"Location"> | Date | string | null
@@ -442,6 +458,8 @@ export type LocationOrderByWithRelationInput = {
   ratingCount?: Prisma.SortOrder
   ratingThreshold?: Prisma.SortOrder
   heroMediaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  coverKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  coverThumbKey?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedById?: Prisma.SortOrderInput | Prisma.SortOrder
   claimedById?: Prisma.SortOrderInput | Prisma.SortOrder
   claimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -487,6 +505,8 @@ export type LocationWhereUniqueInput = Prisma.AtLeast<{
   ratingCount?: Prisma.IntFilter<"Location"> | number
   ratingThreshold?: Prisma.IntFilter<"Location"> | number
   heroMediaId?: Prisma.StringNullableFilter<"Location"> | string | null
+  coverKey?: Prisma.StringNullableFilter<"Location"> | string | null
+  coverThumbKey?: Prisma.StringNullableFilter<"Location"> | string | null
   submittedById?: Prisma.StringNullableFilter<"Location"> | string | null
   claimedById?: Prisma.StringNullableFilter<"Location"> | string | null
   claimedAt?: Prisma.DateTimeNullableFilter<"Location"> | Date | string | null
@@ -529,6 +549,8 @@ export type LocationOrderByWithAggregationInput = {
   ratingCount?: Prisma.SortOrder
   ratingThreshold?: Prisma.SortOrder
   heroMediaId?: Prisma.SortOrderInput | Prisma.SortOrder
+  coverKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  coverThumbKey?: Prisma.SortOrderInput | Prisma.SortOrder
   submittedById?: Prisma.SortOrderInput | Prisma.SortOrder
   claimedById?: Prisma.SortOrderInput | Prisma.SortOrder
   claimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -568,6 +590,8 @@ export type LocationScalarWhereWithAggregatesInput = {
   ratingCount?: Prisma.IntWithAggregatesFilter<"Location"> | number
   ratingThreshold?: Prisma.IntWithAggregatesFilter<"Location"> | number
   heroMediaId?: Prisma.StringNullableWithAggregatesFilter<"Location"> | string | null
+  coverKey?: Prisma.StringNullableWithAggregatesFilter<"Location"> | string | null
+  coverThumbKey?: Prisma.StringNullableWithAggregatesFilter<"Location"> | string | null
   submittedById?: Prisma.StringNullableWithAggregatesFilter<"Location"> | string | null
   claimedById?: Prisma.StringNullableWithAggregatesFilter<"Location"> | string | null
   claimedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Location"> | Date | string | null
@@ -599,6 +623,8 @@ export type LocationCreateInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -637,6 +663,8 @@ export type LocationUncheckedCreateInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -675,6 +703,8 @@ export type LocationUpdateInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -713,6 +743,8 @@ export type LocationUncheckedUpdateInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -751,6 +783,8 @@ export type LocationCreateManyInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -782,6 +816,8 @@ export type LocationUpdateManyMutationInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -809,6 +845,8 @@ export type LocationUncheckedUpdateManyInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -850,6 +888,8 @@ export type LocationCountOrderByAggregateInput = {
   ratingCount?: Prisma.SortOrder
   ratingThreshold?: Prisma.SortOrder
   heroMediaId?: Prisma.SortOrder
+  coverKey?: Prisma.SortOrder
+  coverThumbKey?: Prisma.SortOrder
   submittedById?: Prisma.SortOrder
   claimedById?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
@@ -888,6 +928,8 @@ export type LocationMaxOrderByAggregateInput = {
   ratingCount?: Prisma.SortOrder
   ratingThreshold?: Prisma.SortOrder
   heroMediaId?: Prisma.SortOrder
+  coverKey?: Prisma.SortOrder
+  coverThumbKey?: Prisma.SortOrder
   submittedById?: Prisma.SortOrder
   claimedById?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
@@ -918,6 +960,8 @@ export type LocationMinOrderByAggregateInput = {
   ratingCount?: Prisma.SortOrder
   ratingThreshold?: Prisma.SortOrder
   heroMediaId?: Prisma.SortOrder
+  coverKey?: Prisma.SortOrder
+  coverThumbKey?: Prisma.SortOrder
   submittedById?: Prisma.SortOrder
   claimedById?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
@@ -1273,6 +1317,8 @@ export type LocationCreateWithoutSubmittedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1310,6 +1356,8 @@ export type LocationUncheckedCreateWithoutSubmittedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1357,6 +1405,8 @@ export type LocationCreateWithoutModeratedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1394,6 +1444,8 @@ export type LocationUncheckedCreateWithoutModeratedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -1441,6 +1493,8 @@ export type LocationCreateWithoutClaimedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1478,6 +1532,8 @@ export type LocationUncheckedCreateWithoutClaimedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1544,6 +1600,8 @@ export type LocationScalarWhereInput = {
   ratingCount?: Prisma.IntFilter<"Location"> | number
   ratingThreshold?: Prisma.IntFilter<"Location"> | number
   heroMediaId?: Prisma.StringNullableFilter<"Location"> | string | null
+  coverKey?: Prisma.StringNullableFilter<"Location"> | string | null
+  coverThumbKey?: Prisma.StringNullableFilter<"Location"> | string | null
   submittedById?: Prisma.StringNullableFilter<"Location"> | string | null
   claimedById?: Prisma.StringNullableFilter<"Location"> | string | null
   claimedAt?: Prisma.DateTimeNullableFilter<"Location"> | Date | string | null
@@ -1607,6 +1665,8 @@ export type LocationCreateWithoutMomentsInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1644,6 +1704,8 @@ export type LocationUncheckedCreateWithoutMomentsInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -1697,6 +1759,8 @@ export type LocationUpdateWithoutMomentsInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1734,6 +1798,8 @@ export type LocationUncheckedUpdateWithoutMomentsInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1771,6 +1837,8 @@ export type LocationCreateWithoutRatingsInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1808,6 +1876,8 @@ export type LocationUncheckedCreateWithoutRatingsInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -1861,6 +1931,8 @@ export type LocationUpdateWithoutRatingsInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1898,6 +1970,8 @@ export type LocationUncheckedUpdateWithoutRatingsInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1935,6 +2009,8 @@ export type LocationCreateWithoutChatMessagesInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1972,6 +2048,8 @@ export type LocationUncheckedCreateWithoutChatMessagesInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2025,6 +2103,8 @@ export type LocationUpdateWithoutChatMessagesInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2062,6 +2142,8 @@ export type LocationUncheckedUpdateWithoutChatMessagesInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2099,6 +2181,8 @@ export type LocationCreateWithoutActivitiesInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -2136,6 +2220,8 @@ export type LocationUncheckedCreateWithoutActivitiesInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2189,6 +2275,8 @@ export type LocationUpdateWithoutActivitiesInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2226,6 +2314,8 @@ export type LocationUncheckedUpdateWithoutActivitiesInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2263,6 +2353,8 @@ export type LocationCreateWithoutSavedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -2300,6 +2392,8 @@ export type LocationUncheckedCreateWithoutSavedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2353,6 +2447,8 @@ export type LocationUpdateWithoutSavedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2390,6 +2486,8 @@ export type LocationUncheckedUpdateWithoutSavedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2427,6 +2525,8 @@ export type LocationCreateWithoutPartnerInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -2464,6 +2564,8 @@ export type LocationUncheckedCreateWithoutPartnerInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2527,6 +2629,8 @@ export type LocationCreateWithoutReportsInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -2564,6 +2668,8 @@ export type LocationUncheckedCreateWithoutReportsInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2617,6 +2723,8 @@ export type LocationUpdateWithoutReportsInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2654,6 +2762,8 @@ export type LocationUncheckedUpdateWithoutReportsInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2691,6 +2801,8 @@ export type LocationCreateWithoutRequestClustersInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -2728,6 +2840,8 @@ export type LocationUncheckedCreateWithoutRequestClustersInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2781,6 +2895,8 @@ export type LocationUpdateWithoutRequestClustersInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2818,6 +2934,8 @@ export type LocationUncheckedUpdateWithoutRequestClustersInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2855,6 +2973,8 @@ export type LocationCreateManySubmittedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -2885,6 +3005,8 @@ export type LocationCreateManyModeratedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -2915,6 +3037,8 @@ export type LocationCreateManyClaimedByInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -2945,6 +3069,8 @@ export type LocationUpdateWithoutSubmittedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2982,6 +3108,8 @@ export type LocationUncheckedUpdateWithoutSubmittedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3019,6 +3147,8 @@ export type LocationUncheckedUpdateManyWithoutSubmittedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3049,6 +3179,8 @@ export type LocationUpdateWithoutModeratedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3086,6 +3218,8 @@ export type LocationUncheckedUpdateWithoutModeratedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3123,6 +3257,8 @@ export type LocationUncheckedUpdateManyWithoutModeratedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3153,6 +3289,8 @@ export type LocationUpdateWithoutClaimedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3190,6 +3328,8 @@ export type LocationUncheckedUpdateWithoutClaimedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3227,6 +3367,8 @@ export type LocationUncheckedUpdateManyWithoutClaimedByInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3257,6 +3399,8 @@ export type LocationCreateManyPartnerInput = {
   ratingCount?: number
   ratingThreshold?: number
   heroMediaId?: string | null
+  coverKey?: string | null
+  coverThumbKey?: string | null
   submittedById?: string | null
   claimedById?: string | null
   claimedAt?: Date | string | null
@@ -3287,6 +3431,8 @@ export type LocationUpdateWithoutPartnerInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3324,6 +3470,8 @@ export type LocationUncheckedUpdateWithoutPartnerInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3361,6 +3509,8 @@ export type LocationUncheckedUpdateManyWithoutPartnerInput = {
   ratingCount?: Prisma.IntFieldUpdateOperationsInput | number
   ratingThreshold?: Prisma.IntFieldUpdateOperationsInput | number
   heroMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverThumbKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   submittedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3476,6 +3626,8 @@ export type LocationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   ratingCount?: boolean
   ratingThreshold?: boolean
   heroMediaId?: boolean
+  coverKey?: boolean
+  coverThumbKey?: boolean
   submittedById?: boolean
   claimedById?: boolean
   claimedAt?: boolean
@@ -3519,6 +3671,8 @@ export type LocationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   ratingCount?: boolean
   ratingThreshold?: boolean
   heroMediaId?: boolean
+  coverKey?: boolean
+  coverThumbKey?: boolean
   submittedById?: boolean
   claimedById?: boolean
   claimedAt?: boolean
@@ -3554,6 +3708,8 @@ export type LocationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   ratingCount?: boolean
   ratingThreshold?: boolean
   heroMediaId?: boolean
+  coverKey?: boolean
+  coverThumbKey?: boolean
   submittedById?: boolean
   claimedById?: boolean
   claimedAt?: boolean
@@ -3589,6 +3745,8 @@ export type LocationSelectScalar = {
   ratingCount?: boolean
   ratingThreshold?: boolean
   heroMediaId?: boolean
+  coverKey?: boolean
+  coverThumbKey?: boolean
   submittedById?: boolean
   claimedById?: boolean
   claimedAt?: boolean
@@ -3603,7 +3761,7 @@ export type LocationSelectScalar = {
   updatedAt?: boolean
 }
 
-export type LocationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "name" | "intro" | "category" | "status" | "latitude" | "longitude" | "state" | "suburb" | "address" | "details" | "ratingAvg" | "ratingCount" | "ratingThreshold" | "heroMediaId" | "submittedById" | "claimedById" | "claimedAt" | "claimExpiresAt" | "moderatedById" | "moderatedAt" | "rejectionKind" | "rejectionReason" | "cooldownUntil" | "partnerId" | "createdAt" | "updatedAt", ExtArgs["result"]["location"]>
+export type LocationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "name" | "intro" | "category" | "status" | "latitude" | "longitude" | "state" | "suburb" | "address" | "details" | "ratingAvg" | "ratingCount" | "ratingThreshold" | "heroMediaId" | "coverKey" | "coverThumbKey" | "submittedById" | "claimedById" | "claimedAt" | "claimExpiresAt" | "moderatedById" | "moderatedAt" | "rejectionKind" | "rejectionReason" | "cooldownUntil" | "partnerId" | "createdAt" | "updatedAt", ExtArgs["result"]["location"]>
 export type LocationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   submittedBy?: boolean | Prisma.Location$submittedByArgs<ExtArgs>
   claimedBy?: boolean | Prisma.Location$claimedByArgs<ExtArgs>
@@ -3663,6 +3821,8 @@ export type $LocationPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     ratingCount: number
     ratingThreshold: number
     heroMediaId: string | null
+    coverKey: string | null
+    coverThumbKey: string | null
     submittedById: string | null
     claimedById: string | null
     claimedAt: Date | null
@@ -4125,6 +4285,8 @@ export interface LocationFieldRefs {
   readonly ratingCount: Prisma.FieldRef<"Location", 'Int'>
   readonly ratingThreshold: Prisma.FieldRef<"Location", 'Int'>
   readonly heroMediaId: Prisma.FieldRef<"Location", 'String'>
+  readonly coverKey: Prisma.FieldRef<"Location", 'String'>
+  readonly coverThumbKey: Prisma.FieldRef<"Location", 'String'>
   readonly submittedById: Prisma.FieldRef<"Location", 'String'>
   readonly claimedById: Prisma.FieldRef<"Location", 'String'>
   readonly claimedAt: Prisma.FieldRef<"Location", 'DateTime'>

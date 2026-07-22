@@ -119,6 +119,8 @@ export const LocationScalarFieldEnum = {
   ratingCount: 'ratingCount',
   ratingThreshold: 'ratingThreshold',
   heroMediaId: 'heroMediaId',
+  coverKey: 'coverKey',
+  coverThumbKey: 'coverThumbKey',
   submittedById: 'submittedById',
   claimedById: 'claimedById',
   claimedAt: 'claimedAt',

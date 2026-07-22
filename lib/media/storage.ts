@@ -26,6 +26,21 @@ export function mediaKey(momentCuid: string, variant: "display" | "thumb"): stri
   return `moments/${yyyy}/${mm}/${momentCuid}/${variant}.webp`;
 }
 
+// Storage key for a curator-uploaded LOCATION COVER. Kept in its own prefix so
+// covers are distinguishable from community moment media at the storage layer
+// (useful for audits, and for the serving route's prefix allowlist).
+export function coverKey(
+  locationSlug: string,
+  variant: "display" | "thumb",
+): string {
+  const now = new Date();
+  const stamp = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  // The slug is server-generated (slugify strips anything path-ish), and a
+  // timestamp keeps re-uploads from colliding with a cached old file.
+  const safe = locationSlug.replace(/[^a-z0-9-]/g, "").slice(0, 80);
+  return `covers/${safe}/${stamp}-${variant}.webp`;
+}
+
 // --- Local disk driver -------------------------------------------------------
 // Root is MEDIA_LOCAL_PATH, OUTSIDE the Next public dir and the repo (MEDIA.md).
 // A guard rejects any key that would escape the root (defence in depth — keys

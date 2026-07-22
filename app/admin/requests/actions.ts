@@ -18,6 +18,8 @@ import { db } from "@/lib/db";
 import { requireCurator } from "@/lib/auth";
 import { RejectSchema } from "@/lib/schemas/cooldown";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
+import { processImage } from "@/lib/media/process";
+import { getStorage, coverKey } from "@/lib/media/storage";
 import { revalidatePath } from "next/cache";
 
 export type ClusterActionResult = { ok: true } | { ok: false; error: string };
@@ -35,32 +37,40 @@ function slugify(input: string): string {
 // Approve a cluster into a real Location. The curator supplies the real content
 // — the request name is a pointer, not final copy (the intro is written here,
 // properly, because a location page is editorial).
+//
+// Takes FormData so it can carry an optional COVER IMAGE. The cover runs through
+// the same security pipeline as any upload (magic-byte sniff, decode limit,
+// re-encode, EXIF strip) — curator-uploaded doesn't mean trusted bytes.
 export async function approveCluster(
   clusterId: string,
-  input: {
-    name: string;
-    intro: string;
-    category: string;
-    state: string;
-    suburb?: string;
-    address?: string;
-    // Optional coordinate override — the cluster centroid is an average of
-    // requester pins, so the curator can place it properly.
-    latitude?: number;
-    longitude?: number;
-    // Render-only details (validated by LocationDetailsSchema before writing).
-    bestTimeToVisit?: string;
-    accessNotes?: string;
-    facilities?: string[];
-    entryFeeFree?: boolean;
-    entryFeeNote?: string;
-    warnings?: string[];
-    traditionalOwners?: string;
-  },
+  formData: FormData,
 ): Promise<ClusterActionResult> {
   const actor = await requireCurator();
 
-  if (!input.name?.trim() || input.intro?.trim().length < 20) {
+  // Pull the fields off the form.
+  const s = (k: string) => String(formData.get(k) ?? "").trim();
+  const input = {
+    name: s("name"),
+    intro: s("intro"),
+    category: s("category") || "OTHER",
+    state: s("state") || "VIC",
+    suburb: s("suburb") || undefined,
+    address: s("address") || undefined,
+    latitude: Number(formData.get("latitude")) || undefined,
+    longitude: Number(formData.get("longitude")) || undefined,
+    bestTimeToVisit: s("bestTimeToVisit") || undefined,
+    accessNotes: s("accessNotes") || undefined,
+    facilities: formData.getAll("facilities").map(String).filter(Boolean),
+    entryFeeFree: formData.get("entryFeeFree") === "true",
+    entryFeeNote: s("entryFeeNote") || undefined,
+    warnings: s("warnings")
+      ? s("warnings").split("\n").map((w) => w.trim()).filter(Boolean)
+      : undefined,
+    traditionalOwners: s("traditionalOwners") || undefined,
+  };
+  const coverFile = formData.get("cover");
+
+  if (!input.name || input.intro.length < 20) {
     return {
       ok: false,
       error: "A place needs a name and a real intro (at least 20 characters).",
@@ -81,6 +91,32 @@ export async function approveCluster(
     let slug = slugify(input.name);
     const clash = await db.location.findUnique({ where: { slug } });
     if (clash) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+
+    // Process the cover image BEFORE the transaction — if the image is bad, we
+    // fail without having created a half-made place. Same pipeline as any
+    // upload: curator-uploaded does not mean trusted bytes.
+    let coverKeys: { display: string; thumb: string } | null = null;
+    if (coverFile instanceof File && coverFile.size > 0) {
+      const buf = Buffer.from(await coverFile.arrayBuffer());
+      const processed = await processImage(buf);
+      if (!processed.ok) {
+        return {
+          ok: false,
+          error:
+            processed.error === "too_large"
+              ? "That cover image is too large (max 10 MB)."
+              : processed.error === "not_an_image"
+                ? "That cover file isn't a supported image."
+                : "That cover image couldn't be processed.",
+        };
+      }
+      const storage = getStorage();
+      const dKey = coverKey(slug, "display");
+      const tKey = coverKey(slug, "thumb");
+      await storage.put(dKey, processed.result.display, "image/webp");
+      await storage.put(tKey, processed.result.thumb, "image/webp");
+      coverKeys = { display: dKey, thumb: tKey };
+    }
 
     await db.$transaction(async (tx) => {
       // Build the render-only details JSONB and validate it (the pattern from
@@ -112,6 +148,10 @@ export async function approveCluster(
           // Curator may reposition; otherwise use the cluster centroid.
           latitude: input.latitude ?? cluster.latitude,
           longitude: input.longitude ?? cluster.longitude,
+          // Provisional cover — superseded by a promoted community photo
+          // (heroMediaId) once real contributions arrive.
+          coverKey: coverKeys?.display ?? null,
+          coverThumbKey: coverKeys?.thumb ?? null,
           details,
           status: "APPROVED",
         },

@@ -169,6 +169,20 @@ model Location {
   // in the query and re-check the file is still APPROVED and its moment public.
   heroMediaId String?
 
+  // Curator-uploaded COVER image. Distinct from heroMediaId (which promotes a
+  // community photo). This exists because a newly approved place has no moments
+  // yet, so it has no possible hero — and a browse page of blank cards is bad.
+  //
+  // It is PROVISIONAL by design: the render priority is
+  //     heroMediaId (a real community photo)  →  coverKey  →  placeholder
+  // so the moment genuine contributions arrive and a curator promotes one, the
+  // community photo takes over as the face. The curator cover holds the space
+  // until the place has been photographed by someone who went there.
+  //
+  // Storage keys, not URLs — same convention as MomentMedia (D7).
+  coverKey      String?
+  coverThumbKey String?
+
   // --- Curation / moderation trail ---
   submittedById String?
   submittedBy   User?    @relation("LocationSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)

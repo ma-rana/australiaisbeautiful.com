@@ -7,7 +7,7 @@
 // category, state) — the request's name is a pointer, not final copy. Rejecting
 // needs a kind + reason, which future requesters see instantly.
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { approveCluster, rejectCluster } from "./actions";
 
 export type QueueCluster = {
@@ -61,6 +61,11 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
   const [warnings, setWarnings] = useState("");
   const [traditionalOwners, setTraditionalOwners] = useState("");
 
+  // Cover image — the place's provisional face until a community photo is
+  // promoted to hero. Without one, a newly published place is a blank card.
+  const coverRef = useRef<HTMLInputElement>(null);
+  const [cover, setCover] = useState<{ file: File; url: string } | null>(null);
+
   const toggleFacility = (f: string) =>
     setFacilities((prev) =>
       prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f],
@@ -72,26 +77,26 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
 
   const onApprove = () => {
     setError(null);
+    const fd = new FormData();
+    fd.set("name", name);
+    fd.set("intro", intro);
+    fd.set("category", category);
+    fd.set("state", state);
+    fd.set("suburb", suburb);
+    fd.set("address", address);
+    fd.set("latitude", lat);
+    fd.set("longitude", lng);
+    fd.set("bestTimeToVisit", bestTime);
+    fd.set("accessNotes", accessNotes);
+    facilities.forEach((f) => fd.append("facilities", f));
+    fd.set("entryFeeFree", String(entryFree));
+    fd.set("entryFeeNote", entryNote);
+    fd.set("warnings", warnings);
+    fd.set("traditionalOwners", traditionalOwners);
+    if (cover) fd.set("cover", cover.file);
+
     startTransition(async () => {
-      const res = await approveCluster(cluster.id, {
-        name,
-        intro,
-        category,
-        state,
-        suburb: suburb || undefined,
-        address: address || undefined,
-        latitude: Number(lat) || undefined,
-        longitude: Number(lng) || undefined,
-        bestTimeToVisit: bestTime || undefined,
-        accessNotes: accessNotes || undefined,
-        facilities: facilities.length ? facilities : undefined,
-        entryFeeFree: entryFree,
-        entryFeeNote: entryNote || undefined,
-        warnings: warnings
-          ? warnings.split("\n").map((w) => w.trim()).filter(Boolean)
-          : undefined,
-        traditionalOwners: traditionalOwners || undefined,
-      });
+      const res = await approveCluster(cluster.id, fd);
       if (res.ok) setDone("approved");
       else setError(res.error);
     });
@@ -165,6 +170,54 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
       {mode === "approve" && (
         <div className="space-y-4 border-t border-neutral-200 px-5 py-4 dark:border-neutral-800">
           <p className="text-sm font-medium">Write the place properly</p>
+
+          {/* COVER IMAGE — the place's face. Provisional: once a real
+              contribution arrives and gets promoted to hero, that community
+              photo takes over. But without this, a new place is a blank card. */}
+          <div>
+            <p className="mb-1 text-xs text-neutral-500">
+              Cover image — holds the place until someone photographs it
+            </p>
+            <input
+              ref={coverRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setCover({ file: f, url: URL.createObjectURL(f) });
+              }}
+            />
+            {cover ? (
+              <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cover.url}
+                  alt="Cover preview"
+                  className="h-32 w-56 rounded-md object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    URL.revokeObjectURL(cover.url);
+                    setCover(null);
+                  }}
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-sm text-white hover:bg-black"
+                  aria-label="Remove cover"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => coverRef.current?.click()}
+                className="h-32 w-56 rounded-md border-2 border-dashed border-neutral-300 text-sm text-neutral-500 hover:border-neutral-400 dark:border-neutral-700"
+              >
+                Choose a cover photo
+              </button>
+            )}
+          </div>
 
           {/* Core */}
           <input

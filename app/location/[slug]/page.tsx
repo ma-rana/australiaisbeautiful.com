@@ -52,6 +52,18 @@ export default async function LocationPage({
 
   const details = LocationDetailsSchema.parse(location.details ?? {});
 
+  // The place's face: a promoted COMMUNITY photo wins; the curator's provisional
+  // cover holds the space until one exists.
+  let heroSrc: string | null = null;
+  if (location.heroMediaId) {
+    const hero = await db.momentMedia.findFirst({
+      where: { id: location.heroMediaId, status: "APPROVED" },
+      select: { mediaKey: true },
+    });
+    heroSrc = hero?.mediaKey ?? null;
+  }
+  if (!heroSrc) heroSrc = location.coverKey ?? null;
+
   const moments: ViewerMoment[] = location.moments
     .filter((m) => m.media.length > 0)
     .map((m) => ({
@@ -90,6 +102,15 @@ export default async function LocationPage({
 
       {/* Field-guide header. The signature: the specimen coordinate label. */}
       <header className="mt-8 border-b border-[var(--border)] pb-8">
+        {/* The place's face — a real photo of somewhere real. */}
+        {heroSrc && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroSrc}
+            alt={location.name}
+            className="mb-8 aspect-[16/9] w-full rounded-lg object-cover"
+          />
+        )}
         <p className="specimen-label text-[var(--ochre)]">
           {formatCoords(location.latitude, location.longitude)}
           {"   ·   "}
