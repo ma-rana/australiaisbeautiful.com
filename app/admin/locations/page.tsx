@@ -8,6 +8,7 @@ import { requireCurator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AdminSignOut } from "../AdminSignOut";
+import { resolveMediaSrc } from "@/lib/media/resolve";
 
 export default async function LocationsIndex() {
   try {
@@ -105,10 +106,10 @@ export default async function LocationsIndex() {
           )}
           <ul className="mt-6 divide-y divide-neutral-200 dark:divide-neutral-800">
           {locations.map((loc) => {
-            const face =
+            const face = resolveMediaSrc(
               (loc.heroMediaId ? heroById.get(loc.heroMediaId) : null) ??
-              loc.coverThumbKey ??
-              null;
+                loc.coverThumbKey,
+            );
             return (
               <li key={loc.id}>
                 <Link

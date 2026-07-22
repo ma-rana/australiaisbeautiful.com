@@ -15,6 +15,7 @@ import { db } from "@/lib/db";
 import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { ReviewCard, type QueueMoment } from "./ReviewCard";
 import { AdminSignOut } from "../AdminSignOut";
+import { resolveMediaSrc } from "@/lib/media/resolve";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -62,7 +63,10 @@ export default async function ModerationQueue() {
       name: m.location.name,
       place: [m.location.suburb, m.location.state].filter(Boolean).join(", "),
     },
-    media: m.media.map((mm) => ({ id: mm.id, src: mm.mediaKey })),
+    media: m.media.map((mm) => ({
+      id: mm.id,
+      src: resolveMediaSrc(mm.thumbKey ?? mm.mediaKey) ?? "",
+    })),
   }));
 
   return (

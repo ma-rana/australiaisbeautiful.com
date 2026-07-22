@@ -8,6 +8,7 @@ import { requireCurator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
+import { resolveMediaSrc } from "@/lib/media/resolve";
 import { EditLocationForm } from "./EditLocationForm";
 
 export default async function EditLocationPage({
@@ -55,7 +56,7 @@ export default async function EditLocationPage({
   const candidates = location.moments.flatMap((m) =>
     m.media.map((mm) => ({
       id: mm.id,
-      src: mm.thumbKey ?? mm.mediaKey,
+      src: resolveMediaSrc(mm.thumbKey ?? mm.mediaKey) ?? "",
     })),
   );
 
@@ -85,7 +86,7 @@ export default async function EditLocationPage({
           address: location.address ?? "",
           latitude: location.latitude,
           longitude: location.longitude,
-          coverKey: location.coverKey,
+          coverKey: resolveMediaSrc(location.coverKey),
           heroMediaId: location.heroMediaId,
           details: {
             bestTimeToVisit: details.bestTimeToVisit ?? "",

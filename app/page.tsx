@@ -6,6 +6,7 @@
 
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { resolveMediaSrc } from "@/lib/media/resolve";
 
 export default async function Home() {
   const locations = await db.location.findMany({
@@ -38,7 +39,9 @@ export default async function Home() {
 
   const withFace = locations.map((l) => ({
     ...l,
-    face: (l.heroMediaId ? heroById.get(l.heroMediaId) : null) ?? l.coverThumbKey ?? null,
+    face: resolveMediaSrc(
+      (l.heroMediaId ? heroById.get(l.heroMediaId) : null) ?? l.coverThumbKey,
+    ),
   }));
 
   return (

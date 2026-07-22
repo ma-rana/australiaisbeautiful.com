@@ -11,11 +11,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
 import { getSessionUser } from "@/lib/auth";
+import { resolveMediaSrc } from "@/lib/media/resolve";
 import { MomentGrid, type ViewerMoment } from "./MomentGrid";
-
-function resolveMediaSrc(key: string): string {
-  return key; // dev: keys are already "/media/seed/..." public paths
-}
 
 // Decimal degrees → a specimen-label coordinate, e.g. "37.807°S 144.892°E".
 function formatCoords(lat: number, lng: number): string {
@@ -79,9 +76,9 @@ export default async function LocationPage({
       where: { id: location.heroMediaId, status: "APPROVED" },
       select: { mediaKey: true },
     });
-    heroSrc = hero?.mediaKey ?? null;
+    heroSrc = resolveMediaSrc(hero?.mediaKey);
   }
-  if (!heroSrc) heroSrc = location.coverKey ?? null;
+  if (!heroSrc) heroSrc = resolveMediaSrc(location.coverKey);
 
   const moments: ViewerMoment[] = location.moments
     .filter((m) => m.media.length > 0)
@@ -93,7 +90,7 @@ export default async function LocationPage({
       viewerReacted: myReactions.has(m.id),
       media: m.media.map((mm) => ({
         id: mm.id,
-        src: resolveMediaSrc(mm.mediaKey),
+        src: resolveMediaSrc(mm.mediaKey) ?? "",
       })),
     }));
 
