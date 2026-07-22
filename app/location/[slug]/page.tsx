@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
+import { getSessionUser } from "@/lib/auth";
 import { MomentGrid, type ViewerMoment } from "./MomentGrid";
 
 function resolveMediaSrc(key: string): string {
@@ -52,6 +53,24 @@ export default async function LocationPage({
 
   const details = LocationDetailsSchema.parse(location.details ?? {});
 
+  // Who's looking — so the viewer knows which moments this person has already
+  // reacted to. Signed-out visitors see counts but no "you reacted" state; the
+  // gentle wall appears only when they try to react.
+  const viewer = await getSessionUser();
+  const myReactions = viewer
+    ? new Set(
+        (
+          await db.reaction.findMany({
+            where: {
+              userId: viewer.id,
+              momentId: { in: location.moments.map((m) => m.id) },
+            },
+            select: { momentId: true },
+          })
+        ).map((r) => r.momentId),
+      )
+    : new Set<string>();
+
   // The place's face: a promoted COMMUNITY photo wins; the curator's provisional
   // cover holds the space until one exists.
   let heroSrc: string | null = null;
@@ -70,6 +89,8 @@ export default async function LocationPage({
       id: m.id,
       caption: m.caption,
       createdAt: m.createdAt.toISOString(),
+      reactionCount: m.reactionCount,
+      viewerReacted: myReactions.has(m.id),
       media: m.media.map((mm) => ({
         id: mm.id,
         src: resolveMediaSrc(mm.mediaKey),
@@ -161,7 +182,7 @@ export default async function LocationPage({
             Add your photos
           </Link>
         </div>
-        <MomentGrid moments={moments} />
+        <MomentGrid moments={moments} slug={slug} signedIn={!!viewer} />
       </section>
     </main>
   );

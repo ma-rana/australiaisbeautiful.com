@@ -7,18 +7,45 @@
 // is quiet and even; the boldness is spent on the reading experience, not chrome.
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { toggleReaction } from "./reaction-actions";
 
 export type ViewerMedia = { id: string; src: string };
 export type ViewerMoment = {
   id: string;
   caption: string | null;
   createdAt: string;
+  reactionCount: number;
+  viewerReacted: boolean;
   media: ViewerMedia[];
 };
 
-export function MomentGrid({ moments }: { moments: ViewerMoment[] }) {
+export function MomentGrid({
+  moments,
+  slug,
+  signedIn,
+}: {
+  moments: ViewerMoment[];
+  slug: string;
+  signedIn: boolean;
+}) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
+
+  // Local reaction state, keyed by moment id, so a tap settles instantly
+  // without a page refetch.
+  const [reactions, setReactions] = useState<
+    Record<string, { count: number; mine: boolean }>
+  >(() =>
+    Object.fromEntries(
+      moments.map((m) => [
+        m.id,
+        { count: m.reactionCount, mine: m.viewerReacted },
+      ]),
+    ),
+  );
+  const [wallFor, setWallFor] = useState<string | null>(null);
+  const [pendingReact, setPendingReact] = useState(false);
 
   const openMoment = (i: number) => {
     setOpenIndex(i);
@@ -33,6 +60,39 @@ export function MomentGrid({ moments }: { moments: ViewerMoment[] }) {
     setPhotoIndex((p) => Math.min(p + 1, current.media.length - 1));
   }, [current]);
   const prev = useCallback(() => setPhotoIndex((p) => Math.max(p - 1, 0)), []);
+
+  // Tap to acknowledge, tap again to undo. Optimistic so it feels instant; the
+  // server's settled count wins when it returns.
+  const onReact = async (momentId: string) => {
+    if (!signedIn) {
+      setWallFor(momentId); // the gentle wall — a prompt, not an error
+      return;
+    }
+    if (pendingReact) return;
+    setPendingReact(true);
+
+    const before = reactions[momentId] ?? { count: 0, mine: false };
+    setReactions((r) => ({
+      ...r,
+      [momentId]: {
+        count: before.mine ? before.count - 1 : before.count + 1,
+        mine: !before.mine,
+      },
+    }));
+
+    const res = await toggleReaction(momentId, slug);
+    if (res.ok) {
+      setReactions((r) => ({
+        ...r,
+        [momentId]: { count: res.count, mine: res.reacted },
+      }));
+    } else {
+      // Roll back on failure.
+      setReactions((r) => ({ ...r, [momentId]: before }));
+      if (res.error === "signin_required") setWallFor(momentId);
+    }
+    setPendingReact(false);
+  };
 
   useEffect(() => {
     if (current === null) return;
@@ -175,6 +235,47 @@ export function MomentGrid({ moments }: { moments: ViewerMoment[] }) {
                   year: "numeric",
                 })}
               </p>
+
+              {/* GOOD SPOT — quiet acknowledgement, not a like. One tap, tap
+                  again to undo. Deliberately place-directed, not person-directed:
+                  there are no profiles here, so the word points at the PLACE and
+                  the usefulness of the contribution, never at a contributor.
+                  The count never sorts anything (D21); it just says "this helped
+                  someone". */}
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={() => onReact(current.id)}
+                  disabled={pendingReact}
+                  aria-pressed={reactions[current.id]?.mine ?? false}
+                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition disabled:opacity-60 ${
+                    reactions[current.id]?.mine
+                      ? "border-[var(--eucalypt)] bg-[var(--eucalypt)] text-[var(--paper)]"
+                      : "border-[var(--border)] text-[var(--ink)] hover:border-[var(--eucalypt)]"
+                  }`}
+                >
+                  <span aria-hidden>
+                    {reactions[current.id]?.mine ? "★" : "☆"}
+                  </span>
+                  Good spot
+                  {(reactions[current.id]?.count ?? 0) > 0 && (
+                    <span className="tabular-nums opacity-80">
+                      {reactions[current.id].count}
+                    </span>
+                  )}
+                </button>
+
+                {wallFor === current.id && (
+                  <span className="text-sm text-[var(--muted)]">
+                    <Link
+                      href={`/signin?callbackUrl=/location/${slug}`}
+                      className="underline underline-offset-4"
+                    >
+                      Sign in
+                    </Link>{" "}
+                    to mark this a good spot.
+                  </span>
+                )}
+              </div>
 
               {/* Frame dots */}
               {current.media.length > 1 && (
