@@ -10,42 +10,45 @@
 // session on every request (requireModerator/requireAdmin in lib/auth.ts). The
 // subdomain just decides which routes render — it does not authenticate anyone.
 //
-// NEXT.JS 16: middleware conventions may differ from older versions. Verify
-// against node_modules/next/dist/docs/ before changing this file.
+// DEV vs PROD:
+//   - In production, admin is ONLY reachable via the admin subdomain, and /admin
+//     is hidden (404) on the public host. Strict.
+//   - In development, cross-subdomain cookies on *.localhost are unreliable, so
+//     we ALSO allow /admin/* directly on localhost (same host = same cookie =
+//     no cross-subdomain session problem). The subdomain rewrite still works too.
+//   This keeps local dev friction-free while production stays strict. When the
+//   dedicated admin auth flow is built later, this relaxation can be revisited.
 
 import { NextRequest, NextResponse } from "next/server";
 
 const ADMIN_HOST = "admin.australiaisbeautiful.com";
+const isDev = process.env.NODE_ENV !== "production";
 
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
   const url = req.nextUrl;
-
-  // Strip any port (e.g. localhost:3100) for a clean compare.
   const hostname = host.split(":")[0];
 
-  const isAdminHost =
-    hostname === ADMIN_HOST ||
-    // local dev convenience
-    hostname === "admin.localhost";
+  const isAdminHost = hostname === ADMIN_HOST || hostname === "admin.localhost";
 
   if (isAdminHost) {
-    // Avoid double-prefixing if the path already starts with /admin.
     if (!url.pathname.startsWith("/admin")) {
       url.pathname = `/admin${url.pathname}`;
     }
     return NextResponse.rewrite(url);
   }
 
-  // If someone hits /admin on the PUBLIC host, hide it entirely.
-  if (url.pathname.startsWith("/admin")) {
+  // /admin on the public host:
+  //   - dev  → allow it (so localhost:3000/admin/moments works without the
+  //            subdomain + its cookie headaches)
+  //   - prod → hide it (404). Admin is subdomain-only in production.
+  if (url.pathname.startsWith("/admin") && !isDev) {
     return new NextResponse("Not found", { status: 404 });
   }
 
   return NextResponse.next();
 }
 
-// Don't run middleware on static assets / Next internals.
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

@@ -11,20 +11,24 @@
 import { db } from "@/lib/db";
 import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { ReviewCard, type QueueMoment } from "./ReviewCard";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default async function ModerationQueue() {
-  // The real gate. If it throws, show a plain not-authorised state rather than
-  // a stack trace.
+  // The real gate. Unauthenticated → admin sign-in. Authenticated-but-not-staff
+  // → a plain not-authorised state (they have an account, just not the access).
   try {
     await requireModerator();
   } catch (e) {
-    if (e instanceof ForbiddenError || e instanceof UnauthorizedError) {
+    if (e instanceof UnauthorizedError) {
+      redirect("/admin/signin"); // not signed in → the STAFF door
+    }
+    if (e instanceof ForbiddenError) {
       return (
         <main className="mx-auto max-w-2xl px-6 py-20 text-center">
           <h1 className="text-2xl font-semibold">Not authorised</h1>
           <p className="mt-2 text-neutral-500">
-            You need moderator access to review the queue.
+            This account doesn&apos;t have moderator access.
           </p>
         </main>
       );
