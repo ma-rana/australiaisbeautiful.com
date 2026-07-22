@@ -22,6 +22,12 @@ export function SiteHeader({ email }: { email: string | null }) {
         </Link>
 
         <nav className="flex items-center gap-4 text-sm">
+          <Link
+            href="/request"
+            className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          >
+            Suggest a place
+          </Link>
           {email ? (
             <>
               <span className="hidden text-neutral-500 sm:inline">{email}</span>
