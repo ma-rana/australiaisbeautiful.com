@@ -12,11 +12,11 @@
 // editorial judgement about the map), distinct from the moment review list.
 
 import { db } from "@/lib/db";
-import { requireCurator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
+import { requireCurator, getSessionUser, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ClusterCard, type QueueCluster } from "./ClusterCard";
-import { AdminSignOut } from "../AdminSignOut";
+import { AdminNav, type AdminRole } from "../AdminNav";
 
 export default async function RequestQueue() {
   try {
@@ -35,6 +35,9 @@ export default async function RequestQueue() {
     }
     throw e;
   }
+
+  const viewer = await getSessionUser();
+  const role = (viewer?.role ?? "CURATOR") as AdminRole;
 
   const clusters = await db.locationRequestCluster.findMany({
     where: { status: "OPEN" },
@@ -71,21 +74,7 @@ export default async function RequestQueue() {
             the decision
           </p>
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <Link
-            href="/locations"
-            className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-          >
-            Places
-          </Link>
-          <Link
-            href="/moments"
-            className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-          >
-            Moments
-          </Link>
-          <AdminSignOut />
-        </div>
+        <AdminNav role={role} current="/requests" />
       </header>
 
       {queue.length === 0 ? (

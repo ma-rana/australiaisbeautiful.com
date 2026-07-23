@@ -654,6 +654,10 @@ enum ReportTarget {
   MOMENT
   CHAT_MESSAGE
   ACTIVITY
+  // Not a reportable target — present so ModerationAudit can record actions
+  // taken ON a user account (role grants, suspensions). The audit log and the
+  // report queue share this enum; a USER row will never appear in Report.
+  USER
 }
 
 enum ReportReason {

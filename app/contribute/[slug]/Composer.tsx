@@ -96,6 +96,12 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
           >
             Add more
           </button>
+          <button
+            onClick={() => router.push("/contributions")}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm dark:border-neutral-700"
+          >
+            Your contributions
+          </button>
         </div>
       </div>
     );

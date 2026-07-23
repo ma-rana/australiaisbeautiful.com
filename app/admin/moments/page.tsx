@@ -12,12 +12,11 @@
 // Gated by requireModerator(). Staff sign in on the admin host only.
 
 import { db } from "@/lib/db";
-import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
+import { requireModerator, getSessionUser, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { ReviewCard, type QueueMoment } from "./ReviewCard";
-import { AdminSignOut } from "../AdminSignOut";
+import { AdminNav, type AdminRole } from "../AdminNav";
 import { resolveMediaSrc } from "@/lib/media/resolve";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 
 export default async function ModerationQueue() {
   // The real gate. Unauthenticated → admin sign-in. Authenticated-but-not-staff
@@ -42,6 +41,9 @@ export default async function ModerationQueue() {
     }
     throw e;
   }
+
+  const viewer = await getSessionUser();
+  const role = (viewer?.role ?? "MODERATOR") as AdminRole;
 
   // Recently published moments — newest first, because the point is to catch
   // what just went live. Deliberately NO user include (content, not contributor).
@@ -79,15 +81,7 @@ export default async function ModerationQueue() {
             shouldn&apos;t be here
           </p>
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/locations" className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200">
-            Places
-          </Link>
-          <Link href="/requests" className="text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200">
-            Requests
-          </Link>
-          <AdminSignOut />
-        </div>
+        <AdminNav role={role} current="/moments" />
       </header>
 
       {queue.length === 0 ? (

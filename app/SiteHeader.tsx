@@ -30,6 +30,12 @@ export function SiteHeader({ email }: { email: string | null }) {
           </Link>
           {email ? (
             <>
+              <Link
+                href="/contributions"
+                className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+              >
+                Your contributions
+              </Link>
               <span className="hidden text-neutral-500 sm:inline">{email}</span>
               <button
                 onClick={() =>

@@ -42,10 +42,9 @@ export default function AdminSignInPage() {
         );
         return;
       }
-      // On the admin host the queue is simply /moments (middleware maps it to
-      // the app/admin/* files). No /admin prefix in the URL — the HOST is what
-      // makes this admin.
-      router.push("/moments");
+      // Land on the dashboard, which shows only what this role can act on.
+      // (On the admin host "/" maps to app/admin — the host is the boundary.)
+      router.push("/");
       router.refresh();
     });
   };

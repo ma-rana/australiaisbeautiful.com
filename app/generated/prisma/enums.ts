@@ -166,7 +166,8 @@ export const ReportTarget = {
   LOCATION: 'LOCATION',
   MOMENT: 'MOMENT',
   CHAT_MESSAGE: 'CHAT_MESSAGE',
-  ACTIVITY: 'ACTIVITY'
+  ACTIVITY: 'ACTIVITY',
+  USER: 'USER'
 } as const
 
 export type ReportTarget = (typeof ReportTarget)[keyof typeof ReportTarget]

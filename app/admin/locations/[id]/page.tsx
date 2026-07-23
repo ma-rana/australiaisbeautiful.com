@@ -4,12 +4,13 @@
 // image, and which contributed photo is the place's face.
 
 import { db } from "@/lib/db";
-import { requireCurator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
+import { requireCurator, getSessionUser, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
 import { resolveMediaSrc } from "@/lib/media/resolve";
 import { EditLocationForm } from "./EditLocationForm";
+import { TakedownPanel } from "./TakedownPanel";
 
 export default async function EditLocationPage({
   params,
@@ -32,6 +33,10 @@ export default async function EditLocationPage({
 
   const { id } = await params;
 
+  // Who's looking — curators request takedowns, admins act on them.
+  const viewer = await getSessionUser();
+  const isAdmin = viewer?.role === "ADMIN";
+
   const location = await db.location.findUnique({
     where: { id },
     include: {
@@ -51,6 +56,18 @@ export default async function EditLocationPage({
   if (!location) notFound();
 
   const details = LocationDetailsSchema.parse(location.details ?? {});
+
+  // Is a takedown already with an admin?
+  const openRequest = await db.escalation.findFirst({
+    where: {
+      targetType: "LOCATION",
+      targetId: location.id,
+      status: { in: ["OPEN", "ACKNOWLEDGED"] },
+    },
+    select: { id: true },
+  });
+
+  const momentCount = await db.moment.count({ where: { locationId: location.id } });
 
   // Every approved contributed photo — candidates for the hero.
   const candidates = location.moments.flatMap((m) =>
@@ -100,6 +117,17 @@ export default async function EditLocationPage({
         }}
         candidates={candidates}
       />
+
+      {/* Removing a place — curators request, admins decide. */}
+      <div className="mt-12">
+        <TakedownPanel
+          locationId={location.id}
+          isAdmin={isAdmin}
+          status={location.status}
+          momentCount={momentCount}
+          hasOpenRequest={!!openRequest}
+        />
+      </div>
     </main>
   );
 }
