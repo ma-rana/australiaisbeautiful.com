@@ -63,16 +63,70 @@ const AUSTRALIA_BOUNDS: [[number, number], [number, number]] = [
   [154, -9],
 ];
 
-// The camera clamp is deliberately LOOSER than the initial fit. Setting both to
-// the same rectangle makes fitBounds fight maxBounds: the fit needs padding
-// outside the rectangle to show all of it, the clamp refuses, and the camera
-// ends up shoved into a corner of the continent.
+// The camera clamp. Slightly looser than the fit so fitBounds has room to work
+// (setting both identical makes the fit fight the clamp and shoves the camera
+// into a corner), but tight enough that you can't pan far past the coast into
+// the area the tileset doesn't cover — which renders as empty background and
+// reads as a broken layout rather than as ocean.
 const AUSTRALIA_MAX_BOUNDS: [[number, number], [number, number]] = [
-  [104, -50],
-  [162, -4],
+  [109, -46],
+  [157, -7],
 ];
 
 const SRC = "places";
+
+// Render a photo into a circular sprite MapLibre can use as a layer icon.
+//
+// MapLibre's image registry takes raw RGBA pixels, so the crop, the ring and
+// the shadow are all drawn onto a canvas here rather than expressed in CSS.
+// Doing it once per place at load is cheap; the result is cached by the map.
+async function makeCircleIcon(
+  src: string,
+  size = 128,
+): Promise<ImageData | null> {
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    await img.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    const r = size / 2;
+    const ring = size * 0.07; // white border thickness
+
+    // White disc behind everything — becomes the ring once the photo is drawn
+    // inset within it.
+    ctx.beginPath();
+    ctx.arc(r, r, r - 1, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+
+    // Clip to a circle, then draw the photo cover-style inside it.
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(r, r, r - ring, 0, Math.PI * 2);
+    ctx.clip();
+
+    // "cover": scale so the shorter side fills, centre-crop the rest.
+    const inner = (r - ring) * 2;
+    const scale = Math.max(inner / img.width, inner / img.height);
+    const w = img.width * scale;
+    const h = img.height * scale;
+    ctx.drawImage(img, r - w / 2, r - h / 2, w, h);
+    ctx.restore();
+
+    return ctx.getImageData(0, 0, size, size);
+  } catch {
+    // A photo that won't load shouldn't take the marker with it — the caller
+    // falls back to a plain circle.
+    return null;
+  }
+}
 
 export function MapView({ places }: { places: MapPlace[] }) {
   const router = useRouter();
@@ -209,12 +263,48 @@ export function MapView({ places }: { places: MapPlace[] }) {
       console.error("[map]", msg, e);
     });
 
+    // Keep the canvas matched to its container.
+    //
+    // MapLibre measures once at construction. If the layout is still settling at
+    // that moment — fonts loading, flex children resolving — the canvas ends up
+    // smaller than its box and leaves a blank strip down one edge.
+    //
+    // The ResizeObserver handles later changes (window resize, rotation), but it
+    // can fire on the same frame as construction and then never again, so the
+    // initial mismatch persists. The explicit resizes below cover that: once on
+    // the next frame, and again on `load` when fonts and style are settled.
+    const resizeObserver = new ResizeObserver(() => {
+      map.resize();
+    });
+    resizeObserver.observe(containerRef.current);
+
+    requestAnimationFrame(() => map.resize());
+    map.once("load", () => map.resize());
+
     // --- Places as a clustered GeoJSON source -----------------------------
     //
     // Clustering is MapLibre's own: correct, fast, and it handles the zoom
     // transitions properly. Far better than grouping by hand.
-    const addPlacesLayer = () => {
+    const addPlacesLayer = async () => {
       if (map.getSource(SRC)) return;
+
+      // Load each place's photo into the map's image registry as a circular
+      // sprite. Done before the layer is added so icons are available on first
+      // paint rather than popping in. Places whose photo fails keep an `icon`
+      // of undefined and fall through to the plain-circle layer below.
+      const withIcons = new Set<string>();
+      await Promise.all(
+        places.map(async (p) => {
+          if (!p.face) return;
+          const data = await makeCircleIcon(p.face);
+          if (!data) return;
+          const iconId = `place-${p.id}`;
+          if (!map.hasImage(iconId)) {
+            map.addImage(iconId, data, { pixelRatio: 2 });
+          }
+          withIcons.add(p.id);
+        }),
+      );
 
       map.addSource(SRC, {
         type: "geojson",
@@ -223,37 +313,74 @@ export function MapView({ places }: { places: MapPlace[] }) {
           features: places.map((p) => ({
             type: "Feature",
             geometry: { type: "Point", coordinates: [p.longitude, p.latitude] },
-            properties: { id: p.id, slug: p.slug, name: p.name },
+            properties: {
+              id: p.id,
+              slug: p.slug,
+              name: p.name,
+              icon: withIcons.has(p.id) ? `place-${p.id}` : "",
+            },
           })),
         },
         cluster: true,
         clusterRadius: 55,
         clusterMaxZoom: 13,
+        // Carry ONE member's icon up to the cluster, so a group of places still
+        // shows a photograph rather than a blank circle with a number on it.
+        //
+        // Which member wins is arbitrary — the aggregation keeps whichever it
+        // reduces to last, not a "best" one. That's an acceptable trade: a
+        // photo of one of the places here is far more informative than no photo
+        // at all, and the count makes clear there are others.
+        clusterProperties: {
+          icon: [
+            ["case", ["!=", ["accumulated"], ""], ["accumulated"], ["get", "icon"]],
+            ["get", "icon"],
+          ],
+        },
       });
 
-      // Cluster circles. Size steps with count so a big group reads as bigger.
+      // Clusters WITHOUT a photo to show — a plain circle with the count.
       map.addLayer({
         id: "place-clusters",
         type: "circle",
         source: SRC,
-        filter: ["has", "point_count"],
+        filter: ["all", ["has", "point_count"], ["==", ["get", "icon"], ""]],
         paint: {
           "circle-color": "#4a5d43",
-          "circle-radius": [
-            "step",
-            ["get", "point_count"],
-            16,
-            5,
-            21,
-            15,
-            27,
-          ],
+          "circle-radius": ["step", ["get", "point_count"], 18, 5, 24, 15, 30],
           "circle-stroke-width": 3,
           "circle-stroke-color": "#ffffff",
-          "circle-opacity": 0.95,
         },
       });
 
+      // Clusters WITH a photo — one member's image, so a group still shows a
+      // place rather than an abstract count.
+      map.addLayer({
+        id: "place-cluster-photos",
+        type: "symbol",
+        source: SRC,
+        filter: ["all", ["has", "point_count"], ["!=", ["get", "icon"], ""]],
+        layout: {
+          "icon-image": ["get", "icon"],
+          "icon-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            0.34,
+            10,
+            0.58,
+            14,
+            0.9,
+          ],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+      });
+
+      // The count. Offset to the upper right so it sits ON the circle's edge
+      // rather than over the middle of the photo — the number qualifies the
+      // place ("and others nearby"), it isn't the content.
       map.addLayer({
         id: "place-cluster-count",
         type: "symbol",
@@ -262,17 +389,29 @@ export function MapView({ places }: { places: MapPlace[] }) {
         layout: {
           "text-field": ["get", "point_count_abbreviated"],
           "text-font": ["Noto Sans Medium"],
-          "text-size": 13,
+          "text-size": 12,
+          "text-offset": [
+            "case",
+            ["!=", ["get", "icon"], ""],
+            ["literal", [1.1, -1.1]],
+            ["literal", [0, 0]],
+          ],
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
         },
-        paint: { "text-color": "#ffffff" },
+        paint: {
+          "text-color": "#ffffff",
+          "text-halo-color": "#b06a3f",
+          "text-halo-width": 2.5,
+        },
       });
 
-      // Individual places.
+      // Individual places WITHOUT a usable photo — a plain circle.
       map.addLayer({
         id: "place-points",
         type: "circle",
         source: SRC,
-        filter: ["!", ["has", "point_count"]],
+        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "icon"], ""]],
         paint: {
           "circle-color": "#4a5d43",
           "circle-radius": [
@@ -291,6 +430,37 @@ export function MapView({ places }: { places: MapPlace[] }) {
         },
       });
 
+      // Individual places WITH a photo — the circular sprite.
+      //
+      // The place is the hero, so once you're close enough to tell places
+      // apart, the map should show what they look like rather than where a dot
+      // is. Icons scale with zoom: small enough not to crowd at city level,
+      // large enough to actually read up close.
+      map.addLayer({
+        id: "place-photos",
+        type: "symbol",
+        source: SRC,
+        filter: ["all", ["!", ["has", "point_count"]], ["!=", ["get", "icon"], ""]],
+        layout: {
+          "icon-image": ["get", "icon"],
+          "icon-size": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            0.3,
+            10,
+            0.52,
+            14,
+            0.85,
+            18,
+            1.1,
+          ],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+      });
+
       // Names, once you're close enough for them to be useful.
       map.addLayer({
         id: "place-labels",
@@ -302,7 +472,8 @@ export function MapView({ places }: { places: MapPlace[] }) {
           "text-field": ["get", "name"],
           "text-font": ["Noto Sans Medium"],
           "text-size": 12,
-          "text-offset": [0, 1.3],
+          // Sit below the icon, which is taller than the plain circle.
+          "text-offset": [0, 2.2],
           "text-anchor": "top",
           "text-max-width": 9,
         },
@@ -314,7 +485,9 @@ export function MapView({ places }: { places: MapPlace[] }) {
       });
 
       // Tapping a cluster zooms in until it splits.
-      map.on("click", "place-clusters", (e) => {
+      const expandCluster = (
+        e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] },
+      ) => {
         const feature = e.features?.[0];
         if (!feature) return;
         const clusterId = feature.properties?.cluster_id;
@@ -329,10 +502,14 @@ export function MapView({ places }: { places: MapPlace[] }) {
             duration: 600,
           });
         });
-      });
+      };
+      map.on("click", "place-clusters", expandCluster);
+      map.on("click", "place-cluster-photos", expandCluster);
 
-      // Tapping a place opens its preview.
-      map.on("click", "place-points", (e) => {
+      // Tapping a place opens its preview — both the photo and plain layers.
+      const openPlace = (
+        e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] },
+      ) => {
         const feature = e.features?.[0];
         if (!feature) return;
         const id = feature.properties?.id as string;
@@ -344,9 +521,16 @@ export function MapView({ places }: { places: MapPlace[] }) {
             duration: 500,
           });
         }
-      });
+      };
+      map.on("click", "place-points", openPlace);
+      map.on("click", "place-photos", openPlace);
 
-      for (const layer of ["place-clusters", "place-points"]) {
+      for (const layer of [
+        "place-clusters",
+        "place-cluster-photos",
+        "place-points",
+        "place-photos",
+      ]) {
         map.on("mouseenter", layer, () => {
           map.getCanvas().style.cursor = "pointer";
         });
@@ -356,10 +540,11 @@ export function MapView({ places }: { places: MapPlace[] }) {
       }
     };
 
-    if (map.isStyleLoaded()) addPlacesLayer();
-    else map.once("load", addPlacesLayer);
+    if (map.isStyleLoaded()) void addPlacesLayer();
+    else map.once("load", () => void addPlacesLayer());
 
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       // NOTE: the pmtiles protocol is deliberately NOT removed here. It's global

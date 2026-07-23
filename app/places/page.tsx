@@ -41,7 +41,7 @@ export default async function PlacesList() {
   }));
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16 sm:px-8">
+    <main className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto px-6 py-16 sm:px-8">
       <header className="flex items-baseline justify-between border-b border-[var(--border)] pb-6">
         <div>
           <p className="specimen-label">Every place</p>

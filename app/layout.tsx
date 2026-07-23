@@ -45,9 +45,14 @@ export default async function RootLayout({
       <body className="flex h-screen flex-col overflow-hidden">
         <Providers>
           {!isAdminHost && <SiteHeader email={user?.email ?? null} />}
-          {/* min-h-0 lets a flex child actually shrink — without it the map
-              (which wants 100% height) pushes the layout past the viewport. */}
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+          {/* min-h-0 lets a flex child actually shrink — without it a full-height
+              child (the map) pushes the layout past the viewport.
+
+              scrollbar-gutter isn't used and overflow is `auto` rather than
+              `scroll`, so no space is reserved when there's nothing to scroll.
+              Reserving it narrowed the map's container and left a white strip
+              down the right edge. */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
             {children}
           </div>
         </Providers>
