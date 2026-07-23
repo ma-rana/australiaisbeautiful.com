@@ -116,7 +116,16 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
         setAccuracy(accuracy);
 
-        map.easeTo({ center: [longitude, latitude], zoom: 17, duration: 900 });
+        // flyTo rather than easeTo: this can be a continental jump, and a flat
+        // pan across Australia is disorienting. The arc-out-and-back gives you a
+        // sense of where you've come from.
+        map.flyTo({
+          center: [longitude, latitude],
+          zoom: 15.5,
+          duration: 1800,
+          curve: 1.5,
+          essential: true,
+        });
 
         const res = await placesNear(latitude, longitude, 50);
         setLocating(false);
@@ -198,106 +207,163 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
   // Add markers once the map is ready, and whenever places change.
   //
-  // Markers change CHARACTER with zoom, deliberately:
-  //   far out  — small dots. Photo markers would overlap into mush at
-  //              continental zoom, and at that distance you're scanning for
-  //              clusters, not identifying individual places.
-  //   close in — the place's photo. Once places are distinguishable, showing
-  //              what they look like is far more inviting than a coloured dot,
-  //              and it's the thesis of the whole product: the place is the hero.
+  // Markers change CHARACTER with zoom:
+  //   far out  — small coloured dots. A photo would be unreadable at that size,
+  //              and a small dot marks a point more precisely than a large one.
+  //   close in — the place's photo in a ringed circle. The place is the hero;
+  //              let it show itself.
   //
-  // Size also scales continuously with zoom so markers feel anchored to the
-  // ground rather than floating above it at a fixed pixel size.
+  // CLUSTERING: markers that would overlap on screen merge into one, showing the
+  // topmost photo with a count badge. Without this, two places a few hundred
+  // metres apart collide into an unreadable mess — visible with just two places,
+  // and unusable with twenty. Clustering is done in SCREEN space (pixels between
+  // projected positions) rather than geographic distance, because overlap is a
+  // rendering problem: what matters is whether they collide at the current zoom.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
-    const markers: maplibregl.Marker[] = [];
-    const elements: HTMLElement[] = [];
+    let markers: maplibregl.Marker[] = [];
 
     // Below this, plain coloured dots. Above it, photo markers.
-    //
-    // Set at 11 (roughly "a city in view"): far enough out that photos would be
-    // too small to read anyway, so a crisp coloured dot marks position more
-    // precisely than a blurry thumbnail. Photos earn their place only once
-    // you're close enough for them to actually show you something.
     const PHOTO_ZOOM = 11;
+    // Screen distance under which two markers are considered colliding.
+    const CLUSTER_PX = 64;
 
-    const applyZoomStyling = () => {
+    type Cluster = { members: MapPlace[]; lat: number; lng: number };
+
+    const buildClusters = (): Cluster[] => {
       const z = map.getZoom();
-      const asPhoto = z >= PHOTO_ZOOM;
+      const clusters: Cluster[] = [];
 
-      for (const el of elements) {
-        if (asPhoto) {
-          // Square: 36px at the threshold, growing to 60px zoomed right in.
-          const size = Math.round(
-            36 + Math.min(Math.max(z - PHOTO_ZOOM, 0) / 7, 1) * 24,
-          );
-          el.dataset.mode = "photo";
-          el.style.width = `${size}px`;
-          el.style.height = `${size}px`;
-        } else {
-          // Small and precise: 9px right out, 16px approaching the threshold.
-          // A small dot marks a point more honestly than a big one.
-          const t = Math.min(Math.max((z - 3) / (PHOTO_ZOOM - 3), 0), 1);
-          const size = Math.round(9 + t * 7);
-          el.dataset.mode = "dot";
-          el.style.width = `${size}px`;
-          el.style.height = `${size}px`;
+      // Greedy grouping: walk the places, drop each into the first cluster whose
+      // centre is within CLUSTER_PX on screen, or start a new one. Good enough
+      // at this scale and stable enough not to flicker between frames.
+      for (const p of places) {
+        const pt = map.project([p.longitude, p.latitude]);
+        let placed = false;
+
+        for (const c of clusters) {
+          const cpt = map.project([c.lng, c.lat]);
+          const dx = pt.x - cpt.x;
+          const dy = pt.y - cpt.y;
+          if (Math.hypot(dx, dy) < CLUSTER_PX) {
+            c.members.push(p);
+            // Recentre on the members' mean so the cluster sits among them.
+            c.lat =
+              c.members.reduce((s, m) => s + m.latitude, 0) / c.members.length;
+            c.lng =
+              c.members.reduce((s, m) => s + m.longitude, 0) / c.members.length;
+            placed = true;
+            break;
+          }
+        }
+
+        if (!placed) {
+          clusters.push({ members: [p], lat: p.latitude, lng: p.longitude });
         }
       }
+
+      return clusters;
     };
 
-    const add = () => {
-      for (const p of places) {
+    const sizeFor = (z: number, isCluster: boolean) => {
+      if (z >= PHOTO_ZOOM) {
+        const base = Math.round(
+          36 + Math.min(Math.max(z - PHOTO_ZOOM, 0) / 7, 1) * 24,
+        );
+        return isCluster ? base + 6 : base;
+      }
+      const t = Math.min(Math.max((z - 3) / (PHOTO_ZOOM - 3), 0), 1);
+      const base = Math.round(9 + t * 7);
+      return isCluster ? base + 6 : base;
+    };
+
+    const render = () => {
+      markers.forEach((m) => m.remove());
+      markers = [];
+
+      const z = map.getZoom();
+      const asPhoto = z >= PHOTO_ZOOM;
+      const clusters = buildClusters();
+
+      for (const c of clusters) {
+        const isCluster = c.members.length > 1;
+        const lead = c.members[0];
+        const size = sizeFor(z, isCluster);
+
         const el = document.createElement("button");
         el.className = "aib-pin";
-        el.dataset.mode = "dot";
-        el.setAttribute("aria-label", p.name);
+        el.dataset.mode = asPhoto ? "photo" : "dot";
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.setAttribute(
+          "aria-label",
+          isCluster ? `${c.members.length} places here` : lead.name,
+        );
 
-        // A circular photo marker.
-        //
-        // Deliberately a circle, not a teardrop. A pin's point claims an exact
-        // address; these are parks, beaches and reserves — areas, not addresses.
-        // A circle is honest about that, and it can't drift out of alignment the
-        // way a composed pin shape does.
-        if (p.face) {
+        if (lead.face) {
           const img = document.createElement("img");
-          img.src = p.face;
+          img.src = lead.face;
           img.alt = "";
           img.className = "aib-pin-photo";
           el.appendChild(img);
         }
 
+        if (isCluster) {
+          const badge = document.createElement("span");
+          badge.className = "aib-pin-count";
+          badge.textContent = String(c.members.length);
+          // Font size is set here rather than in CSS: a percentage font-size
+          // resolves against the parent's FONT size, not its dimensions, so it
+          // can't scale with the marker from a stylesheet. Derived from the
+          // marker's actual pixel size so the badge stays proportional.
+          badge.style.fontSize = `${Math.max(9, Math.round(size * 0.26))}px`;
+          el.appendChild(badge);
+        }
+
         el.addEventListener("click", (ev) => {
           ev.stopPropagation();
-          setSelected(p);
-          map.easeTo({ center: [p.longitude, p.latitude], duration: 500 });
+          if (isCluster) {
+            // Zoom in to break the cluster apart rather than showing a list —
+            // the map already knows where they are, so let it show you.
+            map.easeTo({
+              center: [c.lng, c.lat],
+              zoom: Math.min(z + 2.5, 19),
+              duration: 600,
+            });
+          } else {
+            setSelected(lead);
+            map.easeTo({
+              center: [lead.longitude, lead.latitude],
+              duration: 500,
+            });
+          }
         });
 
-        const marker = new maplibregl.Marker({
-          element: el,
-          // A circle marks an area, so its centre is the point.
-          anchor: "center",
-          // Stay upright and flat-on regardless of map rotation or pitch.
-          rotationAlignment: "viewport",
-          pitchAlignment: "viewport",
-        })
-          .setLngLat([p.longitude, p.latitude])
-          .addTo(map);
-        markers.push(marker);
-        elements.push(el);
+        markers.push(
+          new maplibregl.Marker({
+            element: el,
+            anchor: "center",
+            rotationAlignment: "viewport",
+            pitchAlignment: "viewport",
+          })
+            .setLngLat([c.lng, c.lat])
+            .addTo(map),
+        );
       }
-      applyZoomStyling();
     };
 
-    if (map.loaded()) add();
-    else map.once("load", add);
+    if (map.loaded()) render();
+    else map.once("load", render);
 
-    map.on("zoom", applyZoomStyling);
+    // Re-cluster as the view changes — overlap depends on zoom and position.
+    map.on("moveend", render);
+    map.on("zoomend", render);
 
     return () => {
-      map.off("zoom", applyZoomStyling);
+      map.off("moveend", render);
+      map.off("zoomend", render);
       markers.forEach((m) => m.remove());
     };
   }, [places]);
@@ -340,7 +406,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
       {/* What the location turned up — or why it didn't. */}
       {(nearby?.length || locateError) && !selected && (
         <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
-          <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
+          <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
             <div className="flex items-baseline justify-between border-b border-[var(--border)] px-4 py-3">
               <p className="specimen-label">
                 {nearby?.length ? `${nearby.length} nearby` : "Near me"}
@@ -399,7 +465,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
       {/* Bottom sheet — tapping a pin previews the place without leaving the map. */}
       {selected && (
         <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
-          <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
+          <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
             {selected.face && (
               // eslint-disable-next-line @next/next/no-img-element
               <img

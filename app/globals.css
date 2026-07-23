@@ -87,18 +87,35 @@ body {
    Size is set inline by the zoom handler. Literal colours (not var()) because
    MapLibre appends markers into its own container, and a marker that silently
    renders transparent is worse than one slightly off-palette. */
+/* Markers appear with a small settle rather than popping in. Clusters are
+   rebuilt on every pan and zoom, so without this they flicker constantly — the
+   animation is what makes re-clustering read as movement rather than a glitch. */
+@keyframes aib-pin-in {
+  from {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .aib-pin {
   cursor: pointer;
   padding: 0;
   display: block;
+  position: relative;
   border-radius: 50%;
   overflow: hidden;
   background: #4a5d43;
+  animation: aib-pin-in 220ms cubic-bezier(0.34, 1.3, 0.64, 1) both;
   transition:
-    width 180ms ease,
-    height 180ms ease,
-    transform 140ms ease,
-    border-width 180ms ease;
+    width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    height 220ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 180ms cubic-bezier(0.34, 1.4, 0.64, 1),
+    box-shadow 200ms ease,
+    border-width 220ms ease;
 }
 
 .aib-pin[data-mode="dot"] {
@@ -125,6 +142,62 @@ body {
   transition: opacity 200ms ease;
 }
 
+/* Cluster count.
+
+   Positioned to overlap the marker's edge on the upper right, sitting ON the
+   circle rather than floating beside it. Offsets are fractions of the marker's
+   own size (set inline), so the badge stays proportional as markers scale with
+   zoom — a fixed-pixel badge overwhelms a small marker and gets lost on a large
+   one.
+
+   Ochre, matching the "needs attention" accent used elsewhere: it's a count,
+   not a place, so it shouldn't be eucalypt like the markers themselves. */
+/* The badge settles a beat after its marker, so a cluster reads as "a place —
+   and there are others" rather than both arriving at once. */
+@keyframes aib-count-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.aib-pin-count {
+  position: absolute;
+  top: -6%;
+  right: -6%;
+  min-width: 44%;
+  height: 44%;
+  padding: 0 0.28em;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: #b06a3f;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  font-size: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+  pointer-events: none;
+  animation: aib-count-in 240ms cubic-bezier(0.34, 1.5, 0.64, 1) 90ms both;
+}
+
+/* A cluster needs the badge to escape the circle, so it can't clip its overflow.
+   The photo gets its own rounding instead. */
+.aib-pin:has(.aib-pin-count) {
+  overflow: visible;
+}
+.aib-pin:has(.aib-pin-count) .aib-pin-photo {
+  border-radius: 50%;
+}
+
 .aib-pin:hover,
 .aib-pin:focus-visible {
   transform: scale(1.12);
@@ -138,14 +211,36 @@ body {
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.15) !important;
 }
 
-/* "You are here". Deliberately different from a place pin — ochre rather than
-   eucalypt, with a soft halo. It marks a moment, not a destination: it appears
-   when you ask where you are and is never stored (D8).
+/* "You are here". Deliberately different from a place marker — ochre rather
+   than eucalypt, with a soft halo. It marks a moment, not a destination: it
+   appears when you ask where you are and is never stored (D8).
+
+   The pulse is the one piece of ambient motion on the map. It reads as "live",
+   which is true of a position and false of a place — which is exactly why place
+   markers don't pulse.
 
    Colours are literal rather than var()-based: MapLibre appends marker elements
    into its own container, and a marker that silently renders transparent
    because a variable didn't resolve is worse than one that doesn't match the
    palette perfectly. */
+@keyframes aib-me-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(176, 106, 63, 0.4),
+      0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+  70% {
+    box-shadow:
+      0 0 0 14px rgba(176, 106, 63, 0),
+      0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(176, 106, 63, 0),
+      0 1px 6px rgba(0, 0, 0, 0.4);
+  }
+}
+
 .aib-me {
   width: 18px;
   height: 18px;
@@ -156,6 +251,25 @@ body {
     0 0 0 7px rgba(176, 106, 63, 0.22),
     0 1px 6px rgba(0, 0, 0, 0.4);
   pointer-events: none;
+  animation: aib-me-pulse 2.4s ease-out infinite;
+}
+
+/* Panels that rise from the bottom of the map (the place preview, the nearby
+   list). They slide up rather than appearing, so the map reads as one surface
+   with something surfacing on it rather than a layer being switched on. */
+@keyframes aib-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.aib-sheet {
+  animation: aib-sheet-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
