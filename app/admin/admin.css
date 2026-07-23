@@ -1,0 +1,178 @@
+/* app/admin/admin.css — the staff portal's own visual system.
+ *
+ * DELIBERATELY NOT the public site's design. The public pages are warm and
+ * unhurried because someone is browsing places; this is a workbench someone
+ * uses to clear a queue. Different job, different design: crisp, dense,
+ * legible, quiet.
+ *
+ * Two accents only, each with one meaning:
+ *   --action     deep eucalypt — primary actions ("do the thing")
+ *   --attention  burnt ochre   — needs you / destructive confirmation
+ * No other colour appears anywhere. When everything is coloured, nothing is.
+ *
+ * Type: IBM Plex Sans for interface, IBM Plex Mono for anything SCANNED rather
+ * than read — counts, timestamps, coordinates, IDs. Monospace for data is
+ * honest in a tool: it aligns, and it signals "this is a value, not prose".
+ */
+
+.admin-root {
+  --ink: #12140f;
+  --surface: #ffffff;
+  --sunken: #f5f6f2;
+  --line: #e3e5dd;
+  --line-strong: #c9ccc0;
+  --muted: #6b6f63;
+  --action: #2d4739;
+  --action-hover: #3a5a49;
+  --attention: #a8642a;
+  --attention-soft: #fdf6ef;
+  --danger: #8f2d2d;
+
+  background: var(--sunken);
+  color: var(--ink);
+  font-family: var(--font-plex-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-root {
+    --ink: #e6e8e0;
+    --surface: #17190f;
+    --sunken: #101208;
+    --line: #262a1d;
+    --line-strong: #3a3f2d;
+    --muted: #8d9280;
+    --action: #7fa07f;
+    --action-hover: #93b393;
+    --attention: #d08b4f;
+    --attention-soft: #221a10;
+    --danger: #c76b6b;
+  }
+}
+
+/* Data — anything you scan rather than read. */
+.admin-data {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A section eyebrow. Small, spaced, quiet — it labels, nothing more. */
+.admin-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Cards and panels sit on the surface, above the sunken background. */
+.admin-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+/* Buttons ---------------------------------------------------------------- */
+
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 5px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.admin-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.admin-btn:focus-visible {
+  outline: 2px solid var(--action);
+  outline-offset: 2px;
+}
+
+.admin-btn-primary {
+  background: var(--action);
+  color: #fff;
+}
+.admin-btn-primary:hover:not(:disabled) {
+  background: var(--action-hover);
+}
+
+.admin-btn-quiet {
+  background: transparent;
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+.admin-btn-quiet:hover:not(:disabled) {
+  background: var(--sunken);
+}
+
+.admin-btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+/* Inputs ----------------------------------------------------------------- */
+
+.admin-input,
+.admin-textarea,
+.admin-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.875rem;
+  color: var(--ink);
+  font-family: inherit;
+}
+.admin-input:focus,
+.admin-textarea:focus,
+.admin-select:focus {
+  outline: 2px solid var(--action);
+  outline-offset: -1px;
+  border-color: var(--action);
+}
+.admin-textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+/* Chips — multi-select toggles (facilities, rejection kinds). */
+.admin-chip {
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  padding: 0.25rem 0.7rem;
+  font-size: 0.78rem;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.admin-chip:hover {
+  border-color: var(--muted);
+}
+.admin-chip[data-on="true"] {
+  background: var(--action);
+  border-color: var(--action);
+  color: #fff;
+}
+
+/* Attention block — "this needs you". Ochre, used sparingly. */
+.admin-attention {
+  background: var(--attention-soft);
+  border: 1px solid var(--attention);
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-root * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

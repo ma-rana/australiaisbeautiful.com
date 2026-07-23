@@ -10,10 +10,27 @@
 //
 // Forcing dynamic rendering makes every request re-execute the page, which means
 // requireCurator/requireModerator/requireAdmin actually run every time.
-//
-// noStore() additionally opts out of the data cache for anything fetched here.
 
 import { unstable_noStore as noStore } from "next/cache";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import "./admin.css";
+
+// The portal's own faces — a utility sans for the interface, mono for anything
+// scanned rather than read. Deliberately not the public site's display serif:
+// this is a workbench, not a magazine.
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -25,5 +42,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   noStore();
-  return <>{children}</>;
+  return (
+    <div className={`${plexSans.variable} ${plexMono.variable}`}>{children}</div>
+  );
 }

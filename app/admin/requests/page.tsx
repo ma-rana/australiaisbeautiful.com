@@ -5,18 +5,16 @@
 // decision — a much-requested cafe still fails the rubric.
 //
 // Each cluster shows every request behind it: the names people used and, more
-// importantly, WHY they want it. Those notes are the real signal — "been twice,
-// the north track is the good one" is self-evidently someone who's been there.
+// importantly, WHY they want it. Those notes are the real signal.
 //
-// Gated by requireCurator() — approving locations is a curator's job (it's
-// editorial judgement about the map), distinct from the moment review list.
+// Gated by requireCurator() — approving locations is a curator's job.
 
 import { db } from "@/lib/db";
-import { requireCurator, getSessionUser, ForbiddenError, UnauthorizedError } from "@/lib/auth";
+import { requireCurator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { ClusterCard, type QueueCluster } from "./ClusterCard";
-import { AdminNav, type AdminRole } from "../AdminNav";
+import { AdminShell } from "../AdminShell";
+import { getAdminContext } from "../context";
 
 export default async function RequestQueue() {
   try {
@@ -25,19 +23,15 @@ export default async function RequestQueue() {
     if (e instanceof UnauthorizedError) redirect("/signin");
     if (e instanceof ForbiddenError) {
       return (
-        <main className="mx-auto max-w-2xl px-6 py-20 text-center">
-          <h1 className="text-2xl font-semibold">Not authorised</h1>
-          <p className="mt-2 text-neutral-500">
-            This account doesn&apos;t have curator access.
-          </p>
+        <main className="admin-root px-6 py-20 text-center">
+          <h1 className="text-xl font-semibold">Not authorised</h1>
         </main>
       );
     }
     throw e;
   }
 
-  const viewer = await getSessionUser();
-  const role = (viewer?.role ?? "CURATOR") as AdminRole;
+  const ctx = (await getAdminContext())!;
 
   const clusters = await db.locationRequestCluster.findMany({
     where: { status: "OPEN" },
@@ -65,27 +59,24 @@ export default async function RequestQueue() {
   }));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="flex items-baseline justify-between border-b border-neutral-200 pb-4 dark:border-neutral-800">
-        <div>
-          <h1 className="text-2xl font-semibold">Requested places</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            {queue.length} open · most-wanted first · demand sets priority, not
-            the decision
-          </p>
-        </div>
-        <AdminNav role={role} current="/requests" />
-      </header>
-
+    <AdminShell
+      role={ctx.role}
+      email={ctx.email}
+      current="/requests"
+      counts={ctx.counts}
+      twoFactorOn={ctx.twoFactorOn}
+      title="Requested places"
+      subtitle="Most-wanted first. Demand sets the order, not the decision."
+    >
       {queue.length === 0 ? (
-        <div className="py-20 text-center">
-          <p className="text-lg font-medium">No open requests</p>
-          <p className="mt-1 text-neutral-500">
+        <div className="admin-panel px-5 py-12 text-center">
+          <p className="text-sm font-medium">No open requests</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">
             Suggestions from explorers appear here, grouped by place.
           </p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-6">
+        <ul className="space-y-4">
           {queue.map((c) => (
             <li key={c.id}>
               <ClusterCard cluster={c} />
@@ -93,6 +84,6 @@ export default async function RequestQueue() {
           ))}
         </ul>
       )}
-    </main>
+    </AdminShell>
   );
 }

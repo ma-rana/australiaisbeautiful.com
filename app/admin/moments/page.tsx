@@ -1,40 +1,31 @@
-// app/admin/moments/page.tsx — the moment review list.
+// app/admin/moments/page.tsx — what's recently gone live.
 //
-// MODERATION MODEL: moments publish IMMEDIATELY on approved places. The
-// editorial gate is on WHICH PLACES EXIST (location requests are reviewed), not
-// on contributions to places that are already live. So this is NOT a gate-queue
-// — it's a POST-publication review list: what has recently gone live, newest
-// first, so a moderator can spot and remove anything that shouldn't be there.
+// Moments publish immediately (the editorial gate is on which places exist, not
+// on contributions to places that already do). So this isn't a gate-queue — it's
+// a post-publication review list: what's live, newest first, so a moderator can
+// spot and remove anything that shouldn't be there.
 //
-// Shows CONTENT, not the contributor (MODERATION.md §2) — no email, no "all
-// uploads by this user".
-//
-// Gated by requireModerator(). Staff sign in on the admin host only.
+// Shows CONTENT, not the contributor.
 
 import { db } from "@/lib/db";
-import { requireModerator, getSessionUser, ForbiddenError, UnauthorizedError } from "@/lib/auth";
-import { ReviewCard, type QueueMoment } from "./ReviewCard";
-import { AdminNav, type AdminRole } from "../AdminNav";
-import { resolveMediaSrc } from "@/lib/media/resolve";
+import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { resolveMediaSrc } from "@/lib/media/resolve";
+import { ReviewCard, type QueueMoment } from "./ReviewCard";
+import { AdminShell } from "../AdminShell";
+import { getAdminContext } from "../context";
 
 export default async function ModerationQueue() {
-  // The real gate. Unauthenticated → admin sign-in. Authenticated-but-not-staff
-  // → a plain not-authorised state (they have an account, just not the access).
   try {
     await requireModerator();
   } catch (e) {
-    if (e instanceof UnauthorizedError) {
-      // On the admin host, /signin IS the admin sign-in (middleware maps it to
-      // app/admin/signin). No /admin prefix in URLs — the host is the boundary.
-      redirect("/signin");
-    }
+    if (e instanceof UnauthorizedError) redirect("/signin");
     if (e instanceof ForbiddenError) {
       return (
-        <main className="mx-auto max-w-2xl px-6 py-20 text-center">
-          <h1 className="text-2xl font-semibold">Not authorised</h1>
-          <p className="mt-2 text-neutral-500">
-            This account doesn&apos;t have moderator access.
+        <main className="admin-root px-6 py-20 text-center">
+          <h1 className="text-xl font-semibold">Not authorised</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            Reviewing published photos is a moderator&apos;s job.
           </p>
         </main>
       );
@@ -42,11 +33,8 @@ export default async function ModerationQueue() {
     throw e;
   }
 
-  const viewer = await getSessionUser();
-  const role = (viewer?.role ?? "MODERATOR") as AdminRole;
+  const ctx = (await getAdminContext())!;
 
-  // Recently published moments — newest first, because the point is to catch
-  // what just went live. Deliberately NO user include (content, not contributor).
   const moments = await db.moment.findMany({
     where: { status: "APPROVED" },
     orderBy: { createdAt: "desc" },
@@ -72,27 +60,24 @@ export default async function ModerationQueue() {
   }));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="flex items-baseline justify-between border-b border-neutral-200 pb-4 dark:border-neutral-800">
-        <div>
-          <h1 className="text-2xl font-semibold">Recently published</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            {queue.length} live · newest first · remove anything that
-            shouldn&apos;t be here
-          </p>
-        </div>
-        <AdminNav role={role} current="/moments" />
-      </header>
-
+    <AdminShell
+      role={ctx.role}
+      email={ctx.email}
+      current="/moments"
+      counts={ctx.counts}
+      twoFactorOn={ctx.twoFactorOn}
+      title="Moments"
+      subtitle="Live now, newest first. Remove anything that shouldn't be here."
+    >
       {queue.length === 0 ? (
-        <div className="py-20 text-center">
-          <p className="text-lg font-medium">Nothing published yet</p>
-          <p className="mt-1 text-neutral-500">
+        <div className="admin-panel px-5 py-12 text-center">
+          <p className="text-sm font-medium">Nothing published yet</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">
             Contributions appear here as soon as they go live.
           </p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-6">
+        <ul className="space-y-4">
           {queue.map((m) => (
             <li key={m.id}>
               <ReviewCard moment={m} />
@@ -100,6 +85,6 @@ export default async function ModerationQueue() {
           ))}
         </ul>
       )}
-    </main>
+    </AdminShell>
   );
 }

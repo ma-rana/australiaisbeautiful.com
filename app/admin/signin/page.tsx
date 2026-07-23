@@ -84,63 +84,62 @@ export default function AdminSignInPage() {
     });
   };
 
-  const field =
-    "mt-1 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700";
+  const field = "admin-input mt-1";
 
   // --- Step 2: code screen ---
   if (step === "code") {
     return (
-      <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-16">
-        <div className="mb-2 text-xs uppercase tracking-widest text-neutral-500">
-          Step 2 of 2
-        </div>
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Enter your code
-        </h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Open your authenticator app and enter the current 6-digit code for{" "}
-          <span className="text-neutral-700 dark:text-neutral-300">{email}</span>.
-        </p>
-
-        <form onSubmit={submitCode} className="mt-8 space-y-4">
-          <input
-            type="text"
-            value={totp}
-            onChange={(e) => setTotp(e.target.value)}
-            placeholder="000000"
-            inputMode="text"
-            autoFocus
-            autoComplete="one-time-code"
-            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-4 text-center text-2xl tracking-[0.4em] dark:border-neutral-700"
-          />
-
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={isPending || totp.trim().length < 6}
-            className="w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
-          >
-            {isPending ? "Verifying…" : "Verify and sign in"}
-          </button>
-        </form>
-
-        <div className="mt-6 space-y-2 text-center text-sm">
-          <p className="text-neutral-500">
-            Lost your phone? Enter one of your recovery codes above instead.
+      <main className="admin-root flex min-h-screen flex-col justify-center px-6 py-16">
+        <div className="mx-auto w-full max-w-sm">
+          <p className="admin-eyebrow">Step 2 of 2</p>
+          <h1 className="mt-2 text-xl font-semibold">Enter your code</h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Open your authenticator app and enter the current 6-digit code for{" "}
+            <span className="text-[var(--ink)]">{email}</span>.
           </p>
-          <button
-            onClick={() => {
-              setStep("credentials");
-              setTotp("");
-              setError(null);
-            }}
-            className="text-neutral-500 underline underline-offset-4 hover:text-neutral-800 dark:hover:text-neutral-200"
-          >
-            Back
-          </button>
+
+          <form onSubmit={submitCode} className="mt-8 space-y-4">
+            <input
+              type="text"
+              value={totp}
+              onChange={(e) => setTotp(e.target.value)}
+              placeholder="000000"
+              inputMode="text"
+              autoFocus
+              autoComplete="one-time-code"
+              className="admin-input admin-data py-4 text-center text-2xl tracking-[0.4em]"
+            />
+
+            {error && (
+              <p className="text-sm" style={{ color: "var(--danger)" }}>
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={isPending || totp.trim().length < 6}
+              className="admin-btn admin-btn-primary w-full justify-center py-2.5"
+            >
+              {isPending ? "Verifying…" : "Verify and sign in"}
+            </button>
+          </form>
+
+          <div className="mt-6 space-y-2 text-center text-sm">
+            <p className="text-[var(--muted)]">
+              Lost your phone? Enter one of your recovery codes above instead.
+            </p>
+            <button
+              onClick={() => {
+                setStep("credentials");
+                setTotp("");
+                setError(null);
+              }}
+              className="text-[var(--muted)] underline underline-offset-4 hover:text-[var(--ink)]"
+            >
+              Back
+            </button>
+          </div>
         </div>
       </main>
     );
@@ -148,58 +147,54 @@ export default function AdminSignInPage() {
 
   // --- Step 1: credentials ---
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6 py-16">
-      <div className="mb-2 text-xs uppercase tracking-widest text-neutral-500">
-        Staff access
+    <main className="admin-root flex min-h-screen flex-col justify-center px-6 py-16">
+      <div className="mx-auto w-full max-w-sm">
+        <p className="admin-eyebrow">Staff access</p>
+        <h1 className="mt-2 text-xl font-semibold">Australia Is Beautiful</h1>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          Restricted to curators, moderators and administrators.
+        </p>
+
+        <form onSubmit={submitCredentials} className="mt-8 space-y-4">
+          <div>
+            <label className="text-sm font-medium">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+              autoComplete="username"
+              className={field}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              className={field}
+            />
+          </div>
+
+          {error && (
+            <p className="text-sm" style={{ color: "var(--danger)" }}>
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isPending}
+            className="admin-btn admin-btn-primary w-full justify-center py-2.5"
+          >
+            {isPending ? "Checking…" : "Continue"}
+          </button>
+        </form>
       </div>
-      <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-        Admin sign in
-      </h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        Restricted. Curators, moderators and administrators only.
-      </p>
-
-      <form onSubmit={submitCredentials} className="mt-8 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            Email
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoFocus
-            autoComplete="username"
-            className={field}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-            Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            className={field}
-          />
-        </div>
-
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
-
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
-        >
-          {isPending ? "Checking…" : "Continue"}
-        </button>
-      </form>
     </main>
   );
 }

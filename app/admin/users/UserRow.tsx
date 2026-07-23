@@ -18,6 +18,7 @@ export type ManagedUser = {
   role: string;
   status: string;
   createdAt: string;
+  twoFactorOn: boolean;
   isSelf: boolean;
 };
 
@@ -68,19 +69,29 @@ export function UserRow({ user }: { user: ManagedUser }) {
   const isStaff = role !== "EXPLORER";
 
   return (
-    <div className="rounded-lg border border-neutral-200 px-5 py-4 dark:border-neutral-800">
+    <div className="admin-panel px-4 py-3.5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <p className="font-medium">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">
             {user.email}
             {user.isSelf && (
-              <span className="ml-2 text-xs font-normal text-neutral-500">(you)</span>
+              <span className="ml-2 text-xs font-normal text-[var(--muted)]">
+                you
+              </span>
             )}
           </p>
-          <p className="mt-0.5 text-xs text-neutral-500">
+          <p className="admin-data mt-0.5 text-xs text-[var(--muted)]">
             {role.toLowerCase()}
-            {status !== "ACTIVE" && ` · ${status.toLowerCase()}`}
-            {" · joined "}
+            {status !== "ACTIVE" && (
+              <span style={{ color: "var(--attention)" }}>
+                {" · "}
+                {status.toLowerCase()}
+              </span>
+            )}
+            {isStaff && !user.twoFactorOn && (
+              <span style={{ color: "var(--attention)" }}> · no 2FA</span>
+            )}
+            {" · "}
             {new Date(user.createdAt).toLocaleDateString("en-AU", {
               day: "numeric",
               month: "short",
@@ -93,7 +104,7 @@ export function UserRow({ user }: { user: ManagedUser }) {
           <button
             onClick={toggleStatus}
             disabled={isPending}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-neutral-700"
+            className="admin-btn admin-btn-quiet"
           >
             {status === "ACTIVE" ? "Suspend" : "Reinstate"}
           </button>
@@ -101,21 +112,25 @@ export function UserRow({ user }: { user: ManagedUser }) {
       </div>
 
       {note && (
-        <p className="mt-2 text-sm text-green-700 dark:text-green-400">{note}</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--action)" }}>
+          {note}
+        </p>
       )}
       {error && (
-        <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="mt-2 text-sm" style={{ color: "var(--danger)" }}>
+          {error}
+        </p>
       )}
 
       {/* Role controls — hidden on your own row. */}
       {!user.isSelf && (
         <div className="mt-3">
           {pendingRole ? (
-            <div className="rounded-md bg-neutral-100 px-3 py-3 text-sm dark:bg-neutral-900">
+            <div className="rounded px-3 py-3 text-sm" style={{ background: "var(--sunken)" }}>
               <p className="font-medium">
                 Change {user.email} to {pendingRole.toLowerCase()}?
               </p>
-              <p className="mt-1 text-neutral-600 dark:text-neutral-400">
+              <p className="mt-1 text-[var(--muted)]">
                 {pendingRole === "EXPLORER"
                   ? "They lose staff access and will sign in on the public site again."
                   : role === "EXPLORER"
@@ -128,13 +143,13 @@ export function UserRow({ user }: { user: ManagedUser }) {
                 <button
                   onClick={() => applyRole(pendingRole)}
                   disabled={isPending}
-                  className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm text-white disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+                  className="admin-btn admin-btn-primary"
                 >
                   {isPending ? "…" : "Confirm"}
                 </button>
                 <button
                   onClick={() => setPendingRole(null)}
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm dark:border-neutral-700"
+                  className="admin-btn admin-btn-quiet"
                 >
                   Cancel
                 </button>
@@ -148,11 +163,8 @@ export function UserRow({ user }: { user: ManagedUser }) {
                   onClick={() => setPendingRole(r.value)}
                   disabled={isPending || r.value === role}
                   title={r.blurb}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${
-                    r.value === role
-                      ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
-                      : "border-neutral-300 hover:border-neutral-500 dark:border-neutral-700"
-                  }`}
+                  data-on={r.value === role}
+                  className="admin-chip"
                 >
                   {r.label}
                 </button>
@@ -160,12 +172,6 @@ export function UserRow({ user }: { user: ManagedUser }) {
             </div>
           )}
         </div>
-      )}
-
-      {isStaff && !user.isSelf && (
-        <p className="mt-2 text-xs text-neutral-400">
-          Signs in at the admin site only.
-        </p>
       )}
     </div>
   );
