@@ -367,43 +367,62 @@ export function MapView({ places }: { places: MapPlace[] }) {
             ["linear"],
             ["zoom"],
             4,
-            0.34,
+            0.26,
             10,
-            0.58,
+            0.42,
             14,
-            0.9,
+            0.6,
           ],
+          "icon-anchor": "center",
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
         },
+        paint: {
+          "icon-opacity": 1,
+        },
       });
 
-      // The count. Offset to the upper right so it sits ON the circle's edge
-      // rather than over the middle of the photo — the number qualifies the
-      // place ("and others nearby"), it isn't the content.
+      // The count, centred on the cluster.
+      //
+      // Centred rather than badged in a corner: with no offset there's nothing
+      // to drift as the icon scales with zoom, and a number in the middle reads
+      // immediately as "this many places" without competing for the corner.
       map.addLayer({
         id: "place-cluster-count",
         type: "symbol",
         source: SRC,
-        filter: ["has", "point_count"],
+        filter: ["all", ["has", "point_count"], ["!=", ["get", "icon"], ""]],
         layout: {
           "text-field": ["get", "point_count_abbreviated"],
           "text-font": ["Noto Sans Medium"],
-          "text-size": 12,
-          "text-offset": [
-            "case",
-            ["!=", ["get", "icon"], ""],
-            ["literal", [1.1, -1.1]],
-            ["literal", [0, 0]],
-          ],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 14, 15],
+          "text-anchor": "center",
           "text-allow-overlap": true,
           "text-ignore-placement": true,
         },
         paint: {
-          "text-color": "#ffffff",
-          "text-halo-color": "#b06a3f",
-          "text-halo-width": 2.5,
+          // Dark green with a white outline: legible over any photo without a
+          // filled badge competing with the image behind it.
+          "text-color": "#2d3a27",
+          "text-halo-color": "#ffffff",
+          "text-halo-width": 2,
         },
+      });
+
+      // Counts for photoless clusters sit in the middle of the plain circle.
+      map.addLayer({
+        id: "place-cluster-count-plain",
+        type: "symbol",
+        source: SRC,
+        filter: ["all", ["has", "point_count"], ["==", ["get", "icon"], ""]],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-font": ["Noto Sans Medium"],
+          "text-size": 12,
+          "text-allow-overlap": true,
+          "text-ignore-placement": true,
+        },
+        paint: { "text-color": "#ffffff" },
       });
 
       // Individual places WITHOUT a usable photo — a plain circle.
@@ -448,14 +467,18 @@ export function MapView({ places }: { places: MapPlace[] }) {
             ["linear"],
             ["zoom"],
             4,
-            0.3,
+            0.22,
             10,
-            0.52,
+            0.36,
             14,
-            0.85,
+            0.55,
             18,
-            1.1,
+            0.7,
           ],
+          // The circle's centre IS the coordinate — stated explicitly rather
+          // than relying on the default, so the marker can't drift off the
+          // place it represents.
+          "icon-anchor": "center",
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
         },
@@ -472,8 +495,17 @@ export function MapView({ places }: { places: MapPlace[] }) {
           "text-field": ["get", "name"],
           "text-font": ["Noto Sans Medium"],
           "text-size": 12,
-          // Sit below the icon, which is taller than the plain circle.
-          "text-offset": [0, 2.2],
+          // Sit below the icon. Scales with zoom in step with icon-size, since
+          // text-offset is in ems and a fixed value drifts as the icon grows.
+          "text-offset": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            12,
+            ["literal", [0, 1.6]],
+            18,
+            ["literal", [0, 2.6]],
+          ],
           "text-anchor": "top",
           "text-max-width": 9,
         },
