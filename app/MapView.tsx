@@ -12,14 +12,12 @@
 //
 // The map is the home surface: places as pins, tap one to open it.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-// MapLibre v5's ESM build has NO default export — everything is named. A
-// namespace import keeps the familiar `maplibregl.Map` style while matching
-// what the package actually ships.
 import * as maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { placesNear, type NearbyPlace } from "./nearby-actions";
 
 // Register the pmtiles:// protocol ONCE, at module scope.
 //
@@ -61,8 +59,87 @@ export function MapView({ places }: { places: MapPlace[] }) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const meMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [selected, setSelected] = useState<MapPlace | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
+
+  // "Near me" state. The position is held in memory for this interaction only —
+  // never sent anywhere but the one nearby query, never stored (D8).
+  const [locating, setLocating] = useState(false);
+  const [nearby, setNearby] = useState<NearbyPlace[] | null>(null);
+  const [locateError, setLocateError] = useState<string | null>(null);
+  const [accuracy, setAccuracy] = useState<number | null>(null);
+
+  const findNearMe = useCallback(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (!("geolocation" in navigator)) {
+      setLocateError("This browser can't share a location.");
+      return;
+    }
+
+    setLocating(true);
+    setLocateError(null);
+    setSelected(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+
+        // Outside Australia there's nothing to show — say so plainly rather
+        // than flying the camera to a clamped edge and looking broken.
+        const [[w, s], [e, n]] = AUSTRALIA_BOUNDS;
+        if (longitude < w || longitude > e || latitude < s || latitude > n) {
+          setLocating(false);
+          setLocateError(
+            "You're outside Australia — this map only covers Australian places.",
+          );
+          return;
+        }
+
+        // Drop a marker where you are, visually distinct from place pins.
+        //
+        // ACCURACY: browser geolocation without GPS (i.e. most desktops) works
+        // by WiFi lookup and is typically 20-50m out — a house or two. Rather
+        // than draw a confident dot and imply precision we don't have, the ring
+        // is sized to the reported accuracy. On a phone with GPS it tightens to
+        // a few metres on its own.
+        meMarkerRef.current?.remove();
+        const el = document.createElement("div");
+        el.className = "aib-me";
+        el.setAttribute("aria-label", "Your approximate position");
+        el.title = `Accurate to about ${Math.round(accuracy)}m`;
+        meMarkerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat([longitude, latitude])
+          .addTo(map);
+
+        setAccuracy(accuracy);
+
+        map.easeTo({ center: [longitude, latitude], zoom: 17, duration: 900 });
+
+        const res = await placesNear(latitude, longitude, 50);
+        setLocating(false);
+        if (res.ok) {
+          setNearby(res.places);
+          if (res.places.length === 0) {
+            setLocateError("No places on the map within 50km of you yet.");
+          }
+        } else {
+          setLocateError(res.error);
+        }
+      },
+      (err) => {
+        setLocating(false);
+        setLocateError(
+          err.code === err.PERMISSION_DENIED
+            ? "Location access was declined. You can still explore the map."
+            : "Couldn't work out where you are.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -78,7 +155,12 @@ export function MapView({ places }: { places: MapPlace[] }) {
         fitBoundsOptions: { padding: 40 },
         maxBounds: AUSTRALIA_BOUNDS, // the clamp — you cannot leave Australia
         minZoom: 3,
-        maxZoom: 15,
+        // The tileset stops at z13, but MapLibre overzooms vector tiles cleanly —
+        // geometry scales without pixelating, so z19 still renders sharply from
+        // z13 data. No NEW detail appears past z13 (buildings aren't in the
+        // tiles), but the extra zoom matters for placing yourself precisely
+        // against the streets that are there.
+        maxZoom: 19,
         attributionControl: false,
       });
     } catch (e) {
@@ -115,34 +197,104 @@ export function MapView({ places }: { places: MapPlace[] }) {
   }, []);
 
   // Add markers once the map is ready, and whenever places change.
+  //
+  // Markers change CHARACTER with zoom, deliberately:
+  //   far out  — small dots. Photo markers would overlap into mush at
+  //              continental zoom, and at that distance you're scanning for
+  //              clusters, not identifying individual places.
+  //   close in — the place's photo. Once places are distinguishable, showing
+  //              what they look like is far more inviting than a coloured dot,
+  //              and it's the thesis of the whole product: the place is the hero.
+  //
+  // Size also scales continuously with zoom so markers feel anchored to the
+  // ground rather than floating above it at a fixed pixel size.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     const markers: maplibregl.Marker[] = [];
+    const elements: HTMLElement[] = [];
+
+    // Below this, dots. Above it, photo markers.
+    //
+    // Set low (8) deliberately: photos are the point of this map, and with a
+    // sparse set of places there's no crowding to avoid. The dot mode below it
+    // exists for continental zoom, where photo markers would tile over the
+    // whole country. If places ever get dense enough that photos overlap at z8,
+    // the answer is clustering rather than raising this back up.
+    const PHOTO_ZOOM = 8;
+
+    const applyZoomStyling = () => {
+      const z = map.getZoom();
+      const asPhoto = z >= PHOTO_ZOOM;
+
+      for (const el of elements) {
+        if (asPhoto) {
+          // 40px at the threshold, growing to 68px when fully zoomed in.
+          const size = Math.round(
+            40 + Math.min(Math.max(z - PHOTO_ZOOM, 0) / 7, 1) * 28,
+          );
+          el.dataset.mode = "photo";
+          el.style.width = `${size}px`;
+          el.style.height = `${size}px`;
+        } else {
+          // Still clearly visible right out — 14px to 22px, not a speck.
+          const t = Math.min(Math.max((z - 3) / (PHOTO_ZOOM - 3), 0), 1);
+          const size = Math.round(14 + t * 8);
+          el.dataset.mode = "dot";
+          el.style.width = `${size}px`;
+          el.style.height = `${size}px`;
+        }
+      }
+    };
 
     const add = () => {
       for (const p of places) {
         const el = document.createElement("button");
         el.className = "aib-pin";
+        el.dataset.mode = "dot";
         el.setAttribute("aria-label", p.name);
+
+        // The photo lives inside the marker from the start; CSS reveals it only
+        // in photo mode, so switching modes doesn't re-request the image.
+        if (p.face) {
+          const img = document.createElement("img");
+          img.src = p.face;
+          img.alt = "";
+          img.className = "aib-pin-photo";
+          el.appendChild(img);
+        }
+
         el.addEventListener("click", (ev) => {
           ev.stopPropagation();
           setSelected(p);
           map.easeTo({ center: [p.longitude, p.latitude], duration: 500 });
         });
 
-        const marker = new maplibregl.Marker({ element: el })
+        const marker = new maplibregl.Marker({
+          element: el,
+          // The teardrop's point marks the spot, so anchor at the bottom rather
+          // than the centre — otherwise the marker floats above its coordinate.
+          anchor: "bottom",
+          offset: [0, 6],
+        })
           .setLngLat([p.longitude, p.latitude])
           .addTo(map);
         markers.push(marker);
+        elements.push(el);
       }
+      applyZoomStyling();
     };
 
     if (map.loaded()) add();
     else map.once("load", add);
 
-    return () => markers.forEach((m) => m.remove());
+    map.on("zoom", applyZoomStyling);
+
+    return () => {
+      map.off("zoom", applyZoomStyling);
+      markers.forEach((m) => m.remove());
+    };
   }, [places]);
 
   return (
@@ -164,6 +316,77 @@ export function MapView({ places }: { places: MapPlace[] }) {
               Check that <code>/map/australia.pmtiles</code> and{" "}
               <code>/map/style.json</code> exist.
             </p>
+          </div>
+        </div>
+      )}
+
+      {/* Near me — a one-off position read, never stored. */}
+      <div className="absolute bottom-4 right-3 z-10 sm:bottom-6 sm:right-4">
+        <button
+          onClick={findNearMe}
+          disabled={locating}
+          className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--paper)]/95 px-4 py-2.5 text-sm shadow-md backdrop-blur transition-colors hover:border-[var(--eucalypt)] disabled:opacity-60"
+        >
+          <span aria-hidden>◉</span>
+          {locating ? "Finding you…" : "Near me"}
+        </button>
+      </div>
+
+      {/* What the location turned up — or why it didn't. */}
+      {(nearby?.length || locateError) && !selected && (
+        <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
+          <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
+            <div className="flex items-baseline justify-between border-b border-[var(--border)] px-4 py-3">
+              <p className="specimen-label">
+                {nearby?.length ? `${nearby.length} nearby` : "Near me"}
+                {accuracy !== null && (
+                  <span className="ml-2 normal-case tracking-normal opacity-70">
+                    ±{Math.round(accuracy)}m
+                  </span>
+                )}
+              </p>
+              <button
+                onClick={() => {
+                  setNearby(null);
+                  setLocateError(null);
+                  setAccuracy(null);
+                }}
+                className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
+              >
+                Close
+              </button>
+            </div>
+
+            {locateError && (
+              <p className="px-4 py-3 text-sm text-[var(--muted)]">
+                {locateError}
+              </p>
+            )}
+
+            {nearby && nearby.length > 0 && (
+              <ul className="max-h-64 divide-y divide-[var(--border)] overflow-y-auto">
+                {nearby.map((p) => (
+                  <li key={p.slug}>
+                    <button
+                      onClick={() => router.push(`/location/${p.slug}`)}
+                      className="flex w-full items-baseline justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--paper-2)]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-[var(--ink)]">
+                          {p.name}
+                        </span>
+                        <span className="specimen-label">{p.place}</span>
+                      </span>
+                      <span className="shrink-0 text-sm text-[var(--muted)]">
+                        {p.metres < 1000
+                          ? `${Math.round(p.metres)} m`
+                          : `${(p.metres / 1000).toFixed(1)} km`}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       )}
