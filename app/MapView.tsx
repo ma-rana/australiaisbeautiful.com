@@ -75,6 +75,47 @@ const AUSTRALIA_MAX_BOUNDS: [[number, number], [number, number]] = [
 
 const SRC = "places";
 
+// Where the camera was left last time.
+//
+// Refreshing back to the whole continent every time is a real annoyance: if you
+// were looking at Seddon, you want Seddon again, not Australia. Stored in
+// sessionStorage rather than localStorage so it lasts the browsing session but
+// doesn't persist indefinitely — coming back tomorrow should start fresh.
+//
+// This is a VIEW preference, not a location: it records where you were looking,
+// which is a different thing from where you were. Nothing derived from
+// geolocation is ever written here.
+const VIEW_KEY = "aib:map-view";
+
+type SavedView = { lng: number; lat: number; zoom: number };
+
+function loadView(): SavedView | null {
+  try {
+    const raw = sessionStorage.getItem(VIEW_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw) as SavedView;
+    if (
+      typeof v.lng !== "number" ||
+      typeof v.lat !== "number" ||
+      typeof v.zoom !== "number"
+    ) {
+      return null;
+    }
+    return v;
+  } catch {
+    return null;
+  }
+}
+
+function saveView(v: SavedView) {
+  try {
+    sessionStorage.setItem(VIEW_KEY, JSON.stringify(v));
+  } catch {
+    // Storage can be unavailable (private mode, quota). Losing the saved view
+    // is a minor inconvenience, not worth failing over.
+  }
+}
+
 // Render a photo into a circular sprite MapLibre can use as a layer icon.
 //
 // MapLibre's image registry takes raw RGBA pixels, so the crop, the ring and
@@ -188,11 +229,16 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
         // flyTo rather than easeTo: this can be a continental jump, and a flat
         // pan across Australia is disorienting.
+        //
+        // Deliberately unhurried. The flight is doing work — it shows you where
+        // you are RELATIVE to where you were looking, which a snap-cut destroys.
+        // `essential: true` keeps it playing under prefers-reduced-motion, where
+        // MapLibre would otherwise skip straight to the destination.
         map.flyTo({
           center: [longitude, latitude],
           zoom: 15,
-          duration: 1800,
-          curve: 1.5,
+          duration: 2800,
+          curve: 1.3,
           essential: true,
         });
 
@@ -225,12 +271,15 @@ export function MapView({ places }: { places: MapPlace[] }) {
     ensurePmtilesProtocol();
 
     let map: maplibregl.Map;
+    // Restore where you were looking, if this session has been here before.
+    const saved = loadView();
     try {
       map = new maplibregl.Map({
         container: containerRef.current,
         style: "/map/style.json",
-        bounds: AUSTRALIA_BOUNDS,
-        fitBoundsOptions: { padding: 24 },
+        ...(saved
+          ? { center: [saved.lng, saved.lat] as [number, number], zoom: saved.zoom }
+          : { bounds: AUSTRALIA_BOUNDS, fitBoundsOptions: { padding: 24 } }),
         maxBounds: AUSTRALIA_MAX_BOUNDS,
         minZoom: 3,
         // The tileset stops at z13, but MapLibre overzooms vector tiles cleanly.
@@ -256,6 +305,13 @@ export function MapView({ places }: { places: MapPlace[] }) {
       new maplibregl.NavigationControl({ showCompass: false }),
       "top-right",
     );
+
+    // Remember where you were looking, so a refresh doesn't throw you back to
+    // the whole continent. `moveend` covers pans, zooms and flights alike.
+    map.on("moveend", () => {
+      const c = map.getCenter();
+      saveView({ lng: c.lng, lat: c.lat, zoom: map.getZoom() });
+    });
 
     map.on("error", (e) => {
       const msg = e.error?.message ?? "Map resource failed to load";
