@@ -42,10 +42,14 @@ export default async function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex h-screen flex-col overflow-hidden">
         <Providers>
           {!isAdminHost && <SiteHeader email={user?.email ?? null} />}
-          {children}
+          {/* min-h-0 lets a flex child actually shrink — without it the map
+              (which wants 100% height) pushes the layout past the viewport. */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            {children}
+          </div>
         </Providers>
       </body>
     </html>

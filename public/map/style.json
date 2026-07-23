@@ -1,0 +1,164 @@
+{
+  "version": 8,
+  "name": "Australia Is Beautiful",
+  "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  "sources": {
+    "aib": {
+      "type": "vector",
+      "url": "pmtiles:///map/australia.pmtiles",
+      "attribution": "© OpenStreetMap contributors"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#faf9f6" }
+    },
+    {
+      "id": "landcover-green",
+      "type": "fill",
+      "source": "aib",
+      "source-layer": "landcover",
+      "filter": ["in", "class", "wood", "grass", "farmland"],
+      "paint": { "fill-color": "#e7ecdd", "fill-opacity": 0.8 }
+    },
+    {
+      "id": "park",
+      "type": "fill",
+      "source": "aib",
+      "source-layer": "park",
+      "paint": { "fill-color": "#e2ebd6", "fill-opacity": 0.7 }
+    },
+    {
+      "id": "landuse-residential",
+      "type": "fill",
+      "source": "aib",
+      "source-layer": "landuse",
+      "filter": ["in", "class", "residential", "suburb", "neighbourhood"],
+      "paint": { "fill-color": "#f3f1ea" }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "aib",
+      "source-layer": "water",
+      "paint": { "fill-color": "#c4d6d5" }
+    },
+    {
+      "id": "waterway",
+      "type": "line",
+      "source": "aib",
+      "source-layer": "waterway",
+      "minzoom": 8,
+      "paint": {
+        "line-color": "#c4d6d5",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 14, 2.5]
+      }
+    },
+    {
+      "id": "roads-minor",
+      "type": "line",
+      "source": "aib",
+      "source-layer": "transportation",
+      "filter": ["in", "class", "minor", "service", "track"],
+      "minzoom": 12,
+      "paint": {
+        "line-color": "#e8e5da",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 12, 0.5, 16, 4]
+      }
+    },
+    {
+      "id": "roads-secondary",
+      "type": "line",
+      "source": "aib",
+      "source-layer": "transportation",
+      "filter": ["in", "class", "secondary", "tertiary"],
+      "minzoom": 9,
+      "paint": {
+        "line-color": "#e0dccf",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 9, 0.6, 16, 6]
+      }
+    },
+    {
+      "id": "roads-primary",
+      "type": "line",
+      "source": "aib",
+      "source-layer": "transportation",
+      "filter": ["in", "class", "motorway", "trunk", "primary"],
+      "paint": {
+        "line-color": "#d6d0c0",
+        "line-width": ["interpolate", ["linear"], ["zoom"], 5, 0.5, 10, 1.8, 16, 8]
+      }
+    },
+    {
+      "id": "boundary-state",
+      "type": "line",
+      "source": "aib",
+      "source-layer": "boundary",
+      "filter": ["==", "admin_level", 4],
+      "paint": {
+        "line-color": "#cfd2c4",
+        "line-width": 1,
+        "line-dasharray": [3, 2]
+      }
+    },
+    {
+      "id": "place-suburb",
+      "type": "symbol",
+      "source": "aib",
+      "source-layer": "place",
+      "filter": ["in", "class", "suburb", "neighbourhood", "village", "hamlet"],
+      "minzoom": 11,
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 11,
+        "text-max-width": 8
+      },
+      "paint": {
+        "text-color": "#8a8578",
+        "text-halo-color": "#faf9f6",
+        "text-halo-width": 1.5
+      }
+    },
+    {
+      "id": "place-town",
+      "type": "symbol",
+      "source": "aib",
+      "source-layer": "place",
+      "filter": ["in", "class", "city", "town"],
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Medium"],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 10, 15],
+        "text-max-width": 8
+      },
+      "paint": {
+        "text-color": "#5c5f52",
+        "text-halo-color": "#faf9f6",
+        "text-halo-width": 1.8
+      }
+    },
+    {
+      "id": "place-state",
+      "type": "symbol",
+      "source": "aib",
+      "source-layer": "place",
+      "filter": ["==", "class", "state"],
+      "maxzoom": 7,
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Noto Sans Medium"],
+        "text-size": 12,
+        "text-letter-spacing": 0.18,
+        "text-transform": "uppercase"
+      },
+      "paint": {
+        "text-color": "#a09a8c",
+        "text-halo-color": "#faf9f6",
+        "text-halo-width": 1.5
+      }
+    }
+  ]
+}

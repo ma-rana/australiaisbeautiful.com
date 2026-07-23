@@ -72,6 +72,31 @@ body {
   color: var(--muted);
 }
 
+/* Map pins. Deliberately small and quiet — the map is a way to find places, not
+   a heat map. A pin marks a spot; it doesn't shout. */
+.aib-pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--eucalypt);
+  border: 2.5px solid var(--paper);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 140ms ease;
+}
+.aib-pin:hover,
+.aib-pin:focus-visible {
+  transform: scale(1.35);
+  outline: none;
+}
+
+/* MapLibre's own chrome, toned to the palette. */
+.maplibregl-ctrl-group {
+  border-radius: 6px !important;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.15) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;

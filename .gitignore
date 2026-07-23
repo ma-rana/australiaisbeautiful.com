@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Map tiles — large binary, downloaded not committed
+public/map/*.pmtiles
+
+# Map tiles - large binary, downloaded not committed
+public/map/*.pmtiles
+public/map/*.pmtiles
