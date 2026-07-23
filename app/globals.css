@@ -211,6 +211,22 @@ body {
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.15) !important;
 }
 
+/* Lift the zoom controls above the "Near me" button and the attribution, both
+   of which sit in the bottom-right corner. MapLibre only offers four fixed
+   corners, so the stacking is done here instead.
+
+   The margin lives on .maplibregl-ctrl (not .maplibregl-ctrl-group), which is
+   what MapLibre's own stylesheet targets. !important because that stylesheet is
+   imported from the component and so lands after this file. */
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl {
+  margin: 0 20px 45px 0 !important;
+}
+
+/* The attribution shares this corner and shouldn't be pushed up with them. */
+.maplibregl-ctrl-bottom-right .maplibregl-ctrl-attrib {
+  margin: 0 10px 10px 0 !important;
+}
+
 /* "You are here". Deliberately different from a place marker — ochre rather
    than eucalypt, with a soft halo. It marks a moment, not a destination: it
    appears when you ask where you are and is never stored (D8).

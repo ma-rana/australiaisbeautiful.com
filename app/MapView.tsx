@@ -301,9 +301,12 @@ export function MapView({ places }: { places: MapPlace[] }) {
       }),
       "bottom-right",
     );
+    // Zoom controls are positioned by CSS rather than a MapLibre corner, so they
+    // can sit directly above the "Near me" button. MapLibre only offers the four
+    // corners, and bottom-right would stack them with the attribution instead.
     map.addControl(
       new maplibregl.NavigationControl({ showCompass: false }),
-      "top-right",
+      "bottom-right",
     );
 
     // Remember where you were looking, so a refresh doesn't throw you back to
