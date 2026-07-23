@@ -4,13 +4,22 @@
 //
 // MapLibre + Protomaps (D17): one .pmtiles file served as a static asset, read
 // directly by the browser with range requests. No tile server, no per-load
-// billing, ever. "Australia only" is literal here — the camera is clamped to the
-// continent's bounds, not just visually cropped.
+// billing, ever. "Australia only" is literal — the camera is clamped to the
+// continent, not just visually cropped.
 //
-// Street mode only. No satellite (no free imagery at usable resolution, and it
-// reintroduces metering), no 3D, no terrain.
+// PLACES ARE A GEOJSON LAYER, not DOM markers.
 //
-// The map is the home surface: places as pins, tap one to open it.
+// DOM markers were tried first, for photo-in-a-circle pins. They repeatedly
+// failed to position — MapLibre never applied a transform, leaving every marker
+// stacked at the container's origin regardless of lifecycle guards. A GeoJSON
+// source sidesteps the entire problem: MapLibre positions features itself as
+// part of rendering, so there is no projection step to get wrong, and
+// clustering comes built in and correct rather than hand-rolled.
+//
+// The cost is that features are styled circles rather than photographs. Photos
+// still carry the product — they're on the bottom sheet when you tap a place,
+// on the location page, and throughout /places. The map's job is to show you
+// WHERE things are; the photo's job starts once you've picked one.
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -28,9 +37,8 @@ import { placesNear, type NearbyPlace } from "./nearby-actions";
 //
 // VERSION NOTE: pmtiles 4.x expects MapLibre v5's protocol API. MapLibre v6
 // changed it, and the failure is silent — registration succeeds, the archive
-// reads fine on its own, but MapLibre never requests a single tile and the style
-// never finishes loading. Keep maplibre-gl pinned to ^5 unless pmtiles has
-// confirmed v6 support.
+// reads fine on its own, but MapLibre never requests a tile and the style never
+// finishes loading. Keep maplibre-gl pinned to ^5 unless pmtiles confirms v6.
 let protocolRegistered = false;
 function ensurePmtilesProtocol() {
   if (protocolRegistered) return;
@@ -49,11 +57,22 @@ export type MapPlace = {
   face: string | null;
 };
 
-// Australia's bounds — the same values as MAP_MAX_BOUNDS in .env.
+// The initial view: the whole continent.
 const AUSTRALIA_BOUNDS: [[number, number], [number, number]] = [
   [112, -44],
   [154, -9],
 ];
+
+// The camera clamp is deliberately LOOSER than the initial fit. Setting both to
+// the same rectangle makes fitBounds fight maxBounds: the fit needs padding
+// outside the rectangle to show all of it, the clamp refuses, and the camera
+// ends up shoved into a corner of the continent.
+const AUSTRALIA_MAX_BOUNDS: [[number, number], [number, number]] = [
+  [104, -50],
+  [162, -4],
+];
+
+const SRC = "places";
 
 export function MapView({ places }: { places: MapPlace[] }) {
   const router = useRouter();
@@ -85,7 +104,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const { latitude, longitude, accuracy } = pos.coords;
+        const { latitude, longitude, accuracy: acc } = pos.coords;
 
         // Outside Australia there's nothing to show — say so plainly rather
         // than flying the camera to a clamped edge and looking broken.
@@ -98,30 +117,26 @@ export function MapView({ places }: { places: MapPlace[] }) {
           return;
         }
 
-        // Drop a marker where you are, visually distinct from place pins.
-        //
-        // ACCURACY: browser geolocation without GPS (i.e. most desktops) works
-        // by WiFi lookup and is typically 20-50m out — a house or two. Rather
-        // than draw a confident dot and imply precision we don't have, the ring
-        // is sized to the reported accuracy. On a phone with GPS it tightens to
-        // a few metres on its own.
+        // ACCURACY: browser geolocation without GPS (most desktops) works by
+        // WiFi lookup and is typically 20-50m out — a house or two. The reported
+        // figure is shown rather than hidden, so the dot doesn't imply a
+        // precision it doesn't have. On a phone with GPS it tightens by itself.
         meMarkerRef.current?.remove();
         const el = document.createElement("div");
         el.className = "aib-me";
         el.setAttribute("aria-label", "Your approximate position");
-        el.title = `Accurate to about ${Math.round(accuracy)}m`;
+        el.title = `Accurate to about ${Math.round(acc)}m`;
         meMarkerRef.current = new maplibregl.Marker({ element: el })
           .setLngLat([longitude, latitude])
           .addTo(map);
 
-        setAccuracy(accuracy);
+        setAccuracy(acc);
 
         // flyTo rather than easeTo: this can be a continental jump, and a flat
-        // pan across Australia is disorienting. The arc-out-and-back gives you a
-        // sense of where you've come from.
+        // pan across Australia is disorienting.
         map.flyTo({
           center: [longitude, latitude],
-          zoom: 15.5,
+          zoom: 15,
           duration: 1800,
           curve: 1.5,
           essential: true,
@@ -161,14 +176,10 @@ export function MapView({ places }: { places: MapPlace[] }) {
         container: containerRef.current,
         style: "/map/style.json",
         bounds: AUSTRALIA_BOUNDS,
-        fitBoundsOptions: { padding: 40 },
-        maxBounds: AUSTRALIA_BOUNDS, // the clamp — you cannot leave Australia
+        fitBoundsOptions: { padding: 24 },
+        maxBounds: AUSTRALIA_MAX_BOUNDS,
         minZoom: 3,
-        // The tileset stops at z13, but MapLibre overzooms vector tiles cleanly —
-        // geometry scales without pixelating, so z19 still renders sharply from
-        // z13 data. No NEW detail appears past z13 (buildings aren't in the
-        // tiles), but the extra zoom matters for placing yourself precisely
-        // against the streets that are there.
+        // The tileset stops at z13, but MapLibre overzooms vector tiles cleanly.
         maxZoom: 19,
         attributionControl: false,
       });
@@ -187,184 +198,172 @@ export function MapView({ places }: { places: MapPlace[] }) {
       }),
       "bottom-right",
     );
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: false }),
+      "top-right",
+    );
 
     map.on("error", (e) => {
-      // Surface style/tile failures rather than leaving a blank grey box.
       const msg = e.error?.message ?? "Map resource failed to load";
       setFailed(msg);
       console.error("[map]", msg, e);
     });
 
+    // --- Places as a clustered GeoJSON source -----------------------------
+    //
+    // Clustering is MapLibre's own: correct, fast, and it handles the zoom
+    // transitions properly. Far better than grouping by hand.
+    const addPlacesLayer = () => {
+      if (map.getSource(SRC)) return;
+
+      map.addSource(SRC, {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: places.map((p) => ({
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [p.longitude, p.latitude] },
+            properties: { id: p.id, slug: p.slug, name: p.name },
+          })),
+        },
+        cluster: true,
+        clusterRadius: 55,
+        clusterMaxZoom: 13,
+      });
+
+      // Cluster circles. Size steps with count so a big group reads as bigger.
+      map.addLayer({
+        id: "place-clusters",
+        type: "circle",
+        source: SRC,
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": "#4a5d43",
+          "circle-radius": [
+            "step",
+            ["get", "point_count"],
+            16,
+            5,
+            21,
+            15,
+            27,
+          ],
+          "circle-stroke-width": 3,
+          "circle-stroke-color": "#ffffff",
+          "circle-opacity": 0.95,
+        },
+      });
+
+      map.addLayer({
+        id: "place-cluster-count",
+        type: "symbol",
+        source: SRC,
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-font": ["Noto Sans Medium"],
+          "text-size": 13,
+        },
+        paint: { "text-color": "#ffffff" },
+      });
+
+      // Individual places.
+      map.addLayer({
+        id: "place-points",
+        type: "circle",
+        source: SRC,
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": "#4a5d43",
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            5,
+            10,
+            8,
+            16,
+            12,
+          ],
+          "circle-stroke-width": 2.5,
+          "circle-stroke-color": "#ffffff",
+        },
+      });
+
+      // Names, once you're close enough for them to be useful.
+      map.addLayer({
+        id: "place-labels",
+        type: "symbol",
+        source: SRC,
+        filter: ["!", ["has", "point_count"]],
+        minzoom: 12,
+        layout: {
+          "text-field": ["get", "name"],
+          "text-font": ["Noto Sans Medium"],
+          "text-size": 12,
+          "text-offset": [0, 1.3],
+          "text-anchor": "top",
+          "text-max-width": 9,
+        },
+        paint: {
+          "text-color": "#2d3a27",
+          "text-halo-color": "#faf9f6",
+          "text-halo-width": 1.8,
+        },
+      });
+
+      // Tapping a cluster zooms in until it splits.
+      map.on("click", "place-clusters", (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const clusterId = feature.properties?.cluster_id;
+        const src = map.getSource(SRC) as maplibregl.GeoJSONSource;
+        src.getClusterExpansionZoom(clusterId).then((zoom) => {
+          map.easeTo({
+            center: (feature.geometry as GeoJSON.Point).coordinates as [
+              number,
+              number,
+            ],
+            zoom,
+            duration: 600,
+          });
+        });
+      });
+
+      // Tapping a place opens its preview.
+      map.on("click", "place-points", (e) => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        const id = feature.properties?.id as string;
+        const found = places.find((p) => p.id === id);
+        if (found) {
+          setSelected(found);
+          map.easeTo({
+            center: [found.longitude, found.latitude],
+            duration: 500,
+          });
+        }
+      });
+
+      for (const layer of ["place-clusters", "place-points"]) {
+        map.on("mouseenter", layer, () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+        map.on("mouseleave", layer, () => {
+          map.getCanvas().style.cursor = "";
+        });
+      }
+    };
+
+    if (map.isStyleLoaded()) addPlacesLayer();
+    else map.once("load", addPlacesLayer);
+
     return () => {
       map.remove();
       mapRef.current = null;
       // NOTE: the pmtiles protocol is deliberately NOT removed here. It's global
-      // and shared; removing it on unmount breaks any map that mounts after
-      // (and, in development, the one remounting right now).
-    };
-  }, []);
-
-  // Add markers once the map is ready, and whenever places change.
-  //
-  // Markers change CHARACTER with zoom:
-  //   far out  — small coloured dots. A photo would be unreadable at that size,
-  //              and a small dot marks a point more precisely than a large one.
-  //   close in — the place's photo in a ringed circle. The place is the hero;
-  //              let it show itself.
-  //
-  // CLUSTERING: markers that would overlap on screen merge into one, showing the
-  // topmost photo with a count badge. Without this, two places a few hundred
-  // metres apart collide into an unreadable mess — visible with just two places,
-  // and unusable with twenty. Clustering is done in SCREEN space (pixels between
-  // projected positions) rather than geographic distance, because overlap is a
-  // rendering problem: what matters is whether they collide at the current zoom.
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    let markers: maplibregl.Marker[] = [];
-
-    // Below this, plain coloured dots. Above it, photo markers.
-    const PHOTO_ZOOM = 11;
-    // Screen distance under which two markers are considered colliding.
-    const CLUSTER_PX = 64;
-
-    type Cluster = { members: MapPlace[]; lat: number; lng: number };
-
-    const buildClusters = (): Cluster[] => {
-      const z = map.getZoom();
-      const clusters: Cluster[] = [];
-
-      // Greedy grouping: walk the places, drop each into the first cluster whose
-      // centre is within CLUSTER_PX on screen, or start a new one. Good enough
-      // at this scale and stable enough not to flicker between frames.
-      for (const p of places) {
-        const pt = map.project([p.longitude, p.latitude]);
-        let placed = false;
-
-        for (const c of clusters) {
-          const cpt = map.project([c.lng, c.lat]);
-          const dx = pt.x - cpt.x;
-          const dy = pt.y - cpt.y;
-          if (Math.hypot(dx, dy) < CLUSTER_PX) {
-            c.members.push(p);
-            // Recentre on the members' mean so the cluster sits among them.
-            c.lat =
-              c.members.reduce((s, m) => s + m.latitude, 0) / c.members.length;
-            c.lng =
-              c.members.reduce((s, m) => s + m.longitude, 0) / c.members.length;
-            placed = true;
-            break;
-          }
-        }
-
-        if (!placed) {
-          clusters.push({ members: [p], lat: p.latitude, lng: p.longitude });
-        }
-      }
-
-      return clusters;
-    };
-
-    const sizeFor = (z: number, isCluster: boolean) => {
-      if (z >= PHOTO_ZOOM) {
-        const base = Math.round(
-          36 + Math.min(Math.max(z - PHOTO_ZOOM, 0) / 7, 1) * 24,
-        );
-        return isCluster ? base + 6 : base;
-      }
-      const t = Math.min(Math.max((z - 3) / (PHOTO_ZOOM - 3), 0), 1);
-      const base = Math.round(9 + t * 7);
-      return isCluster ? base + 6 : base;
-    };
-
-    const render = () => {
-      markers.forEach((m) => m.remove());
-      markers = [];
-
-      const z = map.getZoom();
-      const asPhoto = z >= PHOTO_ZOOM;
-      const clusters = buildClusters();
-
-      for (const c of clusters) {
-        const isCluster = c.members.length > 1;
-        const lead = c.members[0];
-        const size = sizeFor(z, isCluster);
-
-        const el = document.createElement("button");
-        el.className = "aib-pin";
-        el.dataset.mode = asPhoto ? "photo" : "dot";
-        el.style.width = `${size}px`;
-        el.style.height = `${size}px`;
-        el.setAttribute(
-          "aria-label",
-          isCluster ? `${c.members.length} places here` : lead.name,
-        );
-
-        if (lead.face) {
-          const img = document.createElement("img");
-          img.src = lead.face;
-          img.alt = "";
-          img.className = "aib-pin-photo";
-          el.appendChild(img);
-        }
-
-        if (isCluster) {
-          const badge = document.createElement("span");
-          badge.className = "aib-pin-count";
-          badge.textContent = String(c.members.length);
-          // Font size is set here rather than in CSS: a percentage font-size
-          // resolves against the parent's FONT size, not its dimensions, so it
-          // can't scale with the marker from a stylesheet. Derived from the
-          // marker's actual pixel size so the badge stays proportional.
-          badge.style.fontSize = `${Math.max(9, Math.round(size * 0.26))}px`;
-          el.appendChild(badge);
-        }
-
-        el.addEventListener("click", (ev) => {
-          ev.stopPropagation();
-          if (isCluster) {
-            // Zoom in to break the cluster apart rather than showing a list —
-            // the map already knows where they are, so let it show you.
-            map.easeTo({
-              center: [c.lng, c.lat],
-              zoom: Math.min(z + 2.5, 19),
-              duration: 600,
-            });
-          } else {
-            setSelected(lead);
-            map.easeTo({
-              center: [lead.longitude, lead.latitude],
-              duration: 500,
-            });
-          }
-        });
-
-        markers.push(
-          new maplibregl.Marker({
-            element: el,
-            anchor: "center",
-            rotationAlignment: "viewport",
-            pitchAlignment: "viewport",
-          })
-            .setLngLat([c.lng, c.lat])
-            .addTo(map),
-        );
-      }
-    };
-
-    if (map.loaded()) render();
-    else map.once("load", render);
-
-    // Re-cluster as the view changes — overlap depends on zoom and position.
-    map.on("moveend", render);
-    map.on("zoomend", render);
-
-    return () => {
-      map.off("moveend", render);
-      map.off("zoomend", render);
-      markers.forEach((m) => m.remove());
+      // and shared; removing it on unmount breaks any map mounting after.
     };
   }, [places]);
 
@@ -383,10 +382,6 @@ export function MapView({ places }: { places: MapPlace[] }) {
               The map didn&apos;t load
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">{failed}</p>
-            <p className="mt-3 text-xs text-[var(--muted)]">
-              Check that <code>/map/australia.pmtiles</code> and{" "}
-              <code>/map/style.json</code> exist.
-            </p>
           </div>
         </div>
       )}
@@ -462,7 +457,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         </div>
       )}
 
-      {/* Bottom sheet — tapping a pin previews the place without leaving the map. */}
+      {/* Place preview — the photo lives here, where there's room for it. */}
       {selected && (
         <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
           <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
