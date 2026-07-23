@@ -74,95 +74,62 @@ body {
 
 /* Map markers have two modes, switched by zoom (see MapView).
 
-   dot   — far out. A quiet circle; at continental zoom you're scanning for
-            where things are, not identifying them.
-   photo — close in. A proper map marker (teardrop with a point) carrying the
-            place's own image. The point matters: a place has exact coordinates,
-            so the marker should claim an exact spot. The photo matters because
-            the place is the hero — let it show itself rather than be a dot.
+   dot   — far out. A small coloured circle. At continental zoom a photo would
+            be too small to read, and a small dot marks a point more precisely
+            than a large one.
+   photo — close in. The place's image in a ringed circle, because the place is
+            the hero and should show itself.
 
-   Width/height are set inline by the zoom handler so size scales continuously.
-   Literal colours (not var()) because MapLibre appends markers into its own
-   container, and a marker that silently renders transparent is worse than one
-   slightly off-palette. */
+   A CIRCLE, not a teardrop pin. A pin's point claims an exact address; these
+   are parks, beaches and reserves — areas, not addresses. The circle is honest
+   about that, and unlike a composed pin shape it can't drift out of alignment.
+
+   Size is set inline by the zoom handler. Literal colours (not var()) because
+   MapLibre appends markers into its own container, and a marker that silently
+   renders transparent is worse than one slightly off-palette. */
 .aib-pin {
   cursor: pointer;
   padding: 0;
-  border: none;
-  background: none;
   display: block;
-  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #4a5d43;
   transition:
     width 180ms ease,
     height 180ms ease,
-    transform 140ms ease;
+    transform 140ms ease,
+    border-width 180ms ease;
 }
 
-/* --- dot mode: a simple circle --- */
 .aib-pin[data-mode="dot"] {
-  border-radius: 50%;
-  background: #4a5d43;
-  border: 2.5px solid #ffffff;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.3);
-  overflow: hidden;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
 }
 .aib-pin[data-mode="dot"] .aib-pin-photo {
   opacity: 0;
 }
 
-/* --- photo mode: a teardrop marker with a point ---
-
-   Built as a rotated square with three rounded corners, so the un-rounded
-   bottom-left corner becomes a downward point. The photo sits in an inner
-   element that is counter-rotated and slightly inset, which does two things:
-   it keeps the image upright, and it leaves a visible ring of marker around it
-   so the shape reads as a pin rather than a floating photo. */
 .aib-pin[data-mode="photo"] {
-  background: #ffffff;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  transform-origin: center;
-  border: none;
-  box-shadow: -2px 2px 9px rgb(0 0 0 / 0.32);
-  overflow: visible;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 9px rgb(0 0 0 / 0.32);
 }
-
-/* The image: inset from the marker edge to leave a white ring, counter-rotated
-   to sit upright, and centred within the rotated parent. */
 .aib-pin[data-mode="photo"] .aib-pin-photo {
   opacity: 1;
-  position: absolute;
-  inset: 18%;
-  width: 64%;
-  height: 64%;
-  border-radius: 50%;
-  transform: rotate(45deg);
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.08);
 }
 
 .aib-pin-photo {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
   transition: opacity 200ms ease;
-  background: #4a5d43;
 }
 
-/* Dot mode fills the whole circle; photo mode insets it (rule above). */
-.aib-pin[data-mode="dot"] .aib-pin-photo {
-  width: 100%;
-  height: 100%;
-}
-
-.aib-pin[data-mode="dot"]:hover,
-.aib-pin[data-mode="dot"]:focus-visible {
-  transform: scale(1.18);
+.aib-pin:hover,
+.aib-pin:focus-visible {
+  transform: scale(1.12);
   outline: none;
-}
-.aib-pin[data-mode="photo"]:hover,
-.aib-pin[data-mode="photo"]:focus-visible {
-  transform: rotate(-45deg) scale(1.1);
-  outline: none;
-  box-shadow: -3px 3px 13px rgb(0 0 0 / 0.42);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 0.42);
 }
 
 /* MapLibre's own chrome, toned to the palette. */

@@ -215,14 +215,13 @@ export function MapView({ places }: { places: MapPlace[] }) {
     const markers: maplibregl.Marker[] = [];
     const elements: HTMLElement[] = [];
 
-    // Below this, dots. Above it, photo markers.
+    // Below this, plain coloured dots. Above it, photo markers.
     //
-    // Set low (8) deliberately: photos are the point of this map, and with a
-    // sparse set of places there's no crowding to avoid. The dot mode below it
-    // exists for continental zoom, where photo markers would tile over the
-    // whole country. If places ever get dense enough that photos overlap at z8,
-    // the answer is clustering rather than raising this back up.
-    const PHOTO_ZOOM = 8;
+    // Set at 11 (roughly "a city in view"): far enough out that photos would be
+    // too small to read anyway, so a crisp coloured dot marks position more
+    // precisely than a blurry thumbnail. Photos earn their place only once
+    // you're close enough for them to actually show you something.
+    const PHOTO_ZOOM = 11;
 
     const applyZoomStyling = () => {
       const z = map.getZoom();
@@ -230,17 +229,18 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
       for (const el of elements) {
         if (asPhoto) {
-          // 40px at the threshold, growing to 68px when fully zoomed in.
+          // Square: 36px at the threshold, growing to 60px zoomed right in.
           const size = Math.round(
-            40 + Math.min(Math.max(z - PHOTO_ZOOM, 0) / 7, 1) * 28,
+            36 + Math.min(Math.max(z - PHOTO_ZOOM, 0) / 7, 1) * 24,
           );
           el.dataset.mode = "photo";
           el.style.width = `${size}px`;
           el.style.height = `${size}px`;
         } else {
-          // Still clearly visible right out — 14px to 22px, not a speck.
+          // Small and precise: 9px right out, 16px approaching the threshold.
+          // A small dot marks a point more honestly than a big one.
           const t = Math.min(Math.max((z - 3) / (PHOTO_ZOOM - 3), 0), 1);
-          const size = Math.round(14 + t * 8);
+          const size = Math.round(9 + t * 7);
           el.dataset.mode = "dot";
           el.style.width = `${size}px`;
           el.style.height = `${size}px`;
@@ -255,8 +255,12 @@ export function MapView({ places }: { places: MapPlace[] }) {
         el.dataset.mode = "dot";
         el.setAttribute("aria-label", p.name);
 
-        // The photo lives inside the marker from the start; CSS reveals it only
-        // in photo mode, so switching modes doesn't re-request the image.
+        // A circular photo marker.
+        //
+        // Deliberately a circle, not a teardrop. A pin's point claims an exact
+        // address; these are parks, beaches and reserves — areas, not addresses.
+        // A circle is honest about that, and it can't drift out of alignment the
+        // way a composed pin shape does.
         if (p.face) {
           const img = document.createElement("img");
           img.src = p.face;
@@ -273,10 +277,11 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
         const marker = new maplibregl.Marker({
           element: el,
-          // The teardrop's point marks the spot, so anchor at the bottom rather
-          // than the centre — otherwise the marker floats above its coordinate.
-          anchor: "bottom",
-          offset: [0, 6],
+          // A circle marks an area, so its centre is the point.
+          anchor: "center",
+          // Stay upright and flat-on regardless of map rotation or pitch.
+          rotationAlignment: "viewport",
+          pitchAlignment: "viewport",
         })
           .setLngLat([p.longitude, p.latitude])
           .addTo(map);
