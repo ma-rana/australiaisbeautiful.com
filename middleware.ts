@@ -43,7 +43,20 @@ export function middleware(req: NextRequest) {
     if (!url.pathname.startsWith("/admin")) {
       url.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`;
     }
-    return NextResponse.rewrite(url);
+    const res = NextResponse.rewrite(url);
+
+    // Never let an admin page sit in a cache. Without this the BROWSER can
+    // serve a previously-rendered admin screen from its back/forward cache
+    // after sign-out, without ever hitting the server or its auth gate.
+    res.headers.set(
+      "Cache-Control",
+      "no-store, no-cache, must-revalidate, max-age=0",
+    );
+    res.headers.set("Pragma", "no-cache");
+    // Keep admin pages out of search results and referrer leaks.
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+    res.headers.set("Referrer-Policy", "same-origin");
+    return res;
   }
 
   // Public host: /admin is not a thing. Never was. 404 — dev and prod alike.

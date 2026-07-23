@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  BackupCode: 'BackupCode',
   Location: 'Location',
   Moment: 'Moment',
   MomentMedia: 'MomentMedia',
@@ -94,12 +95,26 @@ export const UserScalarFieldEnum = {
   status: 'status',
   isVerified: 'isVerified',
   verifiedName: 'verifiedName',
+  totpSecret: 'totpSecret',
+  totpEnabled: 'totpEnabled',
+  totpEnrolledAt: 'totpEnrolledAt',
   partnerId: 'partnerId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const BackupCodeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  codeHash: 'codeHash',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type BackupCodeScalarFieldEnum = (typeof BackupCodeScalarFieldEnum)[keyof typeof BackupCodeScalarFieldEnum]
 
 
 export const LocationScalarFieldEnum = {

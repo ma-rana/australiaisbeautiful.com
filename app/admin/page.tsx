@@ -120,6 +120,13 @@ export default async function AdminHome() {
   const roleLabel =
     role === "ADMIN" ? "Administrator" : role === "MODERATOR" ? "Moderator" : "Curator";
 
+  // Has this staff member set up 2FA? Required for staff — surfaced here so it
+  // can't be quietly ignored.
+  const account = await db.user.findUnique({
+    where: { id: user!.id },
+    select: { totpEnabled: true },
+  });
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <header className="flex items-baseline justify-between border-b border-neutral-200 pb-4 dark:border-neutral-800">
@@ -131,6 +138,26 @@ export default async function AdminHome() {
         </div>
         <AdminSignOut />
       </header>
+
+      {/* 2FA is required for staff. Say so at the top of the portal, every
+          time, until it's done — not buried in a settings page nobody visits. */}
+      {!account?.totpEnabled && (
+        <div className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-5 py-4 dark:border-amber-800/60 dark:bg-amber-950/30">
+          <p className="font-medium text-amber-900 dark:text-amber-200">
+            Two-factor authentication is required for your account
+          </p>
+          <p className="mt-1 text-sm text-amber-800 dark:text-amber-300/90">
+            You can change what the public sees. A password alone isn&apos;t
+            enough protection for that.
+          </p>
+          <Link
+            href="/security"
+            className="mt-3 inline-block rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white"
+          >
+            Set it up now
+          </Link>
+        </div>
+      )}
 
       <ul className="mt-8 grid gap-4 sm:grid-cols-2">
         {cards.map((c) => (

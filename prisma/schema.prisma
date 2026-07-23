@@ -43,6 +43,29 @@ model User {
   verifiedName String?                         // e.g. "Parks Victoria". Shown
                                                // ONLY as "✓ Verified Contributor"
                                                // context on a contribution.
+
+  // --- Two-factor authentication (TOTP) ---
+  // Required for STAFF (SECURITY.md §13d): a staff account is the highest-value
+  // target on the platform, and a password alone is one phishing email away from
+  // handing over the map. Explorers may enable it; staff must.
+  //
+  // Rollout is deliberately staged: the field allows optional enrolment first so
+  // the flow can be proven without locking existing staff (including the only
+  // admin) out of their own portal. Enforcement flips on once staff have
+  // enrolled — see lib/twofactor.ts.
+  //
+  // totpSecret is the shared secret, stored so codes can be verified. It is NOT
+  // a password and cannot be hashed — verification needs the original value.
+  // Treat the column as a credential: never log it, never send it anywhere but
+  // the enrolment QR.
+  totpSecret   String?
+  totpEnabled  Boolean    @default(false)
+  totpEnrolledAt DateTime?
+
+  // Single-use recovery codes, stored HASHED (unlike the secret, these are
+  // password-like: we only ever need to check a presented value). Without these
+  // a lost phone means a locked-out admin and no way back except the database.
+  backupCodes  BackupCode[]
   partnerId    String?
   partner      Partner?   @relation(fields: [partnerId], references: [id], onDelete: SetNull)
 
@@ -88,6 +111,22 @@ enum UserStatus {
   ACTIVE
   SUSPENDED
   DELETED
+}
+
+// A single-use TOTP recovery code. Hashed, because we only ever need to CHECK a
+// presented value — same reasoning as a password.
+//
+// These exist so a lost phone isn't a locked-out admin. Generated at enrolment,
+// shown ONCE, and consumed on use (usedAt set, never reusable).
+model BackupCode {
+  id       String    @id @default(cuid())
+  userId   String
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash String
+  usedAt   DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, usedAt])
 }
 
 // Why something was rejected. This is NOT cosmetic — it drives the cooldown

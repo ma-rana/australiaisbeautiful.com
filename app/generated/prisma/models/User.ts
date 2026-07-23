@@ -32,6 +32,9 @@ export type UserMinAggregateOutputType = {
   status: $Enums.UserStatus | null
   isVerified: boolean | null
   verifiedName: string | null
+  totpSecret: string | null
+  totpEnabled: boolean | null
+  totpEnrolledAt: Date | null
   partnerId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -45,6 +48,9 @@ export type UserMaxAggregateOutputType = {
   status: $Enums.UserStatus | null
   isVerified: boolean | null
   verifiedName: string | null
+  totpSecret: string | null
+  totpEnabled: boolean | null
+  totpEnrolledAt: Date | null
   partnerId: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -58,6 +64,9 @@ export type UserCountAggregateOutputType = {
   status: number
   isVerified: number
   verifiedName: number
+  totpSecret: number
+  totpEnabled: number
+  totpEnrolledAt: number
   partnerId: number
   createdAt: number
   updatedAt: number
@@ -73,6 +82,9 @@ export type UserMinAggregateInputType = {
   status?: true
   isVerified?: true
   verifiedName?: true
+  totpSecret?: true
+  totpEnabled?: true
+  totpEnrolledAt?: true
   partnerId?: true
   createdAt?: true
   updatedAt?: true
@@ -86,6 +98,9 @@ export type UserMaxAggregateInputType = {
   status?: true
   isVerified?: true
   verifiedName?: true
+  totpSecret?: true
+  totpEnabled?: true
+  totpEnrolledAt?: true
   partnerId?: true
   createdAt?: true
   updatedAt?: true
@@ -99,6 +114,9 @@ export type UserCountAggregateInputType = {
   status?: true
   isVerified?: true
   verifiedName?: true
+  totpSecret?: true
+  totpEnabled?: true
+  totpEnrolledAt?: true
   partnerId?: true
   createdAt?: true
   updatedAt?: true
@@ -185,6 +203,9 @@ export type UserGroupByOutputType = {
   status: $Enums.UserStatus
   isVerified: boolean
   verifiedName: string | null
+  totpSecret: string | null
+  totpEnabled: boolean
+  totpEnrolledAt: Date | null
   partnerId: string | null
   createdAt: Date
   updatedAt: Date
@@ -219,9 +240,13 @@ export type UserWhereInput = {
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   isVerified?: Prisma.BoolFilter<"User"> | boolean
   verifiedName?: Prisma.StringNullableFilter<"User"> | string | null
+  totpSecret?: Prisma.StringNullableFilter<"User"> | string | null
+  totpEnabled?: Prisma.BoolFilter<"User"> | boolean
+  totpEnrolledAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   partnerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  backupCodes?: Prisma.BackupCodeListRelationFilter
   partner?: Prisma.XOR<Prisma.PartnerNullableScalarRelationFilter, Prisma.PartnerWhereInput> | null
   moments?: Prisma.MomentListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
@@ -252,9 +277,13 @@ export type UserOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   isVerified?: Prisma.SortOrder
   verifiedName?: Prisma.SortOrderInput | Prisma.SortOrder
+  totpSecret?: Prisma.SortOrderInput | Prisma.SortOrder
+  totpEnabled?: Prisma.SortOrder
+  totpEnrolledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   partnerId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  backupCodes?: Prisma.BackupCodeOrderByRelationAggregateInput
   partner?: Prisma.PartnerOrderByWithRelationInput
   moments?: Prisma.MomentOrderByRelationAggregateInput
   ratings?: Prisma.RatingOrderByRelationAggregateInput
@@ -288,9 +317,13 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   isVerified?: Prisma.BoolFilter<"User"> | boolean
   verifiedName?: Prisma.StringNullableFilter<"User"> | string | null
+  totpSecret?: Prisma.StringNullableFilter<"User"> | string | null
+  totpEnabled?: Prisma.BoolFilter<"User"> | boolean
+  totpEnrolledAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   partnerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
+  backupCodes?: Prisma.BackupCodeListRelationFilter
   partner?: Prisma.XOR<Prisma.PartnerNullableScalarRelationFilter, Prisma.PartnerWhereInput> | null
   moments?: Prisma.MomentListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
@@ -321,6 +354,9 @@ export type UserOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   isVerified?: Prisma.SortOrder
   verifiedName?: Prisma.SortOrderInput | Prisma.SortOrder
+  totpSecret?: Prisma.SortOrderInput | Prisma.SortOrder
+  totpEnabled?: Prisma.SortOrder
+  totpEnrolledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   partnerId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -340,6 +376,9 @@ export type UserScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumUserStatusWithAggregatesFilter<"User"> | $Enums.UserStatus
   isVerified?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   verifiedName?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  totpSecret?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  totpEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  totpEnrolledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   partnerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -353,8 +392,12 @@ export type UserCreateInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -385,9 +428,13 @@ export type UserUncheckedCreateInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -417,8 +464,12 @@ export type UserUpdateInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -449,9 +500,13 @@ export type UserUncheckedUpdateInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -481,6 +536,9 @@ export type UserCreateManyInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -494,6 +552,9 @@ export type UserUpdateManyMutationInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -506,6 +567,9 @@ export type UserUncheckedUpdateManyInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -519,6 +583,9 @@ export type UserCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   isVerified?: Prisma.SortOrder
   verifiedName?: Prisma.SortOrder
+  totpSecret?: Prisma.SortOrder
+  totpEnabled?: Prisma.SortOrder
+  totpEnrolledAt?: Prisma.SortOrder
   partnerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -532,6 +599,9 @@ export type UserMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   isVerified?: Prisma.SortOrder
   verifiedName?: Prisma.SortOrder
+  totpSecret?: Prisma.SortOrder
+  totpEnabled?: Prisma.SortOrder
+  totpEnrolledAt?: Prisma.SortOrder
   partnerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -545,19 +615,22 @@ export type UserMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   isVerified?: Prisma.SortOrder
   verifiedName?: Prisma.SortOrder
+  totpSecret?: Prisma.SortOrder
+  totpEnabled?: Prisma.SortOrder
+  totpEnrolledAt?: Prisma.SortOrder
   partnerId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
-export type UserNullableScalarRelationFilter = {
-  is?: Prisma.UserWhereInput | null
-  isNot?: Prisma.UserWhereInput | null
-}
-
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
 }
 
 export type UserListRelationFilter = {
@@ -590,8 +663,26 @@ export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserCreateNestedOneWithoutBackupCodesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutBackupCodesInput, Prisma.UserUncheckedCreateWithoutBackupCodesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutBackupCodesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutBackupCodesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutBackupCodesInput, Prisma.UserUncheckedCreateWithoutBackupCodesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutBackupCodesInput
+  upsert?: Prisma.UserUpsertWithoutBackupCodesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutBackupCodesInput, Prisma.UserUpdateWithoutBackupCodesInput>, Prisma.UserUncheckedUpdateWithoutBackupCodesInput>
 }
 
 export type UserCreateNestedOneWithoutSubmittedLocationsInput = {
@@ -926,6 +1017,162 @@ export type UserUpdateOneWithoutEscalationsClosedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutEscalationsClosedInput, Prisma.UserUpdateWithoutEscalationsClosedInput>, Prisma.UserUncheckedUpdateWithoutEscalationsClosedInput>
 }
 
+export type UserCreateWithoutBackupCodesInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
+  moments?: Prisma.MomentCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+}
+
+export type UserUncheckedCreateWithoutBackupCodesInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  partnerId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationUncheckedCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinUncheckedCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+}
+
+export type UserCreateOrConnectWithoutBackupCodesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutBackupCodesInput, Prisma.UserUncheckedCreateWithoutBackupCodesInput>
+}
+
+export type UserUpsertWithoutBackupCodesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutBackupCodesInput, Prisma.UserUncheckedUpdateWithoutBackupCodesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutBackupCodesInput, Prisma.UserUncheckedCreateWithoutBackupCodesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutBackupCodesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutBackupCodesInput, Prisma.UserUncheckedUpdateWithoutBackupCodesInput>
+}
+
+export type UserUpdateWithoutBackupCodesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
+  moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutBackupCodesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUncheckedUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUncheckedUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUncheckedUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUncheckedUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUncheckedUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUncheckedUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUncheckedUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+}
+
 export type UserCreateWithoutSubmittedLocationsInput = {
   id?: string
   email: string
@@ -934,8 +1181,12 @@ export type UserCreateWithoutSubmittedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -965,9 +1216,13 @@ export type UserUncheckedCreateWithoutSubmittedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -1001,8 +1256,12 @@ export type UserCreateWithoutClaimedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -1032,9 +1291,13 @@ export type UserUncheckedCreateWithoutClaimedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -1068,8 +1331,12 @@ export type UserCreateWithoutModeratedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -1099,9 +1366,13 @@ export type UserUncheckedCreateWithoutModeratedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -1146,8 +1417,12 @@ export type UserUpdateWithoutSubmittedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -1177,9 +1452,13 @@ export type UserUncheckedUpdateWithoutSubmittedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -1219,8 +1498,12 @@ export type UserUpdateWithoutClaimedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -1250,9 +1533,13 @@ export type UserUncheckedUpdateWithoutClaimedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -1292,8 +1579,12 @@ export type UserUpdateWithoutModeratedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -1323,9 +1614,13 @@ export type UserUncheckedUpdateWithoutModeratedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -1354,8 +1649,12 @@ export type UserCreateWithoutMomentsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
@@ -1385,9 +1684,13 @@ export type UserUncheckedCreateWithoutMomentsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -1421,8 +1724,12 @@ export type UserCreateWithoutClaimedMomentsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -1452,9 +1759,13 @@ export type UserUncheckedCreateWithoutClaimedMomentsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -1488,8 +1799,12 @@ export type UserCreateWithoutModeratedMomentsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -1519,9 +1834,13 @@ export type UserUncheckedCreateWithoutModeratedMomentsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -1566,8 +1885,12 @@ export type UserUpdateWithoutMomentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
@@ -1597,9 +1920,13 @@ export type UserUncheckedUpdateWithoutMomentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -1639,8 +1966,12 @@ export type UserUpdateWithoutClaimedMomentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -1670,9 +2001,13 @@ export type UserUncheckedUpdateWithoutClaimedMomentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -1712,8 +2047,12 @@ export type UserUpdateWithoutModeratedMomentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -1743,9 +2082,13 @@ export type UserUncheckedUpdateWithoutModeratedMomentsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -1774,8 +2117,12 @@ export type UserCreateWithoutReactionsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -1805,9 +2152,13 @@ export type UserUncheckedCreateWithoutReactionsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -1852,8 +2203,12 @@ export type UserUpdateWithoutReactionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -1883,9 +2238,13 @@ export type UserUncheckedUpdateWithoutReactionsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -1914,8 +2273,12 @@ export type UserCreateWithoutRatingsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
@@ -1945,9 +2308,13 @@ export type UserUncheckedCreateWithoutRatingsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
   chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
@@ -1992,8 +2359,12 @@ export type UserUpdateWithoutRatingsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
@@ -2023,9 +2394,13 @@ export type UserUncheckedUpdateWithoutRatingsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
   chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
@@ -2054,8 +2429,12 @@ export type UserCreateWithoutChatMessagesInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2085,9 +2464,13 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2132,8 +2515,12 @@ export type UserUpdateWithoutChatMessagesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -2163,9 +2550,13 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -2194,8 +2585,12 @@ export type UserCreateWithoutActivityJoinsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2225,9 +2620,13 @@ export type UserUncheckedCreateWithoutActivityJoinsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2272,8 +2671,12 @@ export type UserUpdateWithoutActivityJoinsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -2303,9 +2706,13 @@ export type UserUncheckedUpdateWithoutActivityJoinsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -2334,8 +2741,12 @@ export type UserCreateWithoutSavedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2365,9 +2776,13 @@ export type UserUncheckedCreateWithoutSavedLocationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2412,8 +2827,12 @@ export type UserUpdateWithoutSavedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -2443,9 +2862,13 @@ export type UserUncheckedUpdateWithoutSavedLocationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -2474,8 +2897,12 @@ export type UserCreateWithoutPartnerInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
@@ -2505,8 +2932,12 @@ export type UserUncheckedCreateWithoutPartnerInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2565,6 +2996,9 @@ export type UserScalarWhereInput = {
   status?: Prisma.EnumUserStatusFilter<"User"> | $Enums.UserStatus
   isVerified?: Prisma.BoolFilter<"User"> | boolean
   verifiedName?: Prisma.StringNullableFilter<"User"> | string | null
+  totpSecret?: Prisma.StringNullableFilter<"User"> | string | null
+  totpEnabled?: Prisma.BoolFilter<"User"> | boolean
+  totpEnrolledAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   partnerId?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -2578,8 +3012,12 @@ export type UserCreateWithoutVerificationRequestsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2609,9 +3047,13 @@ export type UserUncheckedCreateWithoutVerificationRequestsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2645,8 +3087,12 @@ export type UserCreateWithoutReviewedVerificationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2676,9 +3122,13 @@ export type UserUncheckedCreateWithoutReviewedVerificationsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2723,8 +3173,12 @@ export type UserUpdateWithoutVerificationRequestsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -2754,9 +3208,13 @@ export type UserUncheckedUpdateWithoutVerificationRequestsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -2796,8 +3254,12 @@ export type UserUpdateWithoutReviewedVerificationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -2827,9 +3289,13 @@ export type UserUncheckedUpdateWithoutReviewedVerificationsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -2858,8 +3324,12 @@ export type UserCreateWithoutClaimedReportsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2889,9 +3359,13 @@ export type UserUncheckedCreateWithoutClaimedReportsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -2925,8 +3399,12 @@ export type UserCreateWithoutResolvedReportsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -2956,9 +3434,13 @@ export type UserUncheckedCreateWithoutResolvedReportsInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -3003,8 +3485,12 @@ export type UserUpdateWithoutClaimedReportsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -3034,9 +3520,13 @@ export type UserUncheckedUpdateWithoutClaimedReportsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3076,8 +3566,12 @@ export type UserUpdateWithoutResolvedReportsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -3107,9 +3601,13 @@ export type UserUncheckedUpdateWithoutResolvedReportsInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3138,8 +3636,12 @@ export type UserCreateWithoutReviewedClustersInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -3169,9 +3671,13 @@ export type UserUncheckedCreateWithoutReviewedClustersInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -3216,8 +3722,12 @@ export type UserUpdateWithoutReviewedClustersInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -3247,9 +3757,13 @@ export type UserUncheckedUpdateWithoutReviewedClustersInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3278,8 +3792,12 @@ export type UserCreateWithoutAuditEntriesInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -3309,9 +3827,13 @@ export type UserUncheckedCreateWithoutAuditEntriesInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -3356,8 +3878,12 @@ export type UserUpdateWithoutAuditEntriesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -3387,9 +3913,13 @@ export type UserUncheckedUpdateWithoutAuditEntriesInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3418,8 +3948,12 @@ export type UserCreateWithoutEscalationsRaisedInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -3449,9 +3983,13 @@ export type UserUncheckedCreateWithoutEscalationsRaisedInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -3485,8 +4023,12 @@ export type UserCreateWithoutEscalationsClosedInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
   partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
   moments?: Prisma.MomentCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -3516,9 +4058,13 @@ export type UserUncheckedCreateWithoutEscalationsClosedInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   partnerId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
   moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
@@ -3563,8 +4109,12 @@ export type UserUpdateWithoutEscalationsRaisedInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -3594,9 +4144,13 @@ export type UserUncheckedUpdateWithoutEscalationsRaisedInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3636,8 +4190,12 @@ export type UserUpdateWithoutEscalationsClosedInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -3667,9 +4225,13 @@ export type UserUncheckedUpdateWithoutEscalationsClosedInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3698,6 +4260,9 @@ export type UserCreateManyPartnerInput = {
   status?: $Enums.UserStatus
   isVerified?: boolean
   verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -3710,8 +4275,12 @@ export type UserUpdateWithoutPartnerInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
@@ -3741,8 +4310,12 @@ export type UserUncheckedUpdateWithoutPartnerInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
   moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
@@ -3772,6 +4345,9 @@ export type UserUncheckedUpdateManyWithoutPartnerInput = {
   status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
   isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
   verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -3782,6 +4358,7 @@ export type UserUncheckedUpdateManyWithoutPartnerInput = {
  */
 
 export type UserCountOutputType = {
+  backupCodes: number
   moments: number
   ratings: number
   reactions: number
@@ -3804,6 +4381,7 @@ export type UserCountOutputType = {
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  backupCodes?: boolean | UserCountOutputTypeCountBackupCodesArgs
   moments?: boolean | UserCountOutputTypeCountMomentsArgs
   ratings?: boolean | UserCountOutputTypeCountRatingsArgs
   reactions?: boolean | UserCountOutputTypeCountReactionsArgs
@@ -3833,6 +4411,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the UserCountOutputType
    */
   select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountBackupCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BackupCodeWhereInput
 }
 
 /**
@@ -3977,9 +4562,13 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   status?: boolean
   isVerified?: boolean
   verifiedName?: boolean
+  totpSecret?: boolean
+  totpEnabled?: boolean
+  totpEnrolledAt?: boolean
   partnerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  backupCodes?: boolean | Prisma.User$backupCodesArgs<ExtArgs>
   partner?: boolean | Prisma.User$partnerArgs<ExtArgs>
   moments?: boolean | Prisma.User$momentsArgs<ExtArgs>
   ratings?: boolean | Prisma.User$ratingsArgs<ExtArgs>
@@ -4011,6 +4600,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   isVerified?: boolean
   verifiedName?: boolean
+  totpSecret?: boolean
+  totpEnabled?: boolean
+  totpEnrolledAt?: boolean
   partnerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -4025,6 +4617,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   status?: boolean
   isVerified?: boolean
   verifiedName?: boolean
+  totpSecret?: boolean
+  totpEnabled?: boolean
+  totpEnrolledAt?: boolean
   partnerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -4039,13 +4634,17 @@ export type UserSelectScalar = {
   status?: boolean
   isVerified?: boolean
   verifiedName?: boolean
+  totpSecret?: boolean
+  totpEnabled?: boolean
+  totpEnrolledAt?: boolean
   partnerId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "password" | "role" | "status" | "isVerified" | "verifiedName" | "partnerId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "password" | "role" | "status" | "isVerified" | "verifiedName" | "totpSecret" | "totpEnabled" | "totpEnrolledAt" | "partnerId" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  backupCodes?: boolean | Prisma.User$backupCodesArgs<ExtArgs>
   partner?: boolean | Prisma.User$partnerArgs<ExtArgs>
   moments?: boolean | Prisma.User$momentsArgs<ExtArgs>
   ratings?: boolean | Prisma.User$ratingsArgs<ExtArgs>
@@ -4078,6 +4677,7 @@ export type UserIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "User"
   objects: {
+    backupCodes: Prisma.$BackupCodePayload<ExtArgs>[]
     partner: Prisma.$PartnerPayload<ExtArgs> | null
     moments: Prisma.$MomentPayload<ExtArgs>[]
     ratings: Prisma.$RatingPayload<ExtArgs>[]
@@ -4107,6 +4707,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     status: $Enums.UserStatus
     isVerified: boolean
     verifiedName: string | null
+    totpSecret: string | null
+    totpEnabled: boolean
+    totpEnrolledAt: Date | null
     partnerId: string | null
     createdAt: Date
     updatedAt: Date
@@ -4504,6 +5107,7 @@ readonly fields: UserFieldRefs;
  */
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  backupCodes<T extends Prisma.User$backupCodesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$backupCodesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BackupCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   partner<T extends Prisma.User$partnerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$partnerArgs<ExtArgs>>): Prisma.Prisma__PartnerClient<runtime.Types.Result.GetResult<Prisma.$PartnerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   moments<T extends Prisma.User$momentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$momentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MomentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ratings<T extends Prisma.User$ratingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ratingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RatingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4560,6 +5164,9 @@ export interface UserFieldRefs {
   readonly status: Prisma.FieldRef<"User", 'UserStatus'>
   readonly isVerified: Prisma.FieldRef<"User", 'Boolean'>
   readonly verifiedName: Prisma.FieldRef<"User", 'String'>
+  readonly totpSecret: Prisma.FieldRef<"User", 'String'>
+  readonly totpEnabled: Prisma.FieldRef<"User", 'Boolean'>
+  readonly totpEnrolledAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly partnerId: Prisma.FieldRef<"User", 'String'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -4961,6 +5568,30 @@ export type UserDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Limit how many Users to delete.
    */
   limit?: number
+}
+
+/**
+ * User.backupCodes
+ */
+export type User$backupCodesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BackupCode
+   */
+  select?: Prisma.BackupCodeSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BackupCode
+   */
+  omit?: Prisma.BackupCodeOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BackupCodeInclude<ExtArgs> | null
+  where?: Prisma.BackupCodeWhereInput
+  orderBy?: Prisma.BackupCodeOrderByWithRelationInput | Prisma.BackupCodeOrderByWithRelationInput[]
+  cursor?: Prisma.BackupCodeWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BackupCodeScalarFieldEnum | Prisma.BackupCodeScalarFieldEnum[]
 }
 
 /**

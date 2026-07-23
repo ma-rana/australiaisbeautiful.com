@@ -33,6 +33,7 @@ const ITEMS: NavItem[] = [
   { href: "/moments", label: "Moments", minRole: "MODERATOR" },
   { href: "/takedowns", label: "Takedowns", minRole: "ADMIN" },
   { href: "/users", label: "Accounts", minRole: "ADMIN" },
+  { href: "/security", label: "Security", minRole: "CURATOR" },
 ];
 
 export function visibleNavFor(role: AdminRole): NavItem[] {
