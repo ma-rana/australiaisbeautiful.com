@@ -10,18 +10,49 @@
 // can type an email address.
 //
 // It deliberately does NOT establish a session. It's a question, not a login.
+//
+// RATE LIMITED per IP (SECURITY.md §11): this route runs bcrypt.compare on
+// attacker-supplied input, which makes it (a) a password-guessing oracle and
+// (b) a cheap way to burn our CPU. Failed attempts also count against the same
+// per-email budget the real login uses, so probing here spends the same
+// allowance as failing at the front door.
 
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
+import { check, consume, recordFailure, LIMITS } from "@/lib/rate-limit";
+
+function clientIp(req: NextRequest): string {
+  // Behind Nginx, the client is in x-forwarded-for; first hop is the real one.
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
 
 export async function POST(req: NextRequest) {
   try {
+    // Per-IP ceiling on probes. 429 with Retry-After, no information leaked.
+    const ip = clientIp(req);
+    const rl = consume(`needs-code:${ip}`, LIMITS.NEEDS_CODE_IP);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { needsCode: false },
+        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } },
+      );
+    }
+
     const { email, password } = (await req.json()) as {
       email?: string;
       password?: string;
     };
     if (!email || !password) {
+      return NextResponse.json({ needsCode: false });
+    }
+
+    // If this email is already locked out at the front door, don't run the
+    // compare at all — same generic answer, no oracle.
+    const emailKey = `login:${email.toLowerCase()}`;
+    if (!check(emailKey, LIMITS.LOGIN_EMAIL).ok) {
       return NextResponse.json({ needsCode: false });
     }
 
@@ -36,6 +67,8 @@ export async function POST(req: NextRequest) {
     }
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
+      // A wrong password here is the same event as a wrong password at login.
+      recordFailure(emailKey, LIMITS.LOGIN_EMAIL);
       return NextResponse.json({ needsCode: false });
     }
 

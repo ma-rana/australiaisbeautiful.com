@@ -6,13 +6,104 @@
 //
 // NEXT.JS 16: `params` is a Promise and must be awaited.
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { LocationDetailsSchema } from "@/lib/schemas/location";
 import { getSessionUser } from "@/lib/auth";
 import { resolveMediaSrc } from "@/lib/media/resolve";
+import { signMediaUrl } from "@/lib/media/sign";
+import {
+  publicLocationWhere,
+  publicMomentWhere,
+  publicMediaWhere,
+} from "@/lib/queries/visibility";
 import { MomentGrid, type ViewerMoment } from "./MomentGrid";
+import { RatingBlock } from "./RatingBlock";
+
+// ---------------------------------------------------------------------------
+// Share preview (PLAN.md Phase 2): OG tags are the product's actual growth
+// mechanism — a location link pasted into a group chat should unfurl into the
+// place's name, intro, and face. No share buttons anywhere; the URL is the
+// share, so the URL has to look good.
+// ---------------------------------------------------------------------------
+
+const SITE_URL = process.env.APP_URL ?? "http://localhost:3000";
+
+// OG image TTL: scrapers (iMessage, WhatsApp, Slack) cache the image URL and
+// may re-fetch days after the first share, so the default 1-hour media
+// signature would leave broken previews behind. Seven days is long enough for
+// a share's social life, short enough that a takedown still ages links out.
+const OG_IMAGE_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+function ogImageUrl(key: string | null | undefined): string | null {
+  if (!key) return null;
+  // Seed/placeholder assets under /public — stable public paths already.
+  if (key.startsWith("/")) return `${SITE_URL}${key}`;
+  return `${SITE_URL}${signMediaUrl(key, OG_IMAGE_TTL_SECONDS)}`;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const location = await db.location.findFirst({
+    where: { slug, ...publicLocationWhere },
+    select: {
+      name: true,
+      intro: true,
+      state: true,
+      suburb: true,
+      heroMediaId: true,
+      coverKey: true,
+    },
+  });
+  if (!location) return {}; // the page will 404; nothing to describe
+
+  // Same face the page shows: promoted community photo → curator cover.
+  let imageKey: string | null = location.coverKey;
+  if (location.heroMediaId) {
+    const hero = await db.momentMedia.findFirst({
+      where: { id: location.heroMediaId, ...publicMediaWhere },
+      select: { mediaKey: true },
+    });
+    if (hero) imageKey = hero.mediaKey;
+  }
+  const image = ogImageUrl(imageKey);
+
+  const title = `${location.name} — Australia Is Beautiful`;
+  const where = location.suburb
+    ? `${location.suburb}, ${location.state}`
+    : location.state;
+  const description =
+    location.intro.length > 200
+      ? `${location.intro.slice(0, 197)}…`
+      : location.intro || `Discover ${location.name} in ${where}.`;
+
+  return {
+    title,
+    description,
+    metadataBase: new URL(SITE_URL),
+    alternates: { canonical: `/location/${slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `/location/${slug}`,
+      siteName: "Australia Is Beautiful",
+      type: "article",
+      ...(image ? { images: [{ url: image, alt: location.name }] } : {}),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
+  };
+}
 
 // Decimal degrees → a specimen-label coordinate, e.g. "37.807°S 144.892°E".
 function formatCoords(lat: number, lng: number): string {
@@ -28,15 +119,15 @@ export default async function LocationPage({
 }) {
   const { slug } = await params;
 
-  const location = await db.location.findUnique({
-    where: { slug },
+  const location = await db.location.findFirst({
+    where: { slug, ...publicLocationWhere },
     include: {
       moments: {
-        where: { status: "APPROVED", isPublic: true },
+        where: publicMomentWhere,
         orderBy: { createdAt: "desc" },
         include: {
           media: {
-            where: { status: "APPROVED" },
+            where: publicMediaWhere,
             orderBy: { position: "asc" },
           },
         },
@@ -44,7 +135,7 @@ export default async function LocationPage({
     },
   });
 
-  if (!location || location.status !== "APPROVED") {
+  if (!location) {
     notFound();
   }
 
@@ -54,6 +145,14 @@ export default async function LocationPage({
   // reacted to. Signed-out visitors see counts but no "you reacted" state; the
   // gentle wall appears only when they try to react.
   const viewer = await getSessionUser();
+  const myRating = viewer
+    ? await db.rating.findUnique({
+        where: {
+          locationId_userId: { locationId: location.id, userId: viewer.id },
+        },
+        select: { score: true },
+      })
+    : null;
   const myReactions = viewer
     ? new Set(
         (
@@ -73,7 +172,7 @@ export default async function LocationPage({
   let heroSrc: string | null = null;
   if (location.heroMediaId) {
     const hero = await db.momentMedia.findFirst({
-      where: { id: location.heroMediaId, status: "APPROVED" },
+      where: { id: location.heroMediaId, ...publicMediaWhere },
       select: { mediaKey: true },
     });
     heroSrc = resolveMediaSrc(hero?.mediaKey);
@@ -145,6 +244,17 @@ export default async function LocationPage({
           {location.intro}
         </p>
       </header>
+
+      {/* Rating — the place's, never a person's. Hidden until the threshold. */}
+      <RatingBlock
+        locationId={location.id}
+        slug={slug}
+        signedIn={!!viewer}
+        initialAvg={location.ratingAvg}
+        initialCount={location.ratingCount}
+        threshold={location.ratingThreshold}
+        initialMyScore={myRating?.score ?? null}
+      />
 
       {/* Facts — a quiet two-column margin-notes block. */}
       {facts.length > 0 && (

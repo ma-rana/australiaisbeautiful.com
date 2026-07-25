@@ -25,6 +25,8 @@
 
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { consume, LIMITS } from "@/lib/rate-limit";
+import { publicLocationWhere } from "@/lib/queries/visibility";
 import { CreateMomentSchema, MAX_FILES_PER_MOMENT } from "@/lib/schemas/moment";
 import { processImage } from "@/lib/media/process";
 import { getStorage, mediaKey } from "@/lib/media/storage";
@@ -38,6 +40,17 @@ export type UploadResult =
 export async function createMoment(formData: FormData): Promise<UploadResult> {
   // 1. Authz — must be signed in to contribute.
   const user = await requireUser();
+
+  // 1b. Rate limit (SECURITY.md §11). Because moments publish IMMEDIATELY,
+  // this limiter is the only thing between a script and the public site —
+  // it is not optional hygiene. Per-user, since uploading requires a session.
+  const rl = consume(`upload:${user.id}`, LIMITS.UPLOAD);
+  if (!rl.ok) {
+    return {
+      ok: false,
+      error: `You're uploading quickly — try again in about ${Math.ceil(rl.retryAfterSec / 60)} minute(s).`,
+    };
+  }
 
   // 2. Pull + validate the non-file fields at the boundary.
   const locationId = String(formData.get("locationId") ?? "");
@@ -61,11 +74,11 @@ export async function createMoment(formData: FormData): Promise<UploadResult> {
   }
 
   // 3. The location must exist and be public (can't attach to a hidden place).
-  const location = await db.location.findUnique({
-    where: { id: locationId },
-    select: { id: true, status: true },
+  const location = await db.location.findFirst({
+    where: { id: locationId, ...publicLocationWhere },
+    select: { id: true },
   });
-  if (!location || location.status !== "APPROVED") {
+  if (!location) {
     return { ok: false, error: "That place isn't available." };
   }
 

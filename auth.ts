@@ -19,6 +19,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { verifyTotp, hashBackupCode } from "@/lib/twofactor";
+import { check, recordFailure, reset, LIMITS } from "@/lib/rate-limit";
 
 // COOKIE SCOPE: deliberately NOT shared across subdomains.
 //
@@ -87,12 +88,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const totp = (credentials?.totp as string | undefined) ?? "";
         if (!email || !password) return null;
 
+        // RATE LIMIT (SECURITY.md §11): only FAILURES count, per email — the
+        // thing being protected is the account, and an attacker rotates IPs
+        // anyway. While the key is over the limit, even a CORRECT password is
+        // refused: that's what makes it a lockout rather than a speed bump.
+        // Auth.js collapses this into its one generic error, which is fine —
+        // "didn't match" and "locked out" should look identical to a guesser.
+        const rlKey = `login:${email.toLowerCase()}`;
+        if (!check(rlKey, LIMITS.LOGIN_EMAIL).ok) return null;
+
         const user = await db.user.findUnique({ where: { email } });
-        if (!user) return null;
+        if (!user) {
+          // Unknown emails burn budget too — otherwise enumeration is free.
+          recordFailure(rlKey, LIMITS.LOGIN_EMAIL);
+          return null;
+        }
         if (user.status !== "ACTIVE") return null; // suspended/deleted can't log in
 
         const ok = await bcrypt.compare(password, user.password);
-        if (!ok) return null;
+        if (!ok) {
+          recordFailure(rlKey, LIMITS.LOGIN_EMAIL);
+          return null;
+        }
 
         // DOOR SEPARATION (hard): staff credentials work ONLY on the admin
         // subdomain; explorer credentials work ONLY on the public site.
@@ -131,13 +148,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               where: { userId: user.id, codeHash: hash, usedAt: null },
               select: { id: true },
             });
-            if (!backup) return null;
+            if (!backup) {
+              // A wrong second factor is a failed attempt like any other —
+              // otherwise a stolen password gets unlimited free code guesses.
+              recordFailure(rlKey, LIMITS.LOGIN_EMAIL);
+              return null;
+            }
             await db.backupCode.update({
               where: { id: backup.id },
               data: { usedAt: new Date() },
             });
           }
         }
+
+        // Success: clear the failure budget so a legitimate user's earlier
+        // typos don't linger against them.
+        reset(rlKey);
 
         // What we return becomes the basis of the JWT (see callbacks).
         return { id: user.id, email: user.email, role: user.role };

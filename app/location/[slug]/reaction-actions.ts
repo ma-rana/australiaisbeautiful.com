@@ -18,6 +18,7 @@
 
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { publicMomentWhere } from "@/lib/queries/visibility";
 import { revalidatePath } from "next/cache";
 
 export type ReactResult =
@@ -36,7 +37,7 @@ export async function toggleReaction(
 
   try {
     const moment = await db.moment.findFirst({
-      where: { id: momentId, status: "APPROVED", isPublic: true },
+      where: { id: momentId, ...publicMomentWhere },
       select: { id: true },
     });
     if (!moment) return { ok: false, error: "That moment isn't available." };

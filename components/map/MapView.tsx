@@ -81,28 +81,43 @@ const SRC = "places";
 //
 // Refreshing back to the whole continent every time is a real annoyance: if you
 // were looking at Seddon, you want Seddon again, not Australia. Stored in
-// sessionStorage rather than localStorage so it lasts the browsing session but
-// doesn't persist indefinitely — coming back tomorrow should start fresh.
+// localStorage so it survives the browser being closed and reopened — the
+// Google Maps behaviour: the map opens where you left it, today or next month.
+// (This originally used sessionStorage “so tomorrow starts fresh”, which in
+// practice just meant every first load reset to the continent — exactly the
+// annoyance this exists to remove.)
 //
 // This is a VIEW preference, not a location: it records where you were looking,
 // which is a different thing from where you were. Nothing derived from
-// geolocation is ever written here.
-const VIEW_KEY = "aib:map-view";
+// geolocation is ever written here — the “near me” flow deliberately does not
+// save, see the note on findNearMe (D8).
+//
+// Versioned key: if the shape ever changes, bump the suffix and old values are
+// simply ignored rather than half-parsed.
+const VIEW_KEY = "aib:map-view:v1";
 
 type SavedView = { lng: number; lat: number; zoom: number };
 
+// A saved view is only trusted if it still makes sense: finite numbers, inside
+// the camera clamp, inside the zoom range. Anything else (corrupt JSON, a
+// value written by an older build, someone editing devtools) falls back to the
+// continent — a wrong-but-valid view is worse than the default, because the
+// clamp would drag the camera to an edge and the map would look broken.
 function loadView(): SavedView | null {
   try {
-    const raw = sessionStorage.getItem(VIEW_KEY);
+    const raw = localStorage.getItem(VIEW_KEY);
     if (!raw) return null;
     const v = JSON.parse(raw) as SavedView;
     if (
-      typeof v.lng !== "number" ||
-      typeof v.lat !== "number" ||
-      typeof v.zoom !== "number"
+      !Number.isFinite(v.lng) ||
+      !Number.isFinite(v.lat) ||
+      !Number.isFinite(v.zoom)
     ) {
       return null;
     }
+    const [[w, s], [e, n]] = AUSTRALIA_MAX_BOUNDS;
+    if (v.lng < w || v.lng > e || v.lat < s || v.lat > n) return null;
+    if (v.zoom < 3 || v.zoom > 19) return null;
     return v;
   } catch {
     return null;
@@ -111,7 +126,7 @@ function loadView(): SavedView | null {
 
 function saveView(v: SavedView) {
   try {
-    sessionStorage.setItem(VIEW_KEY, JSON.stringify(v));
+    localStorage.setItem(VIEW_KEY, JSON.stringify(v));
   } catch {
     // Storage can be unavailable (private mode, quota). Losing the saved view
     // is a minor inconvenience, not worth failing over.
@@ -208,6 +223,12 @@ export function MapView({ places }: { places: MapPlace[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const meMarkerRef = useRef<maplibregl.Marker | null>(null);
+  // D8 guard: the next moveend after a "near me" flight must NOT be persisted —
+  // the flight lands the camera exactly on the user's position, and writing
+  // that to durable storage would store a value derived from geolocation.
+  // Single-shot: the flag clears on that moveend, so later manual pans (which
+  // are view choices, not positions) save normally.
+  const suppressSaveRef = useRef(false);
   const [selected, setSelected] = useState<MapPlace | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
 
@@ -275,6 +296,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         // you are RELATIVE to where you were looking, which a snap-cut destroys.
         // `essential: true` keeps it playing under prefers-reduced-motion, where
         // MapLibre would otherwise skip straight to the destination.
+        suppressSaveRef.current = true; // don't persist where this flight lands (D8)
         map.flyTo({
           center: [longitude, latitude],
           zoom: 15,
@@ -352,9 +374,14 @@ export function MapView({ places }: { places: MapPlace[] }) {
     // map.zoomOut() directly, so the stack is positioned by one system instead
     // of a MapLibre corner being dragged into place by CSS.
 
-    // Remember where you were looking, so a refresh doesn't throw you back to
-    // the whole continent. `moveend` covers pans, zooms and flights alike.
+    // Remember where you were looking, so a fresh visit doesn't throw you back
+    // to the whole continent. `moveend` covers pans, zooms and flights alike —
+    // except the "near me" flight, whose landing is skipped (see suppressSaveRef).
     map.on("moveend", () => {
+      if (suppressSaveRef.current) {
+        suppressSaveRef.current = false;
+        return;
+      }
       const c = map.getCenter();
       saveView({ lng: c.lng, lat: c.lat, zoom: map.getZoom() });
     });

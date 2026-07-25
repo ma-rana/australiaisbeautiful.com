@@ -71,6 +71,23 @@ function AccountIcon() {
   );
 }
 
+// THE WORDMARK IS NOT A CONTROL, and it carries NO surface. Just the site
+// name, set to look NATIVE to the map: the exact ink (#2d3a27) and halo
+// (#f2f0e9 — the tileset's own background colour) that place-labels use in
+// MapView, so it reads as part of the cartography rather than chrome floating
+// on it. The halo is a TIGHT outline (four 1px offsets + a small blur), which
+// is how MapLibre's text-halo actually renders — a wide soft glow reads as a
+// smudge against these light tiles. No pointer-events-auto — the map is
+// draggable straight across it. On content pages the SiteHeader wordmark
+// stays a link — there it's the way BACK to the map, a real destination.
+// If the map style's colours ever change, update these with it.
+const WORDMARK_STYLE = {
+  fontFamily: "var(--font-display)",
+  color: "#2d3a27",
+  textShadow:
+    "-1px -1px 0 #f2f0e9, 1px -1px 0 #f2f0e9, -1px 1px 0 #f2f0e9, 1px 1px 0 #f2f0e9, 0 0 3px #f2f0e9, 0 0 5px #f2f0e9",
+} as const;
+
 const PILL = "flex h-11 items-center rounded-full px-4 leading-none text-[var(--ink)] transition-colors hover:bg-[var(--paper-2)]";
 
 const ITEM =
@@ -108,13 +125,12 @@ export function MapNav({ email }: { email: string | null }) {
     // wordmark and the corner is still map, and still draggable. A full-width
     // overlay that swallows drags is the usual bug with floating chrome.
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-3 sm:p-4">
-      <Link
-        href="/"
-        className={`pointer-events-auto ${MAP_SURFACE} ${PILL} truncate text-[0.9rem]`}
-        style={{ fontFamily: "var(--font-display)" }}
+      <p
+        className="flex h-11 select-none items-center px-1 leading-none text-[1rem] truncate"
+        style={WORDMARK_STYLE}
       >
         Australia Is Beautiful
-      </Link>
+      </p>
 
       {email ? (
         <div ref={wrapRef} className="pointer-events-auto relative shrink-0">
