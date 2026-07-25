@@ -1,6 +1,6 @@
 "use client";
 
-// app/Providers.tsx — client-side providers.
+// components/Providers.tsx — client-side providers.
 // SessionProvider is required for next-auth/react hooks and signOut() to work
 // in client components.
 

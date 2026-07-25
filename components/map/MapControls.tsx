@@ -1,6 +1,6 @@
 "use client";
 
-// app/MapControls.tsx — the map's controls.
+// components/map/MapControls.tsx — the map's controls.
 //
 // Three groups, separated by what each one DOES, not by what fits:
 //
@@ -26,7 +26,7 @@
 // turns ochre ONLY when near-me proves there's a real gap here.
 
 import Link from "next/link";
-import { MAP_SURFACE, MAP_BUTTON } from "./map-chrome";
+import { MAP_SURFACE, MAP_BUTTON } from "./chrome";
 
 // Mirrors the near-me lifecycle in MapView. "found" means a position was read
 // and the camera flew to it; nothing about it is stored (D8).
@@ -136,7 +136,7 @@ function MinusIcon() {
 /* -------------------------------------------------------------- primitives */
 
 // Shared with MapNav so the top and bottom chrome can't drift apart — see
-// map-chrome.ts for why the surface is two shadows rather than one, and why
+// chrome.ts for why the surface is two shadows rather than one, and why
 // the button carries no text colour of its own.
 const SURFACE = MAP_SURFACE;
 const BTN = MAP_BUTTON;

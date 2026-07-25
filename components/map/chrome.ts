@@ -1,4 +1,4 @@
-// app/map-chrome.ts — the shared look of anything floating on the map.
+// components/map/chrome.ts — the shared look of anything floating on the map.
 //
 // The top nav and the bottom control stack are separate components that must
 // read as one system. Duplicating these strings is exactly how two pieces of

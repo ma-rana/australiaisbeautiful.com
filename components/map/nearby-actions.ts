@@ -1,6 +1,10 @@
 "use server";
 
-// app/nearby-actions.ts — places near a point.
+// components/map/nearby-actions.ts — places near a point.
+//
+// Lives beside MapView rather than in a route folder because MapView is its
+// only caller — app/page.tsx never touches it. The other actions in this
+// codebase sit in route folders for the same reason: next to what calls them.
 //
 // The first real use of the PostGIS geography column and its GIST index
 // (see the postgis migration). ST_DWithin on a geography type does true

@@ -1,6 +1,6 @@
 "use client";
 
-// app/MapShell.tsx — the client boundary for the map.
+// components/map/MapShell.tsx — the client boundary for the map.
 //
 // MapLibre touches `window` at import time, so it can never be evaluated on the
 // server. `ssr: false` is only permitted inside a client component, and the home

@@ -1,6 +1,6 @@
 "use client";
 
-// app/MapNav.tsx — the map's top chrome. Two elements, and that's the point.
+// components/map/MapNav.tsx — the map's top chrome. Two elements, and that's the point.
 //
 // UX §7b on the map home: "the map is the whole canvas; search is ONE minimal
 // element floating on top of it. Not a header, not a toolbar, not chrome around
@@ -41,7 +41,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
-import { MAP_SURFACE, MAP_BUTTON } from "./map-chrome";
+import { MAP_SURFACE, MAP_BUTTON } from "./chrome";
 
 // The signed-in button is a PERSON, not a hamburger. It briefly was one, from
 // when the menu also held navigation — but a hamburger promises site navigation,

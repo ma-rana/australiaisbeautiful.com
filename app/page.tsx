@@ -11,9 +11,9 @@
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { resolveMediaSrc } from "@/lib/media/resolve";
-import { MapShell } from "./MapShell";
-import { MapNav } from "./MapNav";
-import type { MapPlace } from "./MapView";
+import { MapShell } from "@/components/map/MapShell";
+import { MapNav } from "@/components/map/MapNav";
+import type { MapPlace } from "@/components/map/MapView";
 
 export default async function Home() {
   const user = await getSessionUser();

@@ -1,6 +1,6 @@
 "use client";
 
-// app/MapView.tsx — the public map. Australia, and only Australia.
+// components/map/MapView.tsx — the public map. Australia, and only Australia.
 //
 // MapLibre + Protomaps (D17): one .pmtiles file served as a static asset, read
 // directly by the browser with range requests. No tile server, no per-load

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./Providers";
-import { SiteHeader } from "./SiteHeader";
+import { Providers } from "@/components/Providers";
+import { SiteHeader } from "@/components/SiteHeader";
 import { getSessionUser } from "@/lib/auth";
 import { headers } from "next/headers";
 

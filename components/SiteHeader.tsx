@@ -1,6 +1,6 @@
 "use client";
 
-// app/SiteHeader.tsx — the public site's quiet header, for pages that aren't
+// components/SiteHeader.tsx — the public site's quiet header, for pages that aren't
 // the map.
 //
 // IT RENDERS NOTHING ON `/`. The map home owns its own floating chrome
