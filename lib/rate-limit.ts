@@ -100,6 +100,8 @@ export const LIMITS = {
   UPLOAD: { limit: 5, windowMs: 10 * 60 * 1000 },
   /** Failed password attempts per email. */
   LOGIN_EMAIL: { limit: 10, windowMs: 15 * 60 * 1000 },
+  /** New accounts per IP. Five an hour covers a household; fifty is a farm. */
+  SIGNUP_IP: { limit: 5, windowMs: 60 * 60 * 1000 },
   /** needs-code probes per IP — it bcrypt-compares, so it's an oracle to protect. */
   NEEDS_CODE_IP: { limit: 20, windowMs: 15 * 60 * 1000 },
   /** Ratings per user — generous; stops only scripted flooding. */

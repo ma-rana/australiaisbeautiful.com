@@ -30,8 +30,11 @@ const LINK =
 export function SiteHeader({ email }: { email: string | null }) {
   const pathname = usePathname();
 
-  // The map is its own surface. See the note above.
-  if (pathname === "/") return null;
+  // The map is its own surface (see the note above). /signin and /signup are
+  // thresholds, not pages — nav on them is noise, and they carry their own
+  // quiet way back to the map (AuthShell).
+  if (pathname === "/" || pathname === "/signin" || pathname === "/signup")
+    return null;
 
   return (
     <header className="border-b border-[var(--border)]">

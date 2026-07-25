@@ -1,7 +1,11 @@
-// app/signin/page.tsx — public email/password sign-in.
+// app/signin/page.tsx — public email/password sign-in, in the field-guide voice.
 //
 // The everyday door, for explorers. Staff accounts are refused here — their
 // credentials work on the admin subdomain only (auth.ts door separation).
+//
+// The frame, field styles and the contour background live in AuthShell,
+// shared with /signup so the two thresholds cannot drift apart. The
+// SiteHeader deliberately doesn't render on either.
 //
 // TWO STEPS if the account has 2FA on: credentials first, then a dedicated code
 // screen. Explorers can enable 2FA too, and a code deserves its own screen
@@ -10,8 +14,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { AuthShell, FIELD, LABEL, PRIMARY } from "@/components/AuthShell";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -79,18 +85,19 @@ export default function SignInPage() {
     });
   };
 
-  const field =
-    "mt-1 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 text-sm dark:border-neutral-700";
-
   if (step === "code") {
     return (
-      <main className="mx-auto flex min-h-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+      <AuthShell>
+        <p className="specimen-label text-[var(--ochre)]">Second factor</p>
+        <h1
+          className="mt-3 text-3xl tracking-tight text-[var(--ink)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
           Enter your code
         </h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
           From your authenticator app, for{" "}
-          <span className="text-neutral-700 dark:text-neutral-300">{email}</span>.
+          <span className="text-[var(--ink)]/80">{email}</span>.
         </p>
 
         <form onSubmit={submitCode} className="mt-8 space-y-4">
@@ -102,24 +109,22 @@ export default function SignInPage() {
             inputMode="text"
             autoFocus
             autoComplete="one-time-code"
-            className="w-full rounded-md border border-neutral-300 bg-transparent px-3 py-4 text-center text-2xl tracking-[0.4em] dark:border-neutral-700"
+            className="w-full rounded-md border border-[var(--border)] bg-[var(--paper)] px-3 py-4 text-center text-2xl tracking-[0.4em] text-[var(--ink)] placeholder:text-[var(--muted)]/50 transition-colors focus:border-[var(--eucalypt)] focus:outline-none focus:ring-2 focus:ring-[var(--eucalypt)]/20"
           />
 
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
+          {error && <p className="text-sm text-[var(--ochre)]">{error}</p>}
 
           <button
             type="submit"
             disabled={isPending || totp.trim().length < 6}
-            className="w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
+            className={PRIMARY}
           >
             {isPending ? "Verifying…" : "Verify and sign in"}
           </button>
         </form>
 
         <div className="mt-6 space-y-2 text-center text-sm">
-          <p className="text-neutral-500">
+          <p className="text-[var(--muted)]">
             Lost your phone? Enter a recovery code above instead.
           </p>
           <button
@@ -128,65 +133,76 @@ export default function SignInPage() {
               setTotp("");
               setError(null);
             }}
-            className="text-neutral-500 underline underline-offset-4 hover:text-neutral-800 dark:hover:text-neutral-200"
+            className="text-[var(--muted)] underline underline-offset-4 transition-colors hover:text-[var(--ink)]"
           >
             Back
           </button>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-full max-w-sm flex-1 flex-col justify-center px-6 py-16">
-      <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-        Sign in
+    <AuthShell>
+      <p className="specimen-label text-[var(--ochre)]">Explorer sign-in</p>
+      <h1
+        className="mt-3 text-3xl tracking-tight text-[var(--ink)]"
+        style={{ fontFamily: "var(--font-display)" }}
+      >
+        Welcome back
       </h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        Welcome back to Australia Is Beautiful.
+      <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+        Sign in to add your photos and field notes to the places you&apos;ve
+        been.
       </p>
 
       <form onSubmit={submitCredentials} className="mt-8 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <label htmlFor="email" className={LABEL}>
             Email
           </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
             autoFocus
             autoComplete="username"
-            className={field}
+            className={FIELD}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+          <label htmlFor="password" className={LABEL}>
             Password
           </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className={field}
+            className={FIELD}
           />
         </div>
 
-        {error && (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-        )}
+        {error && <p className="text-sm text-[var(--ochre)]">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="w-full rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
-        >
+        <button type="submit" disabled={isPending} className={PRIMARY}>
           {isPending ? "Checking…" : "Continue"}
         </button>
       </form>
-    </main>
+
+      <p className="mt-6 text-sm text-[var(--muted)]">
+        New here?{" "}
+        <Link
+          href={`/signup${callbackUrl !== "/" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+          className="text-[var(--eucalypt)] underline underline-offset-4"
+        >
+          Create an account
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

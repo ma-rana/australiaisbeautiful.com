@@ -82,7 +82,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         totp: { label: "Code", type: "text" },
       },
       async authorize(credentials) {
-        const email = credentials?.email as string | undefined;
+        // Lowercased to match signup's normalization (lib/schemas/auth.ts) —
+        // emails are compared case-insensitively everywhere or nowhere.
+        const email = (credentials?.email as string | undefined)
+          ?.trim()
+          .toLowerCase();
         const password = credentials?.password as string | undefined;
         const door = (credentials?.door as string | undefined) ?? "public";
         const totp = (credentials?.totp as string | undefined) ?? "";

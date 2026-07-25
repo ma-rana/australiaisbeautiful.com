@@ -41,17 +41,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { email, password } = (await req.json()) as {
+    const { email: rawEmail, password } = (await req.json()) as {
       email?: string;
       password?: string;
     };
+    // Lowercased to match signup + authorize — one normalization everywhere.
+    const email = rawEmail?.trim().toLowerCase();
     if (!email || !password) {
       return NextResponse.json({ needsCode: false });
     }
 
     // If this email is already locked out at the front door, don't run the
     // compare at all — same generic answer, no oracle.
-    const emailKey = `login:${email.toLowerCase()}`;
+    const emailKey = `login:${email}`;
     if (!check(emailKey, LIMITS.LOGIN_EMAIL).ok) {
       return NextResponse.json({ needsCode: false });
     }
