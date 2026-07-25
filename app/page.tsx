@@ -4,16 +4,19 @@
 // places, spatially — "what's near me" and "what's out there" are the questions
 // people actually arrive with, and a list can't answer either.
 //
-// The list view still exists at /places for when you want to read rather than
-// explore. Both are open to everyone; no account needed to look (UX §7b).
+// The list view at /places still exists but nothing links to it any more — see
+// the note in MapNav. Everything the map offers is open to everyone; no account
+// is needed to look (UX §7b).
 
-import Link from "next/link";
 import { db } from "@/lib/db";
+import { getSessionUser } from "@/lib/auth";
 import { resolveMediaSrc } from "@/lib/media/resolve";
 import { MapShell } from "./MapShell";
+import { MapNav } from "./MapNav";
 import type { MapPlace } from "./MapView";
 
 export default async function Home() {
+  const user = await getSessionUser();
   const locations = await db.location.findMany({
     where: { status: "APPROVED" },
     select: {
@@ -52,20 +55,14 @@ export default async function Home() {
 
   return (
     <div className="relative flex-1">
-      {/* The map fills the surface below the header. */}
+      {/* The map fills the whole surface. There is no header above it — the
+          chrome floats on the map instead (MapNav, MapControls), which is what
+          §7b means by "the map is the whole canvas". */}
       <div className="absolute inset-0">
         <MapShell places={places} />
       </div>
 
-      {/* A quiet way through to the list, for reading rather than exploring. */}
-      <div className="pointer-events-none absolute left-3 top-3 z-10 sm:left-4 sm:top-4">
-        <Link
-          href="/places"
-          className="pointer-events-auto rounded-full border border-[var(--border)] bg-[var(--paper)]/95 px-4 py-2 text-sm shadow-sm backdrop-blur transition-colors hover:border-[var(--eucalypt)]"
-        >
-          Browse as a list
-        </Link>
-      </div>
+      <MapNav email={user?.email ?? null} />
 
       {places.length === 0 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-8 z-10 flex justify-center px-4">

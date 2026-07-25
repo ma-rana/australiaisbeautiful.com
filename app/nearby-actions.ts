@@ -15,6 +15,7 @@
 // that's movement tracking with a friendlier name.
 
 import { db } from "@/lib/db";
+import { NEARBY_SEARCH_RADIUS_KM } from "@/lib/constants";
 
 export type NearbyPlace = {
   slug: string;
@@ -33,7 +34,7 @@ export type NearbyResult =
 export async function placesNear(
   latitude: number,
   longitude: number,
-  radiusKm = 50,
+  radiusKm = NEARBY_SEARCH_RADIUS_KM,
 ): Promise<NearbyResult> {
   // Sanity-check the inputs — these come from the browser.
   if (

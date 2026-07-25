@@ -21,13 +21,14 @@
 
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { DEDUP_RADIUS_M } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-// How close two pins must be to be considered "the same place". 150m is a
-// reasonable park/landmark radius — tight enough not to merge neighbours,
-// loose enough that two people pinning opposite ends of a reserve still group.
-const CLUSTER_RADIUS_METRES = 150;
+// How close two pins must be to be considered "the same place". The value and
+// its reasoning live in lib/constants.ts, alongside the other radii — §7c wants
+// them findable in one place rather than scattered across queries.
+const CLUSTER_RADIUS_METRES = DEDUP_RADIUS_M;
 
 const RequestSchema = z.object({
   name: z.string().trim().min(2).max(120),

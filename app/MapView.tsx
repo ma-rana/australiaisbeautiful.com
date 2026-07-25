@@ -27,6 +27,8 @@ import * as maplibregl from "maplibre-gl";
 import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { placesNear, type NearbyPlace } from "./nearby-actions";
+import { MapControls } from "./MapControls";
+import { NEARBY_RADIUS_M, NEARBY_SEARCH_RADIUS_KM } from "@/lib/constants";
 
 // Register the pmtiles:// protocol ONCE, at module scope.
 //
@@ -116,14 +118,33 @@ function saveView(v: SavedView) {
   }
 }
 
+// Sprite geometry, in device pixels. Registered at pixelRatio 2, so the
+// rendered CSS size is half these numbers at icon-size 1.
+//
+// The canvas is deliberately LARGER than the disc it draws. A drop shadow
+// painted at the canvas edge is simply clipped away, which is why the previous
+// version had no shadow at all despite the comment claiming one — there was
+// nowhere for it to go. ICON_PAD is that somewhere.
+const ICON_CANVAS = 152;
+const ICON_PAD = 11; // room for the shadow to fall into
+const ICON_HAIRLINE = 2; // dark outer edge
+const ICON_RING = 7; // white ring
+
 // Render a photo into a circular sprite MapLibre can use as a layer icon.
 //
-// MapLibre's image registry takes raw RGBA pixels, so the crop, the ring and
+// MapLibre's image registry takes raw RGBA pixels, so the crop, the rings and
 // the shadow are all drawn onto a canvas here rather than expressed in CSS.
 // Doing it once per place at load is cheap; the result is cached by the map.
+//
+// TWO rings, not one. The white ring alone disappears against pale terrain —
+// the map's own background is #f2f0e9 and desert fill is paler still, so a
+// white-ringed photo bleeds into the ground and stops reading as a marker. The
+// dark hairline outside it is what holds the edge on sand; the white ring is
+// what holds it against dark bush and water. Each covers the case the other
+// fails. Google and Airbnb both land on the same two-ring answer.
 async function makeCircleIcon(
   src: string,
-  size = 128,
+  size = ICON_CANVAS,
 ): Promise<ImageData | null> {
   try {
     const img = new Image();
@@ -137,28 +158,41 @@ async function makeCircleIcon(
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    const r = size / 2;
-    const ring = size * 0.07; // white border thickness
+    const c = size / 2;
+    const outer = c - ICON_PAD;
 
-    // White disc behind everything — becomes the ring once the photo is drawn
-    // inset within it.
+    // Shadow + hairline in one pass: filling the outer disc with the shadow
+    // enabled paints both, and the shadow is cleared immediately after so it
+    // doesn't accumulate under every subsequent fill.
+    ctx.save();
+    ctx.shadowColor = "rgba(0, 0, 0, 0.32)";
+    ctx.shadowBlur = 9;
+    ctx.shadowOffsetY = 3;
     ctx.beginPath();
-    ctx.arc(r, r, r - 1, 0, Math.PI * 2);
+    ctx.arc(c, c, outer, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(26, 28, 26, 0.22)";
+    ctx.fill();
+    ctx.restore();
+
+    // The white ring, inset by the hairline.
+    ctx.beginPath();
+    ctx.arc(c, c, outer - ICON_HAIRLINE, 0, Math.PI * 2);
     ctx.fillStyle = "#ffffff";
     ctx.fill();
 
     // Clip to a circle, then draw the photo cover-style inside it.
+    const photoR = outer - ICON_HAIRLINE - ICON_RING;
     ctx.save();
     ctx.beginPath();
-    ctx.arc(r, r, r - ring, 0, Math.PI * 2);
+    ctx.arc(c, c, photoR, 0, Math.PI * 2);
     ctx.clip();
 
     // "cover": scale so the shorter side fills, centre-crop the rest.
-    const inner = (r - ring) * 2;
+    const inner = photoR * 2;
     const scale = Math.max(inner / img.width, inner / img.height);
     const w = img.width * scale;
     const h = img.height * scale;
-    ctx.drawImage(img, r - w / 2, r - h / 2, w, h);
+    ctx.drawImage(img, c - w / 2, c - h / 2, w, h);
     ctx.restore();
 
     return ctx.getImageData(0, 0, size, size);
@@ -183,18 +217,25 @@ export function MapView({ places }: { places: MapPlace[] }) {
   const [nearby, setNearby] = useState<NearbyPlace[] | null>(null);
   const [locateError, setLocateError] = useState<string | null>(null);
   const [accuracy, setAccuracy] = useState<number | null>(null);
+  // Tracked separately from locateError so the control can show a struck-through
+  // reticle for "you refused" without string-matching the error copy. A denied
+  // permission is a different state from a failed read: one is recoverable by
+  // tapping again, the other needs browser settings.
+  const [denied, setDenied] = useState(false);
 
   const findNearMe = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
 
     if (!("geolocation" in navigator)) {
+      setDenied(true);
       setLocateError("This browser can't share a location.");
       return;
     }
 
     setLocating(true);
     setLocateError(null);
+    setDenied(false);
     setSelected(null);
 
     navigator.geolocation.getCurrentPosition(
@@ -242,12 +283,14 @@ export function MapView({ places }: { places: MapPlace[] }) {
           essential: true,
         });
 
-        const res = await placesNear(latitude, longitude, 50);
+        const res = await placesNear(latitude, longitude, NEARBY_SEARCH_RADIUS_KM);
         setLocating(false);
         if (res.ok) {
           setNearby(res.places);
           if (res.places.length === 0) {
-            setLocateError("No places on the map within 50km of you yet.");
+            setLocateError(
+              `No places on the map within ${NEARBY_SEARCH_RADIUS_KM}km of you yet.`,
+            );
           }
         } else {
           setLocateError(res.error);
@@ -255,6 +298,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
       },
       (err) => {
         setLocating(false);
+        setDenied(err.code === err.PERMISSION_DENIED);
         setLocateError(
           err.code === err.PERMISSION_DENIED
             ? "Location access was declined. You can still explore the map."
@@ -293,21 +337,20 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
     mapRef.current = map;
 
+    // Attribution moves to the opposite corner. MapControls owns the bottom
+    // right outright now, and two things sharing that corner was the entire
+    // reason globals.css needed !important margins to hold them apart.
     map.addControl(
       new maplibregl.AttributionControl({
         compact: true,
         customAttribution:
           '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>',
       }),
-      "bottom-right",
+      "bottom-left",
     );
-    // Zoom controls are positioned by CSS rather than a MapLibre corner, so they
-    // can sit directly above the "Near me" button. MapLibre only offers the four
-    // corners, and bottom-right would stack them with the attribution instead.
-    map.addControl(
-      new maplibregl.NavigationControl({ showCompass: false }),
-      "bottom-right",
-    );
+    // No NavigationControl. Zoom lives in MapControls and calls map.zoomIn() /
+    // map.zoomOut() directly, so the stack is positioned by one system instead
+    // of a MapLibre corner being dragged into place by CSS.
 
     // Remember where you were looking, so a refresh doesn't throw you back to
     // the whole continent. `moveend` covers pans, zooms and flights alike.
@@ -426,11 +469,11 @@ export function MapView({ places }: { places: MapPlace[] }) {
             ["linear"],
             ["zoom"],
             4,
-            0.26,
+            0.38,
             10,
-            0.42,
+            0.46,
             14,
-            0.6,
+            0.62,
           ],
           "icon-anchor": "center",
           "icon-allow-overlap": true,
@@ -441,11 +484,84 @@ export function MapView({ places }: { places: MapPlace[] }) {
         },
       });
 
-      // The count, centred on the cluster.
+      // The count, as a badge on the marker's upper-right edge.
       //
-      // Centred rather than badged in a corner: with no offset there's nothing
-      // to drift as the icon scales with zoom, and a number in the middle reads
-      // immediately as "this many places" without competing for the corner.
+      // It used to sit centred ON the photograph. That put dark green text with
+      // a white halo over an arbitrary image — the hardest legibility case
+      // available — and covered whatever the photo was of. Worse, a number in
+      // the middle of a circle reads as "this is a number"; a badge on the edge
+      // reads as "a place, and there are others", which is what a cluster is.
+      //
+      // EVERY NUMBER BELOW IS DERIVED, NOT CHOSEN. The badge and the sprite are
+      // drawn by different systems in different units, and that mismatch is
+      // easy to ship without noticing:
+      //
+      //   the sprite's ring  = ICON_RING device px ÷ pixelRatio 2 × icon-size
+      //                      = 7 ÷ 2 × icon-size = 3.5 × icon-size CSS px
+      //   the sprite's disc  = (ICON_CANVAS/2 - ICON_PAD) ÷ 2 × icon-size
+      //                      = 32.5 × icon-size CSS px
+      //   a circle layer's stroke and radius = plain CSS px, NOT scaled at all
+      //
+      // So a fixed circle-stroke-width matches the sprite's ring at exactly one
+      // zoom and is wrong everywhere else — which is why the badge's border read
+      // as heavier than the marker's. Each value is interpolated across the same
+      // zoom stops as icon-size (0.38 / 0.46 / 0.62), computed from the two
+      // lines above:
+      //
+      //   marker radius : 12.4 / 15.0 / 20.2
+      //   ring width    :  1.3 /  1.6 /  2.2   (3.5 × icon-size)
+      //   badge radius  :  5.9 /  7.2 /  9.7   (marker radius × 0.48)
+      //   edge offset   :  8.7 / 10.6 / 14.2   (marker radius × 0.707, the 45° point)
+      //
+      // If icon-size changes, recompute these. They are not independent knobs.
+      map.addLayer({
+        id: "place-cluster-badge",
+        type: "circle",
+        source: SRC,
+        filter: ["all", ["has", "point_count"], ["!=", ["get", "icon"], ""]],
+        paint: {
+          "circle-color": "#b06a3f",
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            1.3,
+            10,
+            1.6,
+            14,
+            2.2,
+          ],
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            5.9,
+            10,
+            7.2,
+            14,
+            9.7,
+          ],
+          "circle-translate": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            ["literal", [8.7, -8.7]],
+            10,
+            ["literal", [10.6, -10.6]],
+            14,
+            ["literal", [14.2, -14.2]],
+          ],
+          // Both translate properties default to a "map" anchor, which rotates
+          // the offset with the map's bearing — two-finger rotate would swing
+          // the badge around the marker. Viewport keeps it upper-right always.
+          "circle-translate-anchor": "viewport",
+        },
+      });
+
       map.addLayer({
         id: "place-cluster-count",
         type: "symbol",
@@ -454,17 +570,28 @@ export function MapView({ places }: { places: MapPlace[] }) {
         layout: {
           "text-field": ["get", "point_count_abbreviated"],
           "text-font": ["Noto Sans Medium"],
-          "text-size": ["interpolate", ["linear"], ["zoom"], 4, 11, 14, 15],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 4, 9.5, 10, 10.5, 14, 12.5],
           "text-anchor": "center",
           "text-allow-overlap": true,
           "text-ignore-placement": true,
         },
         paint: {
-          // Dark green with a white outline: legible over any photo without a
-          // filled badge competing with the image behind it.
-          "text-color": "#2d3a27",
-          "text-halo-color": "#ffffff",
-          "text-halo-width": 2,
+          // White on ochre needs no halo — the badge itself is the contrast.
+          "text-color": "#ffffff",
+          // text-translate rather than text-offset: offset is in ems and would
+          // drift as text-size changes, which is the same drift problem again.
+          "text-translate": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            ["literal", [8.7, -8.7]],
+            10,
+            ["literal", [10.6, -10.6]],
+            14,
+            ["literal", [14.2, -14.2]],
+          ],
+          "text-translate-anchor": "viewport",
         },
       });
 
@@ -482,6 +609,42 @@ export function MapView({ places }: { places: MapPlace[] }) {
           "text-ignore-placement": true,
         },
         paint: { "text-color": "#ffffff" },
+      });
+
+      // The selected place's halo.
+      //
+      // Added BEFORE the marker layers so it renders underneath them — it reads
+      // as a ring around the photo rather than a wash over it. The filter starts
+      // matching nothing; the effect below swaps in the selected id.
+      //
+      // A separate layer rather than feature-state, because the obvious
+      // approach doesn't work: icon-size is a LAYOUT property, and layout
+      // properties can't read feature-state. Growing the marker itself on
+      // selection is therefore not available; a halo underneath it is.
+      map.addLayer({
+        id: "place-selected",
+        type: "circle",
+        source: SRC,
+        filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "id"], ""]],
+        paint: {
+          "circle-color": "#4a5d43",
+          "circle-opacity": 0.16,
+          "circle-stroke-color": "#4a5d43",
+          "circle-stroke-width": 2.5,
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            4,
+            12,
+            10,
+            17,
+            14,
+            24,
+            18,
+            29,
+          ],
+        },
       });
 
       // Individual places WITHOUT a usable photo — a plain circle.
@@ -643,6 +806,25 @@ export function MapView({ places }: { places: MapPlace[] }) {
     };
   }, [places]);
 
+  // Point the halo at whichever place is open.
+  //
+  // Without this, tapping a marker opened the sheet but left the map unchanged,
+  // so in a cluster of nearby places there was nothing connecting what you were
+  // reading to which dot it came from.
+  //
+  // An empty string never matches a real id (they're cuids), so it's the "no
+  // selection" filter. `places` is a dependency because the layer is recreated
+  // whenever the source is rebuilt.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.getLayer("place-selected")) return;
+    map.setFilter("place-selected", [
+      "all",
+      ["!", ["has", "point_count"]],
+      ["==", ["get", "id"], selected?.id ?? ""],
+    ]);
+  }, [selected, places]);
+
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
@@ -662,17 +844,31 @@ export function MapView({ places }: { places: MapPlace[] }) {
         </div>
       )}
 
-      {/* Near me — a one-off position read, never stored. */}
-      <div className="absolute bottom-4 right-3 z-10 sm:bottom-6 sm:right-4">
-        <button
-          onClick={findNearMe}
-          disabled={locating}
-          className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--paper)]/95 px-4 py-2.5 text-sm shadow-md backdrop-blur transition-colors hover:border-[var(--eucalypt)] disabled:opacity-60"
-        >
-          <span aria-hidden>◉</span>
-          {locating ? "Finding you…" : "Near me"}
-        </button>
-      </div>
+      {/* Suggest, near me, zoom — one stack, one corner. The position read is
+          still a one-off and still never stored (D8).
+
+          `suggestInvited` costs no extra query: placesNear already returns
+          metres, nearest first, so "nothing within 500m" is just reading the
+          first row (UX §7c, NEARBY_RADIUS_M). */}
+      <MapControls
+        locateState={
+          locating
+            ? "locating"
+            : denied
+              ? "denied"
+              : accuracy !== null
+                ? "found"
+                : "idle"
+        }
+        onLocate={findNearMe}
+        onZoomIn={() => mapRef.current?.zoomIn()}
+        onZoomOut={() => mapRef.current?.zoomOut()}
+        suggestInvited={
+          nearby !== null &&
+          !(nearby[0] && nearby[0].metres <= NEARBY_RADIUS_M)
+        }
+        sheetOpen={!!(selected || nearby?.length || locateError)}
+      />
 
       {/* What the location turned up — or why it didn't. */}
       {(nearby?.length || locateError) && !selected && (
