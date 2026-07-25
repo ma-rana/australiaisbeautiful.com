@@ -15,6 +15,8 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { resolveMediaSrc } from "@/lib/media/resolve";
+import { BackToMap } from "@/components/BackToMap";
+import { MapBackdropShell } from "@/components/MapBackdropShell";
 import { MomentRow, type OwnMoment } from "./MomentRow";
 
 export default async function ContributionsPage() {
@@ -70,9 +72,15 @@ export default async function ContributionsPage() {
   // (Left out until requests carry an author — see the note below.)
 
   return (
-    <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-14 sm:px-8">
+    <>
+      <MapBackdropShell />
+      <main className="relative mx-auto w-full max-w-2xl flex-1 px-6 py-8 sm:px-8">
+      {/* No SiteHeader here — reached from the map's account menu; only the
+          way back (see SiteHeader's note). */}
+      <BackToMap />
+
       {/* Field-guide header — the same devices a location page uses. */}
-      <header className="border-b border-[var(--border)] pb-8">
+      <header className="mt-10 border-b border-[var(--border)] pb-8">
         <p className="specimen-label text-[var(--ochre)]">
           Private field log&ensp;·&ensp;Only you see this
         </p>
@@ -119,6 +127,7 @@ export default async function ContributionsPage() {
           ))}
         </ul>
       )}
-    </main>
+      </main>
+    </>
   );
 }

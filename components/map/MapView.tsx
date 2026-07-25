@@ -72,6 +72,27 @@ export type MapPlace = {
 
 const SRC = "places";
 
+// THREE-TIER MARKER PRESENTATION, by zoom.
+//
+// Far out (continent to region), photo discs are wrong twice over: dozens of
+// heavy white-ringed circles crowd the geography they're supposed to sit on,
+// and at that scale nobody can read a 25px photograph anyway. So:
+//
+//   z < 8.5           small luminous dots — presence, not detail. A crisp
+//                     eucalypt dot over a soft glow (circle-blur), which is
+//                     as "neon" as this palette gets without importing a
+//                     colour that belongs to no system.
+//   z 8.5 → 9.5       the crossfade: dots fade out as photos fade in. Both
+//                     forms exist at half strength mid-band — a dissolve, not
+//                     a pop. Layer min/max zoom bounds the band so invisible
+//                     layers also stop catching taps.
+//   z ≥ 9.5           the current presentation: photo discs, cluster badges.
+//                     Names join at z12 as before.
+const MARKER_MINZOOM = 8.5; // photos begin
+const DOT_MAXZOOM = 9.5; // dots end
+const DOT_GLOW = "#7c9a6d"; // lightened eucalypt — the glow reads luminous on #f2f0e9
+const DOT_CORE = "#4a5d43"; // the system eucalypt
+
 // Sprite geometry, in device pixels. Registered at pixelRatio 2, so the
 // rendered CSS size is half these numbers at icon-size 1.
 //
@@ -313,6 +334,37 @@ export function MapView({ places }: { places: MapPlace[] }) {
     // map.zoomOut() directly, so the stack is positioned by one system instead
     // of a MapLibre corner being dragged into place by CSS.
 
+    // --- The parting snapshot -------------------------------------------
+    //
+    // Satellite pages (/contributions) show "the map you were just looking
+    // at" as their backdrop — but as a CAPTURED IMAGE, not a second live map
+    // (see MapBackdrop: a WebGL renderer behind a scrim to show 12% of a map
+    // is cost without payoff; a JPEG is the same percept at ~1% of it).
+    //
+    // MECHANICS: the WebGL drawing buffer isn't preserved between frames
+    // (preserveDrawingBuffer defaults false, correctly — preserving costs
+    // every frame), so toDataURL on a resting canvas returns blank. The
+    // capture therefore rides inside a `render` callback, with triggerRepaint
+    // forcing that frame. Debounced past moveend so flights and drags never
+    // pay the encode cost mid-gesture; sessionStorage so a fresh tab starts
+    // clean (the backdrop falls back to contours).
+    const SNAP_KEY = "aib:map-snap:v1";
+    let snapTimer: ReturnType<typeof setTimeout> | null = null;
+    const captureSnapshot = () => {
+      map.once("render", () => {
+        try {
+          sessionStorage.setItem(
+            SNAP_KEY,
+            map.getCanvas().toDataURL("image/jpeg", 0.55),
+          );
+        } catch {
+          // Storage full or canvas unavailable — the snapshot is optional.
+        }
+      });
+      map.triggerRepaint();
+    };
+    map.once("idle", captureSnapshot); // one exists even if they never pan
+
     // Remember where you were looking, so a fresh visit doesn't throw you back
     // to the whole continent. `moveend` covers pans, zooms and flights alike —
     // except the "near me" flight, whose landing is skipped (see suppressSaveRef).
@@ -323,6 +375,9 @@ export function MapView({ places }: { places: MapPlace[] }) {
       }
       const c = map.getCenter();
       saveView({ lng: c.lng, lat: c.lat, zoom: map.getZoom() });
+      // Refresh the parting snapshot, debounced — rapid pans encode once.
+      if (snapTimer) clearTimeout(snapTimer);
+      snapTimer = setTimeout(captureSnapshot, 400);
     });
 
     map.on("error", (e) => {
@@ -411,17 +466,93 @@ export function MapView({ places }: { places: MapPlace[] }) {
         },
       });
 
+      // TIER 1 — the far-out dots (see the zoom-tier note by MARKER_MINZOOM).
+      // No cluster/single filter: at this scale a cluster and a place are the
+      // same statement — "something is here" — clusters just say it slightly
+      // larger. The glow is a second, bigger circle with circle-blur 1 under
+      // the crisp dot: MapLibre has no shadow for circles, but a fully
+      // feathered fill IS a glow.
+      map.addLayer({
+        id: "place-glow",
+        type: "circle",
+        source: SRC,
+        maxzoom: DOT_MAXZOOM,
+        paint: {
+          "circle-color": DOT_GLOW,
+          "circle-blur": 1,
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            3,
+            ["case", ["has", "point_count"], 10, 8],
+            8.5,
+            ["case", ["has", "point_count"], 16, 13],
+          ],
+          "circle-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8.5,
+            0.55,
+            9.5,
+            0,
+          ],
+        },
+      });
+      map.addLayer({
+        id: "place-dot",
+        type: "circle",
+        source: SRC,
+        maxzoom: DOT_MAXZOOM,
+        paint: {
+          "circle-color": DOT_CORE,
+          "circle-stroke-color": "#ffffff",
+          "circle-stroke-width": 1.25,
+          "circle-radius": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            3,
+            ["case", ["has", "point_count"], 4, 3],
+            8.5,
+            ["case", ["has", "point_count"], 6.5, 5],
+          ],
+          "circle-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8.5,
+            1,
+            9.5,
+            0,
+          ],
+          "circle-stroke-opacity": [
+            "interpolate",
+            ["linear"],
+            ["zoom"],
+            8.5,
+            1,
+            9.5,
+            0,
+          ],
+        },
+      });
+
       // Clusters WITHOUT a photo to show — a plain circle with the count.
       map.addLayer({
         id: "place-clusters",
         type: "circle",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["has", "point_count"], ["==", ["get", "icon"], ""]],
         paint: {
           "circle-color": "#4a5d43",
           "circle-radius": ["step", ["get", "point_count"], 18, 5, 24, 15, 30],
           "circle-stroke-width": 3,
           "circle-stroke-color": "#ffffff",
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
+          "circle-stroke-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
         },
       });
 
@@ -431,6 +562,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-cluster-photos",
         type: "symbol",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["has", "point_count"], ["!=", ["get", "icon"], ""]],
         layout: {
           "icon-image": ["get", "icon"],
@@ -450,7 +582,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
           "icon-ignore-placement": true,
         },
         paint: {
-          "icon-opacity": 1,
+          "icon-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
         },
       });
 
@@ -488,10 +620,13 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-cluster-badge",
         type: "circle",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["has", "point_count"], ["!=", ["get", "icon"], ""]],
         paint: {
           "circle-color": "#b06a3f",
           "circle-stroke-color": "#ffffff",
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
+          "circle-stroke-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
           "circle-stroke-width": [
             "interpolate",
             ["linear"],
@@ -536,6 +671,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-cluster-count",
         type: "symbol",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["has", "point_count"], ["!=", ["get", "icon"], ""]],
         layout: {
           "text-field": ["get", "point_count_abbreviated"],
@@ -548,6 +684,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         paint: {
           // White on ochre needs no halo — the badge itself is the contrast.
           "text-color": "#ffffff",
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
           // text-translate rather than text-offset: offset is in ems and would
           // drift as text-size changes, which is the same drift problem again.
           "text-translate": [
@@ -570,6 +707,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-cluster-count-plain",
         type: "symbol",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["has", "point_count"], ["==", ["get", "icon"], ""]],
         layout: {
           "text-field": ["get", "point_count_abbreviated"],
@@ -578,7 +716,10 @@ export function MapView({ places }: { places: MapPlace[] }) {
           "text-allow-overlap": true,
           "text-ignore-placement": true,
         },
-        paint: { "text-color": "#ffffff" },
+        paint: {
+          "text-color": "#ffffff",
+          "text-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
+        },
       });
 
       // The selected place's halo.
@@ -595,6 +736,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-selected",
         type: "circle",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "id"], ""]],
         paint: {
           "circle-color": "#4a5d43",
@@ -622,9 +764,12 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-points",
         type: "circle",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "icon"], ""]],
         paint: {
           "circle-color": "#4a5d43",
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
+          "circle-stroke-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
           "circle-radius": [
             "interpolate",
             ["linear"],
@@ -651,6 +796,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
         id: "place-photos",
         type: "symbol",
         source: SRC,
+        minzoom: MARKER_MINZOOM,
         filter: ["all", ["!", ["has", "point_count"]], ["!=", ["get", "icon"], ""]],
         layout: {
           "icon-image": ["get", "icon"],
@@ -673,6 +819,9 @@ export function MapView({ places }: { places: MapPlace[] }) {
           "icon-anchor": "center",
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
+        },
+        paint: {
+          "icon-opacity": ["interpolate", ["linear"], ["zoom"], 8.5, 0, 9.5, 1],
         },
       });
 
@@ -749,11 +898,22 @@ export function MapView({ places }: { places: MapPlace[] }) {
       map.on("click", "place-points", openPlace);
       map.on("click", "place-photos", openPlace);
 
+      // The far-out dots are tappable too — a dot that ignores a tap reads as
+      // broken. A cluster-dot behaves like a cluster (zoom until it splits);
+      // a single-place dot opens the place, same as its photo form would.
+      map.on("click", "place-dot", (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        if (f.properties?.cluster_id !== undefined) expandCluster(e);
+        else openPlace(e);
+      });
+
       for (const layer of [
         "place-clusters",
         "place-cluster-photos",
         "place-points",
         "place-photos",
+        "place-dot",
       ]) {
         map.on("mouseenter", layer, () => {
           map.getCanvas().style.cursor = "pointer";
@@ -769,6 +929,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
     return () => {
       resizeObserver.disconnect();
+      if (snapTimer) clearTimeout(snapTimer);
       map.remove();
       mapRef.current = null;
       // NOTE: the pmtiles protocol is deliberately NOT removed here. It's global

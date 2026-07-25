@@ -21,6 +21,8 @@ import {
 } from "@/lib/queries/visibility";
 import { MomentGrid, type ViewerMoment } from "./MomentGrid";
 import { RatingBlock } from "./RatingBlock";
+import { BackToMap } from "@/components/BackToMap";
+import { MapBackdropShell } from "@/components/MapBackdropShell";
 
 // ---------------------------------------------------------------------------
 // Share preview (PLAN.md Phase 2): OG tags are the product's actual growth
@@ -208,17 +210,18 @@ export default async function LocationPage({
     });
 
   return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-16 sm:px-8">
-      {/* Back to the index — quiet, top-left. */}
-      <Link
-        href="/"
-        className="specimen-label transition-colors hover:text-[var(--ink)]"
-      >
-        ← All places
-      </Link>
+    <>
+      {/* Contours, not the map snapshot: most visitors arrive here from a
+          SHARED LINK with no map session behind them, so there's usually no
+          snapshot to show — and this page's hero photo is the visual lead;
+          the backdrop must stay abstract under it. */}
+      <MapBackdropShell variant="contours" />
+      <main className="relative mx-auto w-full max-w-3xl flex-1 px-6 py-8 sm:px-8">
+      {/* No SiteHeader (see its note): just the quiet way back. */}
+      <BackToMap />
 
       {/* Field-guide header. The signature: the specimen coordinate label. */}
-      <header className="mt-8 border-b border-[var(--border)] pb-8">
+      <header className="mt-10 border-b border-[var(--border)] pb-8">
         {/* The place's face — a real photo of somewhere real. */}
         {heroSrc && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -291,6 +294,7 @@ export default async function LocationPage({
         </div>
         <MomentGrid moments={moments} slug={slug} signedIn={!!viewer} />
       </section>
-    </main>
+      </main>
+    </>
   );
 }

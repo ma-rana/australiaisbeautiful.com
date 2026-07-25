@@ -21,6 +21,7 @@
 
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { consume, LIMITS } from "@/lib/rate-limit";
 import { DEDUP_RADIUS_M } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -32,7 +33,16 @@ const CLUSTER_RADIUS_METRES = DEDUP_RADIUS_M;
 
 const RequestSchema = z.object({
   name: z.string().trim().min(2).max(120),
-  note: z.string().trim().max(1000).optional(),
+  // The WHY is REQUIRED, and its floor is deliberate: it's the only thing a
+  // curator can actually judge a suggestion by. "nice spot" clears nothing;
+  // twenty characters is the minimum at which "been twice, north track is the
+  // good one" fits. An empty-note pin is exactly the "wrong request" that
+  // wastes a queue slot — requiring the why filters it at the door.
+  note: z
+    .string()
+    .trim()
+    .min(20, "Tell us a little more — what makes it worth the trip?")
+    .max(1000),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   fromNearMe: z.boolean().default(false),
@@ -44,13 +54,25 @@ export type RequestResult =
 
 export async function submitLocationRequest(input: {
   name: string;
-  note?: string;
+  note: string;
   latitude: number;
   longitude: number;
   fromNearMe?: boolean;
 }): Promise<RequestResult> {
   // Suggesting a place needs an account (the gentle wall) — viewing never does.
-  await requireUser();
+  const user = await requireUser();
+
+  // Rate limit (SECURITY.md §11): each request can CREATE a cluster — a row a
+  // human curator must eventually look at — so the ceiling protects the
+  // queue, which is the scarcest resource in the whole pipeline.
+  const rl = consume(`request:${user.id}`, LIMITS.REQUEST);
+  if (!rl.ok) {
+    return {
+      ok: false,
+      error:
+        "You've suggested a lot of places today — give the curators a chance to catch up and try again tomorrow.",
+    };
+  }
 
   const parsed = RequestSchema.safeParse(input);
   if (!parsed.success) {

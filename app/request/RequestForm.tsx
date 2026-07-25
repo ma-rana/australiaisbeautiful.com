@@ -51,14 +51,38 @@ export function RequestForm() {
       setResult({
         ok: false,
         error:
-          "Where is it? Drag the map until the pin is on the spot, or use your location.",
+          "Where is it? Use your location, then drag the map until the pin is on the spot.",
+      });
+      return;
+    }
+    // ON-SITE REQUIRED (product decision, 2026-07-25): suggestions must be
+    // made from at or near the place — the pin has to sit inside the on-site
+    // zone. Known trade-offs, accepted deliberately: geolocation is
+    // client-claimed so this deters casual armchair pins rather than defeating
+    // a determined spoofer, and it excludes the suggest-from-home-later case.
+    // To soften back to signal-only, delete this block — everything else
+    // (zone, flag, curator display) already works without it.
+    if (!point.fromMyLocation) {
+      setResult({
+        ok: false,
+        error:
+          "Suggestions are made from the place itself — tap “Use my current location” and drop the pin inside the circle. If you're not there right now, save it for your next visit.",
+      });
+      return;
+    }
+    // The why is required (see actions.ts — it's the only thing a curator can
+    // judge by). Checked here too so nobody round-trips to find out.
+    if (note.trim().length < 20) {
+      setResult({
+        ok: false,
+        error: "Tell us a little more — what makes it worth the trip?",
       });
       return;
     }
     startTransition(async () => {
       const res = await submitLocationRequest({
         name,
-        note: note || undefined,
+        note,
         latitude: point.latitude,
         longitude: point.longitude,
         fromNearMe: point.fromMyLocation,
@@ -125,8 +149,9 @@ export function RequestForm() {
               Why should someone go?
             </label>
             <p className="mt-1 text-sm text-[var(--muted)]">
-              What makes it worth the trip, and anything useful you know from
-              being there.
+              At least a sentence — this is what our curators judge the
+              suggestion by. What makes it worth the trip, and anything useful
+              you know from being there.
             </p>
             <textarea
               id="place-note"

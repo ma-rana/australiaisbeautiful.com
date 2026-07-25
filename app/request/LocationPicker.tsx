@@ -59,6 +59,31 @@ const ME_SRC = "picker-me";
 const ME_COLOR = "#b06a3f"; // var(--ochre) — layer paint can't read CSS vars
 const ME_FILL = "rgba(176, 106, 63, 0.14)";
 
+// THE ON-SITE ZONE. Pins placed within this distance of the person's located
+// position are flagged fromMyLocation — the "suggested from the spot" trust
+// signal curators see. It is deliberately a SIGNAL and not a wall: browser
+// geolocation is client-claimed and trivially spoofed (DevTools sensor
+// override), so a hard requirement would block honest people — the
+// suggest-it-from-home-after-the-hike case, the desktop with a 50m-wrong WiFi
+// fix — while stopping nobody determined. Quality control stays where it can
+// actually work: the curator queue. The zone's job is to make the honest case
+// legible, and to be VISIBLE, so an explorer standing at the place knows
+// their pin carries extra weight.
+const ONSITE_RADIUS_M = 750;
+
+// Ground distance between two points, in metres (haversine).
+function distanceM(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
 // A circle layer's radius is in PIXELS; the accuracy is in METRES. The bridge
 // is exponential zoom interpolation: metres-per-pixel halves with each zoom
 // level, so px(z) = px(0) × 2^z renders a circle of constant ground size.
@@ -102,9 +127,29 @@ function showMeHalo(
         "circle-radius",
         accuracyRadiusStops(accuracyM, lat),
       );
+      map.setPaintProperty(
+        "picker-me-zone",
+        "circle-radius",
+        accuracyRadiusStops(ONSITE_RADIUS_M, lat),
+      );
       return;
     }
     map.addSource(ME_SRC, { type: "geojson", data });
+    // The on-site zone, under everything: a wide, faint ring at
+    // ONSITE_RADIUS_M. Pins inside it are marked as suggested from the spot.
+    map.addLayer({
+      id: "picker-me-zone",
+      type: "circle",
+      source: ME_SRC,
+      paint: {
+        "circle-radius": accuracyRadiusStops(ONSITE_RADIUS_M, lat),
+        "circle-color": "rgba(176, 106, 63, 0.05)",
+        "circle-stroke-color": ME_COLOR,
+        "circle-stroke-width": 1,
+        "circle-stroke-opacity": 0.45,
+        "circle-pitch-alignment": "map",
+      },
+    });
     map.addLayer({
       id: "picker-me-accuracy",
       type: "circle",
@@ -165,6 +210,16 @@ export function LocationPicker({
   const [lngText, setLngText] = useState("");
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  // Where the person actually is, once they've shared it — held in memory for
+  // this form only (D8), used to (a) draw the on-site zone and (b) decide
+  // whether the pin is inside it. State for rendering the hint; the ref is
+  // what the map's moveend handler (bound once) reads.
+  const [located, setLocated] = useState<{
+    lat: number;
+    lng: number;
+    acc: number;
+  } | null>(null);
+  const locatedRef = useRef<typeof located>(null);
   // If the mini map itself dies (style, tiles, WebGL), the form must not die
   // with it — the manual fields become the primary input instead of a hidden
   // escape hatch, and the dead canvas is replaced with an honest note.
@@ -239,10 +294,18 @@ export function LocationPicker({
         return;
       }
       const c = map.getCenter();
+      // On-site is a DISTANCE, not an exact match: fine-tuning the pin to the
+      // actual lookout fifty metres from where you're standing must not strip
+      // the "suggested from the spot" signal. The accuracy figure widens the
+      // zone — a fix that's 50m wrong shouldn't penalise the pin.
+      const loc = locatedRef.current;
+      const onSite =
+        !!loc &&
+        distanceM(c.lat, c.lng, loc.lat, loc.lng) <= ONSITE_RADIUS_M + loc.acc;
       onChangeRef.current({
         latitude: c.lat,
         longitude: c.lng,
-        fromMyLocation: false,
+        fromMyLocation: onSite,
       });
       // Share the view back (see ./camera): a hand-chosen pan is a view
       // preference, same as on the big map. Programmatic moves — including
@@ -329,11 +392,19 @@ export function LocationPicker({
           setGeoError("You're outside Australia — drop the pin by hand instead.");
           return;
         }
-        // The halo: your position with the accuracy radius drawn honestly.
-        // It stays put if you then drag the pin elsewhere — the halo is where
-        // YOU are, the pin is the PLACE; they're allowed to disagree.
+        // The halo + the on-site zone: your position, the accuracy radius,
+        // and the ring within which a pin counts as suggested-from-the-spot.
+        // The halo stays put if you then drag the pin elsewhere — the halo is
+        // where YOU are, the pin is the PLACE; they're allowed to disagree.
+        const fix = {
+          lat: latitude,
+          lng: longitude,
+          acc: Math.max(accuracy, 20),
+        };
+        locatedRef.current = fix;
+        setLocated(fix);
         if (mapRef.current) {
-          showMeHalo(mapRef.current, longitude, latitude, Math.max(accuracy, 20));
+          showMeHalo(mapRef.current, longitude, latitude, fix.acc);
         }
         aimAt(latitude, longitude, true, 15);
       },
@@ -361,7 +432,12 @@ export function LocationPicker({
       return;
     }
     setGeoError(null);
-    aimAt(latitude, longitude, false, 14);
+    const loc = locatedRef.current;
+    const onSite =
+      !!loc &&
+      distanceM(latitude, longitude, loc.lat, loc.lng) <=
+        ONSITE_RADIUS_M + loc.acc;
+    aimAt(latitude, longitude, onSite, 14);
   };
 
   return (
@@ -431,15 +507,23 @@ export function LocationPicker({
         </button>
 
         <p className="specimen-label tabular-nums">
-          {value
-            ? `${value.latitude.toFixed(5)}, ${value.longitude.toFixed(5)}`
-            : "No pin yet"}
+          {value ? (
+            <>
+              {value.latitude.toFixed(5)}, {value.longitude.toFixed(5)}
+              {value.fromMyLocation && (
+                <span className="text-[var(--ochre)]"> · On-site</span>
+              )}
+            </>
+          ) : (
+            "No pin yet"
+          )}
         </p>
       </div>
 
       <p className="mt-1.5 text-xs text-[var(--muted)]">
-        Your location is used once, to aim the map. Nothing about your movements
-        is stored.{" "}
+        {located
+          ? "Drop the pin inside the circle — suggestions are made from the place itself. Your location is used only for this; nothing about your movements is stored."
+          : "Suggestions are made from the place itself: share your location, then drop the pin inside the circle that appears. Your location is used once; nothing about your movements is stored."}{" "}
         <button
           type="button"
           onClick={() => setManual((m) => !m)}

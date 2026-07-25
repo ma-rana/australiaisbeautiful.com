@@ -106,6 +106,9 @@ export const LIMITS = {
   NEEDS_CODE_IP: { limit: 20, windowMs: 15 * 60 * 1000 },
   /** Ratings per user — generous; stops only scripted flooding. */
   RATING: { limit: 30, windowMs: 10 * 60 * 1000 },
+  /** Place suggestions per user. Ten a day covers an ambitious road trip;
+   *  a hundred is a script scattering clusters across the curator queue. */
+  REQUEST: { limit: 10, windowMs: 24 * 60 * 60 * 1000 },
 } as const satisfies Record<string, RateLimitOptions>;
 
 // Periodic sweep so idle keys don't accumulate forever. One hour is plenty:

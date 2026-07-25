@@ -9,6 +9,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { FIELD, LABEL, PRIMARY } from "@/components/AuthShell";
 import { createMoment } from "../actions";
 
 const MAX_FILES = 10;
@@ -71,20 +72,24 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
   // on approved places; review happens after, not as a gate).
   if (submitted) {
     return (
-      <div className="mt-8 rounded-lg border border-neutral-200 p-6 dark:border-neutral-800">
-        <p className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
-          Thanks — it&apos;s live.
+      <div className="mt-8 rounded-lg border border-[var(--border)] p-6">
+        <p className="specimen-label text-[var(--eucalypt)]">Live</p>
+        <p
+          className="mt-2 text-xl text-[var(--ink)]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          Thanks — it&apos;s on the place&apos;s page.
         </p>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          Your photos and note are on the place&apos;s page now. You can edit or
-          remove them any time from your contributions.
+        <p className="mt-2 leading-relaxed text-[var(--muted)]">
+          Your photos and note are up now, shared as an Explorer. You can edit
+          or remove them any time from your contributions.
         </p>
-        <div className="mt-4 flex gap-3">
+        <div className="mt-5 flex flex-wrap gap-2">
           <button
             onClick={() => router.push(`/location/${slug}`)}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900"
+            className="rounded-md bg-[var(--eucalypt)] px-4 py-2 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
           >
-            Back to the place
+            See it on the place
           </button>
           <button
             onClick={() => {
@@ -92,13 +97,13 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
               setCaption("");
               setSubmitted(false);
             }}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm dark:border-neutral-700"
+            className="rounded-md border border-[var(--border)] px-4 py-2 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--paper-2)]"
           >
-            Add more
+            Add another
           </button>
           <button
             onClick={() => router.push("/contributions")}
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm dark:border-neutral-700"
+            className="rounded-md border border-[var(--border)] px-4 py-2 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--paper-2)]"
           >
             Your contributions
           </button>
@@ -121,7 +126,7 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
         />
         <button
           onClick={() => inputRef.current?.click()}
-          className="w-full rounded-lg border-2 border-dashed border-neutral-300 py-10 text-neutral-500 hover:border-neutral-400 hover:text-neutral-700 dark:border-neutral-700 dark:hover:border-neutral-500"
+          className="w-full rounded-lg border-2 border-dashed border-[var(--border)] py-10 text-[var(--muted)] transition-colors hover:border-[var(--eucalypt)]/50 hover:text-[var(--ink)]"
         >
           {staged.length === 0 ? "Choose photos" : "Add more photos"}
         </button>
@@ -146,7 +151,7 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
                 ✕
               </button>
               {i === 0 && (
-                <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[0.65rem] text-white">
+                <span className="absolute bottom-1 left-1 rounded bg-[var(--eucalypt)] px-1.5 py-0.5 text-[0.6rem] font-medium uppercase tracking-wider text-[var(--paper)]">
                   Leads
                 </span>
               )}
@@ -157,31 +162,30 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
 
       {/* The field-note QUESTION — the deliberate difference from a blank box */}
       <div>
-        <label className="block font-medium text-neutral-800 dark:text-neutral-200">
+        <label htmlFor="moment-note" className={LABEL}>
           What should someone know before they go?
         </label>
-        <p className="mt-1 text-sm text-neutral-500">
-          The honest, useful stuff — parking, the best bit, what to skip, when to
-          come. This is what makes the place worth the trip.
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          The honest, useful stuff — parking, the best bit, what to skip, when
+          to come. This is what makes the place worth the trip.
         </p>
         <textarea
+          id="moment-note"
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           rows={4}
           maxLength={2000}
           placeholder="e.g. Park on the side street — the main lot fills by 9. The north track has the best view and it's an easy walk."
-          className="mt-3 w-full rounded-md border border-neutral-300 bg-transparent px-3 py-2 dark:border-neutral-700"
+          className={`${FIELD} mt-3`}
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-[var(--ochre)]">{error}</p>}
 
       <button
         onClick={onSubmit}
         disabled={isPending || staged.length === 0}
-        className="w-full rounded-md bg-neutral-900 px-4 py-3 font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+        className={`${PRIMARY} py-3`}
       >
         {isPending ? "Uploading…" : "Share"}
       </button>
