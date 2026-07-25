@@ -1,7 +1,7 @@
 {
   "version": 8,
   "name": "Australia Is Beautiful",
-  "glyphs": "https://fonts.openmaptiles.org/{fontstack}/{range}.pbf",
+  "glyphs": "/map/fonts/{fontstack}/{range}.pbf",
   "sources": {
     "aib": {
       "type": "vector",

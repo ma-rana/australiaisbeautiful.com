@@ -29,6 +29,12 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { placesNear, type NearbyPlace } from "./nearby-actions";
 import { MapControls } from "./MapControls";
 import { NEARBY_RADIUS_M, NEARBY_SEARCH_RADIUS_KM } from "@/lib/constants";
+import {
+  AUSTRALIA_BOUNDS,
+  AUSTRALIA_MAX_BOUNDS,
+  loadView,
+  saveView,
+} from "./camera";
 
 // Register the pmtiles:// protocol ONCE, at module scope.
 //
@@ -59,79 +65,12 @@ export type MapPlace = {
   face: string | null;
 };
 
-// The initial view: the whole continent.
-const AUSTRALIA_BOUNDS: [[number, number], [number, number]] = [
-  [112, -44],
-  [154, -9],
-];
-
-// The camera clamp. Slightly looser than the fit so fitBounds has room to work
-// (setting both identical makes the fit fight the clamp and shoves the camera
-// into a corner), but tight enough that you can't pan far past the coast into
-// the area the tileset doesn't cover — which renders as empty background and
-// reads as a broken layout rather than as ocean.
-const AUSTRALIA_MAX_BOUNDS: [[number, number], [number, number]] = [
-  [109, -46],
-  [157, -7],
-];
+// The initial view, the camera clamp, and the saved-view store live in
+// ./camera — shared with the /request LocationPicker so both surfaces open
+// where the person was last looking, and so "never persist a
+// geolocation-derived camera" (D8) is documented in one place.
 
 const SRC = "places";
-
-// Where the camera was left last time.
-//
-// Refreshing back to the whole continent every time is a real annoyance: if you
-// were looking at Seddon, you want Seddon again, not Australia. Stored in
-// localStorage so it survives the browser being closed and reopened — the
-// Google Maps behaviour: the map opens where you left it, today or next month.
-// (This originally used sessionStorage “so tomorrow starts fresh”, which in
-// practice just meant every first load reset to the continent — exactly the
-// annoyance this exists to remove.)
-//
-// This is a VIEW preference, not a location: it records where you were looking,
-// which is a different thing from where you were. Nothing derived from
-// geolocation is ever written here — the “near me” flow deliberately does not
-// save, see the note on findNearMe (D8).
-//
-// Versioned key: if the shape ever changes, bump the suffix and old values are
-// simply ignored rather than half-parsed.
-const VIEW_KEY = "aib:map-view:v1";
-
-type SavedView = { lng: number; lat: number; zoom: number };
-
-// A saved view is only trusted if it still makes sense: finite numbers, inside
-// the camera clamp, inside the zoom range. Anything else (corrupt JSON, a
-// value written by an older build, someone editing devtools) falls back to the
-// continent — a wrong-but-valid view is worse than the default, because the
-// clamp would drag the camera to an edge and the map would look broken.
-function loadView(): SavedView | null {
-  try {
-    const raw = localStorage.getItem(VIEW_KEY);
-    if (!raw) return null;
-    const v = JSON.parse(raw) as SavedView;
-    if (
-      !Number.isFinite(v.lng) ||
-      !Number.isFinite(v.lat) ||
-      !Number.isFinite(v.zoom)
-    ) {
-      return null;
-    }
-    const [[w, s], [e, n]] = AUSTRALIA_MAX_BOUNDS;
-    if (v.lng < w || v.lng > e || v.lat < s || v.lat > n) return null;
-    if (v.zoom < 3 || v.zoom > 19) return null;
-    return v;
-  } catch {
-    return null;
-  }
-}
-
-function saveView(v: SavedView) {
-  try {
-    localStorage.setItem(VIEW_KEY, JSON.stringify(v));
-  } catch {
-    // Storage can be unavailable (private mode, quota). Losing the saved view
-    // is a minor inconvenience, not worth failing over.
-  }
-}
 
 // Sprite geometry, in device pixels. Registered at pixelRatio 2, so the
 // rendered CSS size is half these numbers at icon-size 1.
@@ -388,8 +327,12 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
     map.on("error", (e) => {
       const msg = e.error?.message ?? "Map resource failed to load";
-      setFailed(msg);
       console.error("[map]", msg, e);
+      // A glyph range that fails is cosmetic — MapLibre renders the codepoint
+      // locally and carries on. Declaring the whole map failed over it would
+      // turn a font hiccup into a dead homepage (same fix as LocationPicker).
+      if (/glyph/i.test(msg)) return;
+      setFailed(msg);
     });
 
     // Keep the canvas matched to its container.
@@ -897,52 +840,85 @@ export function MapView({ places }: { places: MapPlace[] }) {
         sheetOpen={!!(selected || nearby?.length || locateError)}
       />
 
-      {/* What the location turned up — or why it didn't. */}
+      {/* What the location turned up — or why it didn't. Ochre leads the
+          header because this list is anchored to YOU (the ochre "me" dot),
+          unlike everything else on the map, which is eucalypt-place. */}
       {(nearby?.length || locateError) && !selected && (
-        <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
+        <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-96 sm:p-4">
           <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
             <div className="flex items-baseline justify-between border-b border-[var(--border)] px-4 py-3">
-              <p className="specimen-label">
-                {nearby?.length ? `${nearby.length} nearby` : "Near me"}
-                {accuracy !== null && (
-                  <span className="ml-2 normal-case tracking-normal opacity-70">
-                    ±{Math.round(accuracy)}m
-                  </span>
+              <div>
+                <p className="specimen-label text-[var(--ochre)]">Near you</p>
+                {nearby && nearby.length > 0 && (
+                  <p className="mt-0.5 text-sm text-[var(--muted)]">
+                    {nearby.length} place{nearby.length === 1 ? "" : "s"} within{" "}
+                    {NEARBY_SEARCH_RADIUS_KM} km
+                    {accuracy !== null && (
+                      <span className="opacity-70"> · ±{Math.round(accuracy)} m</span>
+                    )}
+                  </p>
                 )}
-              </p>
+              </div>
               <button
                 onClick={() => {
                   setNearby(null);
                   setLocateError(null);
                   setAccuracy(null);
                 }}
-                className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
+                className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
               >
                 Close
               </button>
             </div>
 
             {locateError && (
-              <p className="px-4 py-3 text-sm text-[var(--muted)]">
+              <p className="px-4 py-4 text-sm leading-relaxed text-[var(--muted)]">
                 {locateError}
               </p>
             )}
 
             {nearby && nearby.length > 0 && (
-              <ul className="max-h-64 divide-y divide-[var(--border)] overflow-y-auto">
+              <ul className="max-h-72 divide-y divide-[var(--border)] overflow-y-auto">
                 {nearby.map((p) => (
                   <li key={p.slug}>
                     <button
                       onClick={() => router.push(`/location/${p.slug}`)}
-                      className="flex w-full items-baseline justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--paper-2)]"
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--paper-2)]"
                     >
-                      <span className="min-w-0">
-                        <span className="block truncate text-[var(--ink)]">
+                      {/* The place's face — a photo makes the "go here?" case
+                          better than a name can. No face yet → a quiet
+                          category placeholder, never a broken image. */}
+                      {p.face ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={p.face}
+                          alt=""
+                          className="h-14 w-14 shrink-0 rounded-md object-cover"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden
+                          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-[var(--paper-2)] text-lg text-[var(--eucalypt)]"
+                          style={{ fontFamily: "var(--font-display)" }}
+                        >
+                          {p.name.charAt(0)}
+                        </span>
+                      )}
+
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="block truncate text-[1.02rem] leading-snug text-[var(--ink)]"
+                          style={{ fontFamily: "var(--font-display)" }}
+                        >
                           {p.name}
                         </span>
-                        <span className="specimen-label">{p.place}</span>
+                        <span className="specimen-label mt-0.5 block truncate">
+                          {p.kind}
+                          {p.place ? ` · ${p.place}` : ""}
+                        </span>
                       </span>
-                      <span className="shrink-0 text-sm text-[var(--muted)]">
+
+                      <span className="shrink-0 text-right text-sm tabular-nums text-[var(--muted)]">
                         {p.metres < 1000
                           ? `${Math.round(p.metres)} m`
                           : `${(p.metres / 1000).toFixed(1)} km`}

@@ -1,6 +1,6 @@
 "use client";
 
-// app/contributions/MomentRow.tsx — one of your contributions, with controls.
+// app/contributions/MomentRow.tsx — one entry in your field log, with controls.
 //
 // What you can do with your own moment:
 //   - Edit the field note (the photos are fixed once processed; the note is the
@@ -10,6 +10,11 @@
 //
 // If it was removed by a moderator, the reason is shown plainly. A removal the
 // contributor can't see the reason for is just a disappearance.
+//
+// PALETTE NOTE: destructive actions use OCHRE, not red. The public site has no
+// red in its system (errors on the auth pages are ochre too), and a full
+// alarm-red button in this calm palette reads like a different product. The
+// confirm step is what actually protects the delete; the colour just marks it.
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
@@ -30,6 +35,35 @@ export type OwnMoment = {
   location: { name: string; slug: string; place: string };
   media: { id: string; src: string }[];
 };
+
+// The shared button vocabulary for this card.
+const GHOST =
+  "rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--ink)] " +
+  "transition-colors hover:bg-[var(--paper-2)] disabled:opacity-50";
+const SOLID =
+  "rounded-md bg-[var(--eucalypt)] px-3 py-1.5 text-sm font-medium text-[var(--paper)] " +
+  "transition-opacity hover:opacity-90 disabled:opacity-50";
+
+// Status, as a specimen tag with a coloured dot — the card's one glanceable
+// signal. Eucalypt = live on the place; stone = you've hidden it; ochre = a
+// moderator removed it.
+function StatusTag({ removed, isPublic }: { removed: boolean; isPublic: boolean }) {
+  const [dot, label] = removed
+    ? ["var(--ochre)", "Removed"]
+    : !isPublic
+      ? ["var(--muted)", "Hidden by you"]
+      : ["var(--eucalypt)", "Live"];
+  return (
+    <span className="specimen-label inline-flex shrink-0 items-center gap-1.5">
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: dot }}
+        aria-hidden
+      />
+      {label}
+    </span>
+  );
+}
 
 export function MomentRow({ moment }: { moment: OwnMoment }) {
   const [isPending, startTransition] = useTransition();
@@ -75,49 +109,52 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
 
   if (deleted) {
     return (
-      <div className="rounded-lg border border-[var(--border)] px-5 py-4 text-sm text-[var(--muted)]">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--paper-2)] px-5 py-4 text-sm text-[var(--muted)]">
         Deleted — your photos and note have been removed.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--border)]">
-      {/* Which place, and its state */}
-      <div className="flex items-baseline justify-between border-b border-[var(--border)] px-5 py-3">
-        <Link
-          href={`/location/${moment.location.slug}`}
-          className="font-medium text-[var(--ink)] underline-offset-4 hover:underline"
-        >
-          {moment.location.name}
-        </Link>
-        <span className="specimen-label">
-          {removed
-            ? "Removed"
-            : !isPublic
-              ? "Hidden by you"
-              : "Live"}
-        </span>
+    <article className="overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--paper)]">
+      {/* Which place, and this entry's state. The place leads — it's the main
+          character even in your own log. */}
+      <div className="flex items-baseline justify-between gap-4 px-5 py-3.5">
+        <div className="min-w-0">
+          <Link
+            href={`/location/${moment.location.slug}`}
+            className="block truncate text-[1.05rem] text-[var(--ink)] underline-offset-4 hover:underline"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {moment.location.name}
+          </Link>
+          {moment.location.place && (
+            <p className="specimen-label mt-0.5">{moment.location.place}</p>
+          )}
+        </div>
+        <StatusTag removed={removed} isPublic={isPublic} />
       </div>
 
       {/* A moderator removed it — say why, plainly. */}
       {removed && moment.rejectionReason && (
-        <div className="border-b border-[var(--border)] bg-[var(--paper-2)] px-5 py-3 text-sm">
-          <p className="font-medium text-[var(--ink)]">Why this was removed</p>
-          <p className="mt-1 text-[var(--muted)]">{moment.rejectionReason}</p>
+        <div className="border-y border-[var(--border)] bg-[var(--paper-2)] px-5 py-3 text-sm">
+          <p className="specimen-label text-[var(--ochre)]">Why this was removed</p>
+          <p className="mt-1.5 leading-relaxed text-[var(--foreground)]/85">
+            {moment.rejectionReason}
+          </p>
         </div>
       )}
 
-      {/* Photos */}
-      <div className="flex gap-2 overflow-x-auto bg-[var(--paper-2)] p-3">
+      {/* Photos — the contact sheet. */}
+      <div className="flex gap-2 overflow-x-auto border-y border-[var(--border)] bg-[var(--paper-2)] p-3">
         {moment.media.map((mm) => (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={mm.id}
             src={mm.src}
             alt=""
-            className={`h-28 w-28 shrink-0 rounded object-cover ${
-              removed || !isPublic ? "opacity-50" : ""
+            className={`h-28 w-28 shrink-0 rounded-md object-cover transition-opacity ${
+              removed || !isPublic ? "opacity-45 saturate-50" : ""
             }`}
           />
         ))}
@@ -132,14 +169,11 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
               onChange={(e) => setCaption(e.target.value)}
               rows={4}
               maxLength={2000}
-              className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2 text-sm"
+              autoFocus
+              className="w-full rounded-md border border-[var(--border)] bg-[var(--paper)] px-3.5 py-2.5 text-sm leading-relaxed text-[var(--ink)] transition-colors focus:border-[var(--eucalypt)] focus:outline-none focus:ring-2 focus:ring-[var(--eucalypt)]/20"
             />
-            <div className="mt-2 flex gap-2">
-              <button
-                onClick={onSaveCaption}
-                disabled={isPending}
-                className="rounded-md bg-[var(--ink)] px-3 py-1.5 text-sm text-[var(--paper)] disabled:opacity-50"
-              >
+            <div className="mt-2.5 flex items-center gap-2">
+              <button onClick={onSaveCaption} disabled={isPending} className={SOLID}>
                 {isPending ? "Saving…" : "Save note"}
               </button>
               <button
@@ -147,7 +181,7 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
                   setCaption(moment.caption ?? "");
                   setEditing(false);
                 }}
-                className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
+                className={GHOST}
               >
                 Cancel
               </button>
@@ -159,49 +193,45 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
               <p className="leading-relaxed text-[var(--ink)]">{caption}</p>
             ) : (
               <p className="text-sm italic text-[var(--muted)]">
-                No note — add one so people know what to expect.
+                No field note yet — parking, timing, which track is the good one.
               </p>
             )}
-            <p className="specimen-label mt-3">
+            <p className="specimen-label mt-3.5">
               {new Date(moment.createdAt).toLocaleDateString("en-AU", {
                 day: "numeric",
                 month: "short",
                 year: "numeric",
               })}
               {moment.reactionCount > 0 &&
-                `   ·   ${moment.reactionCount} found this a good spot`}
+                `   ·   ${moment.reactionCount} found this worth it`}
             </p>
           </>
         )}
       </div>
 
-      {error && (
-        <p className="px-5 pb-2 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="px-5 pb-3 text-sm text-[var(--ochre)]">{error}</p>}
 
       {/* Controls */}
       {!removed && !editing && (
-        <div className="flex flex-wrap gap-2 border-t border-[var(--border)] px-5 py-3">
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm"
-          >
+        <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] px-5 py-3">
+          <button onClick={() => setEditing(true)} className={GHOST}>
             Edit note
           </button>
-          <button
-            onClick={onToggleVisibility}
-            disabled={isPending}
-            className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm disabled:opacity-50"
-          >
+          <button onClick={onToggleVisibility} disabled={isPending} className={GHOST}>
             {isPublic ? "Hide from the place" : "Show again"}
           </button>
 
+          <span className="flex-1" />
+
           {confirmDelete ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2.5">
+              <span className="text-sm text-[var(--muted)]">
+                Photos and note, gone for good?
+              </span>
               <button
                 onClick={onDelete}
                 disabled={isPending}
-                className="rounded-md bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                className="rounded-md bg-[var(--ochre)] px-3 py-1.5 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90 disabled:opacity-50"
               >
                 {isPending ? "Deleting…" : "Delete permanently"}
               </button>
@@ -209,19 +239,19 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
                 onClick={() => setConfirmDelete(false)}
                 className="text-sm text-[var(--muted)] underline-offset-4 hover:underline"
               >
-                Cancel
+                Keep it
               </button>
             </span>
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-red-600 dark:text-red-400"
+              className="rounded-md px-3 py-1.5 text-sm text-[var(--ochre)] transition-colors hover:bg-[var(--paper-2)]"
             >
               Delete
             </button>
           )}
         </div>
       )}
-    </div>
+    </article>
   );
 }

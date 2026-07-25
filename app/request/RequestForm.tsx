@@ -2,8 +2,8 @@
 
 // app/request/RequestForm.tsx — the suggest-a-place form.
 //
-// Asks for: the name, where it is (coords — via "use my location" or manual),
-// and WHY. The why is the real signal: "been here twice, the north track is the
+// Asks for: the name, where it is (a pin on a map — see LocationPicker), and
+// WHY. The why is the real signal: "been here twice, the north track is the
 // good one" is self-evidently from someone who's actually been, which is worth
 // more than any verification could be.
 //
@@ -13,63 +13,61 @@
 // out.
 
 import { useState, useTransition } from "react";
+import dynamic from "next/dynamic";
+import { FIELD, LABEL, PRIMARY } from "@/components/AuthShell";
+import type { PickedPoint } from "./LocationPicker";
 import { submitLocationRequest, type RequestResult } from "./actions";
+
+// MapLibre touches `window` at IMPORT time — the exact reason MapShell exists
+// for the homepage map. A static import here evaluates maplibre-gl during the
+// server render of /request and the canvas comes up dead. The type import
+// above is safe (types are erased); the component itself must load client-only.
+const LocationPicker = dynamic(
+  () => import("./LocationPicker").then((m) => m.LocationPicker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mt-2 flex h-72 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--paper-2)]">
+        <p className="specimen-label">Loading the map…</p>
+      </div>
+    ),
+  },
+);
 
 export function RequestForm() {
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
-  const [lat, setLat] = useState("");
-  const [lng, setLng] = useState("");
-  const [fromNearMe, setFromNearMe] = useState(false);
-  const [locating, setLocating] = useState(false);
+  const [point, setPoint] = useState<PickedPoint | null>(null);
   const [result, setResult] = useState<RequestResult | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // "Use my location" — a one-off browser geolocation read to fill the pin.
-  // NOT tracking: nothing is stored but the coordinates of the place being
-  // suggested, and `fromNearMe` is just a flag that the pin was self-located.
-  const useMyLocation = () => {
-    if (!navigator.geolocation) return;
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLat(pos.coords.latitude.toFixed(6));
-        setLng(pos.coords.longitude.toFixed(6));
-        setFromNearMe(true);
-        setLocating(false);
-      },
-      () => setLocating(false),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  };
-
   const onSubmit = () => {
     setResult(null);
-    const latitude = Number(lat);
-    const longitude = Number(lng);
     if (!name.trim()) {
       setResult({ ok: false, error: "What's the place called?" });
       return;
     }
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      setResult({ ok: false, error: "We need the coordinates — use your location or enter them." });
+    if (!point) {
+      setResult({
+        ok: false,
+        error:
+          "Where is it? Drag the map until the pin is on the spot, or use your location.",
+      });
       return;
     }
     startTransition(async () => {
       const res = await submitLocationRequest({
         name,
         note: note || undefined,
-        latitude,
-        longitude,
-        fromNearMe,
+        latitude: point.latitude,
+        longitude: point.longitude,
+        fromNearMe: point.fromMyLocation,
       });
       setResult(res);
       if (res.ok && res.status === "queued") {
         setName("");
         setNote("");
-        setLat("");
-        setLng("");
-        setFromNearMe(false);
+        setPoint(null);
       }
     });
   };
@@ -81,8 +79,9 @@ export function RequestForm() {
           after a successful submit reads as "did that work?" */}
       {result?.ok && result.status === "queued" ? (
         <div className="rounded-lg border border-[var(--border)] p-6">
+          <p className="specimen-label text-[var(--eucalypt)]">Received</p>
           <p
-            className="text-xl text-[var(--ink)]"
+            className="mt-2 text-xl text-[var(--ink)]"
             style={{ fontFamily: "var(--font-display)" }}
           >
             Thanks — it&apos;s in.
@@ -94,111 +93,78 @@ export function RequestForm() {
           </p>
           <button
             onClick={() => setResult(null)}
-            className="mt-4 rounded-md border border-[var(--border)] px-4 py-2 text-sm"
+            className="mt-4 rounded-md border border-[var(--border)] px-4 py-2 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--paper-2)]"
           >
             Suggest another place
           </button>
         </div>
       ) : (
         <>
-      <div>
-        <label className="block font-medium text-[var(--ink)]">
-          What&apos;s it called?
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Werribee Gorge Circuit Walk"
-          className="mt-2 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2"
-        />
-      </div>
+          <div>
+            <label htmlFor="place-name" className={LABEL}>
+              What&apos;s it called?
+            </label>
+            <input
+              id="place-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Werribee Gorge Circuit Walk"
+              className={FIELD}
+            />
+          </div>
 
-      <div>
-        <label className="block font-medium text-[var(--ink)]">Where is it?</label>
-        <div className="mt-2 flex gap-2">
-          <input
-            value={lat}
-            onChange={(e) => {
-              setLat(e.target.value);
-              setFromNearMe(false);
-            }}
-            placeholder="Latitude"
-            className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2"
-          />
-          <input
-            value={lng}
-            onChange={(e) => {
-              setLng(e.target.value);
-              setFromNearMe(false);
-            }}
-            placeholder="Longitude"
-            className="w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2"
-          />
-        </div>
-        <button
-          onClick={useMyLocation}
-          disabled={locating}
-          className="mt-2 text-sm text-[var(--eucalypt)] underline-offset-4 hover:underline disabled:opacity-50"
-        >
-          {locating ? "Finding you…" : "Use my current location"}
-        </button>
-        <p className="mt-1 text-xs text-[var(--muted)]">
-          Used once to place the pin. Nothing about your movements is stored.
-        </p>
-      </div>
+          {/* WHERE — a pin on the map, not a pair of numbers. */}
+          <div>
+            <label className={LABEL}>Where is it?</label>
+            <LocationPicker value={point} onChange={setPoint} />
+          </div>
 
-      {/* The WHY — the real signal */}
-      <div>
-        <label className="block font-medium text-[var(--ink)]">
-          Why should someone go?
-        </label>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          What makes it worth the trip, and anything useful you know from being
-          there.
-        </p>
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={4}
-          maxLength={1000}
-          placeholder="e.g. Been twice. The north track is the good one — the south is overgrown. Best light late afternoon, and there's parking at the top gate."
-          className="mt-2 w-full rounded-md border border-[var(--border)] bg-transparent px-3 py-2"
-        />
-      </div>
+          {/* The WHY — the real signal */}
+          <div>
+            <label htmlFor="place-note" className={LABEL}>
+              Why should someone go?
+            </label>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              What makes it worth the trip, and anything useful you know from
+              being there.
+            </p>
+            <textarea
+              id="place-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={4}
+              maxLength={1000}
+              placeholder="e.g. Been twice. The north track is the good one — the south is overgrown. Best light late afternoon, and there's parking at the top gate."
+              className={FIELD}
+            />
+          </div>
 
-      {/* Honest outcome messaging */}
-      {result && (
-        <div
-          className={`rounded-md border px-4 py-3 text-sm ${
-            result.ok
-              ? "border-[var(--border)] text-[var(--ink)]"
-              : "border-red-300 text-red-600 dark:text-red-400"
-          }`}
-        >
-          {result.ok ? (
-            <>
-              {result.status === "queued" && <strong>Thanks — it&apos;s in. </strong>}
-              {result.status === "already_exists" && (
-                <strong>Already here. </strong>
+          {/* Honest outcome messaging */}
+          {result && (
+            <div
+              className={`rounded-md border border-[var(--border)] px-4 py-3 text-sm leading-relaxed ${
+                result.ok ? "text-[var(--ink)]" : "text-[var(--ochre)]"
+              }`}
+            >
+              {result.ok ? (
+                <>
+                  {result.status === "already_exists" && (
+                    <strong>Already here. </strong>
+                  )}
+                  {result.status === "already_rejected" && (
+                    <strong>We&apos;ve looked at this one. </strong>
+                  )}
+                  {result.message}
+                </>
+              ) : (
+                result.error
               )}
-              {result.status === "already_rejected" && (
-                <strong>We&apos;ve looked at this one. </strong>
-              )}
-              {result.message}
-            </>
-          ) : (
-            result.error
+            </div>
           )}
-        </div>
-      )}
 
-      <button
-        onClick={onSubmit}
-        disabled={isPending}
-        className="w-full rounded-md bg-[var(--ink)] px-4 py-3 font-medium text-[var(--paper)] disabled:opacity-50"
-      >
-        {isPending ? "Sending…" : "Suggest this place"}
-      </button>
+          <button onClick={onSubmit} disabled={isPending} className={PRIMARY}>
+            {isPending ? "Sending…" : "Suggest this place"}
+          </button>
         </>
       )}
     </div>

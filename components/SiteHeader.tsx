@@ -48,18 +48,21 @@ export function SiteHeader({ email }: { email: string | null }) {
         </Link>
 
         <nav className="flex items-center gap-4 text-sm">
-          {/* On the map this is the compass in the control stack (§7c — the
-              request belongs at the moment of noticing). Off the map there's no
-              stack, so it lives here. */}
-          <Link href="/request" className={LINK}>
-            Suggest a place
-          </Link>
+          {/* Self-links are omitted — a nav item pointing at the page you're on
+              is a button to nowhere (same reasoning as the map wordmark). */}
+          {pathname !== "/request" && (
+            <Link href="/request" className={LINK}>
+              Suggest a place
+            </Link>
+          )}
 
           {email ? (
             <>
-              <Link href="/contributions" className={LINK}>
-                Your contributions
-              </Link>
+              {pathname !== "/contributions" && (
+                <Link href="/contributions" className={LINK}>
+                  Your contributions
+                </Link>
+              )}
               <button
                 onClick={() =>
                   // Absolute URL from the current host — keeps the redirect on
