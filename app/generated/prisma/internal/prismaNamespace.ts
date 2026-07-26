@@ -1880,6 +1880,7 @@ export const MomentScalarFieldEnum = {
   caption: 'caption',
   isPublic: 'isPublic',
   reactionCount: 'reactionCount',
+  dismissedByUser: 'dismissedByUser',
   claimedById: 'claimedById',
   claimedAt: 'claimedAt',
   claimExpiresAt: 'claimExpiresAt',

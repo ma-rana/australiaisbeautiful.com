@@ -47,3 +47,24 @@ export const NEARBY_RADIUS_M = 500;
  * reach" — a drive rather than a walk, so it's kilometres, not metres.
  */
 export const NEARBY_SEARCH_RADIUS_KM = 50;
+
+/**
+ * The ON-SITE zone: how close a suggestion pin must be to the requester's own
+ * located position to count as "made from the place itself".
+ *
+ * This is the radius the picker draws as a ring after "use my current
+ * location", and — critically — the radius the SERVER re-checks on submit
+ * (app/request/actions.ts). The client flag alone is forgeable; the server
+ * verifies the pin sits within this distance of the reported position before
+ * accepting the request.
+ *
+ * Generous on purpose (larger than DEDUP): a person standing at a big place
+ * may pin a lookout a few hundred metres from where they're standing and still
+ * plainly be there. The accuracy of the browser fix is ADDED to this at the
+ * check, so a poor GPS fix doesn't wrongly reject an honest on-site pin.
+ *
+ * NOTE: this is a SIGNAL-turned-REQUIREMENT (product decision 2026-07-25). It
+ * deters casual armchair pins; it cannot defeat a determined spoofer (browser
+ * geolocation is client-claimed). Real quality control is the curator queue.
+ */
+export const ONSITE_RADIUS_M = 750;

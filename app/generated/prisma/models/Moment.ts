@@ -43,6 +43,7 @@ export type MomentMinAggregateOutputType = {
   caption: string | null
   isPublic: boolean | null
   reactionCount: number | null
+  dismissedByUser: boolean | null
   claimedById: string | null
   claimedAt: Date | null
   claimExpiresAt: Date | null
@@ -63,6 +64,7 @@ export type MomentMaxAggregateOutputType = {
   caption: string | null
   isPublic: boolean | null
   reactionCount: number | null
+  dismissedByUser: boolean | null
   claimedById: string | null
   claimedAt: Date | null
   claimExpiresAt: Date | null
@@ -83,6 +85,7 @@ export type MomentCountAggregateOutputType = {
   caption: number
   isPublic: number
   reactionCount: number
+  dismissedByUser: number
   claimedById: number
   claimedAt: number
   claimExpiresAt: number
@@ -113,6 +116,7 @@ export type MomentMinAggregateInputType = {
   caption?: true
   isPublic?: true
   reactionCount?: true
+  dismissedByUser?: true
   claimedById?: true
   claimedAt?: true
   claimExpiresAt?: true
@@ -133,6 +137,7 @@ export type MomentMaxAggregateInputType = {
   caption?: true
   isPublic?: true
   reactionCount?: true
+  dismissedByUser?: true
   claimedById?: true
   claimedAt?: true
   claimExpiresAt?: true
@@ -153,6 +158,7 @@ export type MomentCountAggregateInputType = {
   caption?: true
   isPublic?: true
   reactionCount?: true
+  dismissedByUser?: true
   claimedById?: true
   claimedAt?: true
   claimExpiresAt?: true
@@ -260,6 +266,7 @@ export type MomentGroupByOutputType = {
   caption: string | null
   isPublic: boolean
   reactionCount: number
+  dismissedByUser: boolean
   claimedById: string | null
   claimedAt: Date | null
   claimExpiresAt: Date | null
@@ -303,6 +310,7 @@ export type MomentWhereInput = {
   caption?: Prisma.StringNullableFilter<"Moment"> | string | null
   isPublic?: Prisma.BoolFilter<"Moment"> | boolean
   reactionCount?: Prisma.IntFilter<"Moment"> | number
+  dismissedByUser?: Prisma.BoolFilter<"Moment"> | boolean
   claimedById?: Prisma.StringNullableFilter<"Moment"> | string | null
   claimedAt?: Prisma.DateTimeNullableFilter<"Moment"> | Date | string | null
   claimExpiresAt?: Prisma.DateTimeNullableFilter<"Moment"> | Date | string | null
@@ -330,6 +338,7 @@ export type MomentOrderByWithRelationInput = {
   caption?: Prisma.SortOrderInput | Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   reactionCount?: Prisma.SortOrder
+  dismissedByUser?: Prisma.SortOrder
   claimedById?: Prisma.SortOrderInput | Prisma.SortOrder
   claimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   claimExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -360,6 +369,7 @@ export type MomentWhereUniqueInput = Prisma.AtLeast<{
   caption?: Prisma.StringNullableFilter<"Moment"> | string | null
   isPublic?: Prisma.BoolFilter<"Moment"> | boolean
   reactionCount?: Prisma.IntFilter<"Moment"> | number
+  dismissedByUser?: Prisma.BoolFilter<"Moment"> | boolean
   claimedById?: Prisma.StringNullableFilter<"Moment"> | string | null
   claimedAt?: Prisma.DateTimeNullableFilter<"Moment"> | Date | string | null
   claimExpiresAt?: Prisma.DateTimeNullableFilter<"Moment"> | Date | string | null
@@ -387,6 +397,7 @@ export type MomentOrderByWithAggregationInput = {
   caption?: Prisma.SortOrderInput | Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   reactionCount?: Prisma.SortOrder
+  dismissedByUser?: Prisma.SortOrder
   claimedById?: Prisma.SortOrderInput | Prisma.SortOrder
   claimedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   claimExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -415,6 +426,7 @@ export type MomentScalarWhereWithAggregatesInput = {
   caption?: Prisma.StringNullableWithAggregatesFilter<"Moment"> | string | null
   isPublic?: Prisma.BoolWithAggregatesFilter<"Moment"> | boolean
   reactionCount?: Prisma.IntWithAggregatesFilter<"Moment"> | number
+  dismissedByUser?: Prisma.BoolWithAggregatesFilter<"Moment"> | boolean
   claimedById?: Prisma.StringNullableWithAggregatesFilter<"Moment"> | string | null
   claimedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Moment"> | Date | string | null
   claimExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Moment"> | Date | string | null
@@ -433,6 +445,7 @@ export type MomentCreateInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -458,6 +471,7 @@ export type MomentUncheckedCreateInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -479,6 +493,7 @@ export type MomentUpdateInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -504,6 +519,7 @@ export type MomentUncheckedUpdateInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -527,6 +543,7 @@ export type MomentCreateManyInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -545,6 +562,7 @@ export type MomentUpdateManyMutationInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -563,6 +581,7 @@ export type MomentUncheckedUpdateManyInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -593,6 +612,7 @@ export type MomentCountOrderByAggregateInput = {
   caption?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   reactionCount?: Prisma.SortOrder
+  dismissedByUser?: Prisma.SortOrder
   claimedById?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
   claimExpiresAt?: Prisma.SortOrder
@@ -617,6 +637,7 @@ export type MomentMaxOrderByAggregateInput = {
   caption?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   reactionCount?: Prisma.SortOrder
+  dismissedByUser?: Prisma.SortOrder
   claimedById?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
   claimExpiresAt?: Prisma.SortOrder
@@ -637,6 +658,7 @@ export type MomentMinOrderByAggregateInput = {
   caption?: Prisma.SortOrder
   isPublic?: Prisma.SortOrder
   reactionCount?: Prisma.SortOrder
+  dismissedByUser?: Prisma.SortOrder
   claimedById?: Prisma.SortOrder
   claimedAt?: Prisma.SortOrder
   claimExpiresAt?: Prisma.SortOrder
@@ -889,6 +911,7 @@ export type MomentCreateWithoutUserInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -912,6 +935,7 @@ export type MomentUncheckedCreateWithoutUserInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -943,6 +967,7 @@ export type MomentCreateWithoutModeratedByInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -967,6 +992,7 @@ export type MomentUncheckedCreateWithoutModeratedByInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -997,6 +1023,7 @@ export type MomentCreateWithoutClaimedByInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1021,6 +1048,7 @@ export type MomentUncheckedCreateWithoutClaimedByInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedById?: string | null
@@ -1072,6 +1100,7 @@ export type MomentScalarWhereInput = {
   caption?: Prisma.StringNullableFilter<"Moment"> | string | null
   isPublic?: Prisma.BoolFilter<"Moment"> | boolean
   reactionCount?: Prisma.IntFilter<"Moment"> | number
+  dismissedByUser?: Prisma.BoolFilter<"Moment"> | boolean
   claimedById?: Prisma.StringNullableFilter<"Moment"> | string | null
   claimedAt?: Prisma.DateTimeNullableFilter<"Moment"> | Date | string | null
   claimExpiresAt?: Prisma.DateTimeNullableFilter<"Moment"> | Date | string | null
@@ -1122,6 +1151,7 @@ export type MomentCreateWithoutLocationInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1145,6 +1175,7 @@ export type MomentUncheckedCreateWithoutLocationInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1192,6 +1223,7 @@ export type MomentCreateWithoutMediaInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1216,6 +1248,7 @@ export type MomentUncheckedCreateWithoutMediaInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1252,6 +1285,7 @@ export type MomentUpdateWithoutMediaInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1276,6 +1310,7 @@ export type MomentUncheckedUpdateWithoutMediaInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1296,6 +1331,7 @@ export type MomentCreateWithoutReactionsInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1320,6 +1356,7 @@ export type MomentUncheckedCreateWithoutReactionsInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1356,6 +1393,7 @@ export type MomentUpdateWithoutReactionsInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1380,6 +1418,7 @@ export type MomentUncheckedUpdateWithoutReactionsInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1400,6 +1439,7 @@ export type MomentCreateWithoutReportsInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedAt?: Date | string | null
@@ -1424,6 +1464,7 @@ export type MomentUncheckedCreateWithoutReportsInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1460,6 +1501,7 @@ export type MomentUpdateWithoutReportsInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1484,6 +1526,7 @@ export type MomentUncheckedUpdateWithoutReportsInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1505,6 +1548,7 @@ export type MomentCreateManyUserInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1525,6 +1569,7 @@ export type MomentCreateManyModeratedByInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1544,6 +1589,7 @@ export type MomentCreateManyClaimedByInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
   moderatedById?: string | null
@@ -1561,6 +1607,7 @@ export type MomentUpdateWithoutUserInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1584,6 +1631,7 @@ export type MomentUncheckedUpdateWithoutUserInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1606,6 +1654,7 @@ export type MomentUncheckedUpdateManyWithoutUserInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1624,6 +1673,7 @@ export type MomentUpdateWithoutModeratedByInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1648,6 +1698,7 @@ export type MomentUncheckedUpdateWithoutModeratedByInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1670,6 +1721,7 @@ export type MomentUncheckedUpdateManyWithoutModeratedByInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1687,6 +1739,7 @@ export type MomentUpdateWithoutClaimedByInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1711,6 +1764,7 @@ export type MomentUncheckedUpdateWithoutClaimedByInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1733,6 +1787,7 @@ export type MomentUncheckedUpdateManyWithoutClaimedByInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1751,6 +1806,7 @@ export type MomentCreateManyLocationInput = {
   caption?: string | null
   isPublic?: boolean
   reactionCount?: number
+  dismissedByUser?: boolean
   claimedById?: string | null
   claimedAt?: Date | string | null
   claimExpiresAt?: Date | string | null
@@ -1769,6 +1825,7 @@ export type MomentUpdateWithoutLocationInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   moderatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1792,6 +1849,7 @@ export type MomentUncheckedUpdateWithoutLocationInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1814,6 +1872,7 @@ export type MomentUncheckedUpdateManyWithoutLocationInput = {
   caption?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   isPublic?: Prisma.BoolFieldUpdateOperationsInput | boolean
   reactionCount?: Prisma.IntFieldUpdateOperationsInput | number
+  dismissedByUser?: Prisma.BoolFieldUpdateOperationsInput | boolean
   claimedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   claimedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   claimExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1883,6 +1942,7 @@ export type MomentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   caption?: boolean
   isPublic?: boolean
   reactionCount?: boolean
+  dismissedByUser?: boolean
   claimedById?: boolean
   claimedAt?: boolean
   claimExpiresAt?: boolean
@@ -1911,6 +1971,7 @@ export type MomentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   caption?: boolean
   isPublic?: boolean
   reactionCount?: boolean
+  dismissedByUser?: boolean
   claimedById?: boolean
   claimedAt?: boolean
   claimExpiresAt?: boolean
@@ -1935,6 +1996,7 @@ export type MomentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   caption?: boolean
   isPublic?: boolean
   reactionCount?: boolean
+  dismissedByUser?: boolean
   claimedById?: boolean
   claimedAt?: boolean
   claimExpiresAt?: boolean
@@ -1959,6 +2021,7 @@ export type MomentSelectScalar = {
   caption?: boolean
   isPublic?: boolean
   reactionCount?: boolean
+  dismissedByUser?: boolean
   claimedById?: boolean
   claimedAt?: boolean
   claimExpiresAt?: boolean
@@ -1970,7 +2033,7 @@ export type MomentSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MomentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "locationId" | "userId" | "type" | "status" | "caption" | "isPublic" | "reactionCount" | "claimedById" | "claimedAt" | "claimExpiresAt" | "moderatedById" | "moderatedAt" | "rejectionKind" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["moment"]>
+export type MomentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "locationId" | "userId" | "type" | "status" | "caption" | "isPublic" | "reactionCount" | "dismissedByUser" | "claimedById" | "claimedAt" | "claimExpiresAt" | "moderatedById" | "moderatedAt" | "rejectionKind" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["moment"]>
 export type MomentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   location?: boolean | Prisma.LocationDefaultArgs<ExtArgs>
   user?: boolean | Prisma.Moment$userArgs<ExtArgs>
@@ -2014,6 +2077,7 @@ export type $MomentPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     caption: string | null
     isPublic: boolean
     reactionCount: number
+    dismissedByUser: boolean
     claimedById: string | null
     claimedAt: Date | null
     claimExpiresAt: Date | null
@@ -2461,6 +2525,7 @@ export interface MomentFieldRefs {
   readonly caption: Prisma.FieldRef<"Moment", 'String'>
   readonly isPublic: Prisma.FieldRef<"Moment", 'Boolean'>
   readonly reactionCount: Prisma.FieldRef<"Moment", 'Int'>
+  readonly dismissedByUser: Prisma.FieldRef<"Moment", 'Boolean'>
   readonly claimedById: Prisma.FieldRef<"Moment", 'String'>
   readonly claimedAt: Prisma.FieldRef<"Moment", 'DateTime'>
   readonly claimExpiresAt: Prisma.FieldRef<"Moment", 'DateTime'>

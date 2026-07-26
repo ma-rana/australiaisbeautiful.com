@@ -22,6 +22,7 @@ import {
   setMomentVisibility,
   updateMomentCaption,
   deleteMoment,
+  dismissRemovedMoment,
 } from "./actions";
 
 export type OwnMoment = {
@@ -73,6 +74,7 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
   const [editing, setEditing] = useState(false);
   const [caption, setCaption] = useState(moment.caption ?? "");
   const [isPublic, setIsPublic] = useState(moment.isPublic);
+  const [dismissed, setDismissed] = useState(false);
 
   const removed = moment.status === "REMOVED" || moment.status === "REJECTED";
 
@@ -107,6 +109,23 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
     });
   };
 
+  const onDismiss = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await dismissRemovedMoment(moment.id);
+      if (res.ok) setDismissed(true);
+      else setError(res.error);
+    });
+  };
+
+  if (dismissed) {
+    return (
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--paper-2)] px-5 py-4 text-sm text-[var(--muted)]">
+        Dismissed — cleared from your list.
+      </div>
+    );
+  }
+
   if (deleted) {
     return (
       <div className="rounded-lg border border-[var(--border)] bg-[var(--paper-2)] px-5 py-4 text-sm text-[var(--muted)]">
@@ -135,14 +154,20 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
         <StatusTag removed={removed} isPublic={isPublic} />
       </div>
 
-      {/* A moderator removed it — say why, plainly. */}
-      {removed && moment.rejectionReason && (
-        <div className="border-y border-[var(--border)] bg-[var(--paper-2)] px-5 py-3 text-sm">
-          <p className="specimen-label text-[var(--ochre)]">Why this was removed</p>
-          <p className="mt-1.5 leading-relaxed text-[var(--foreground)]/85">
-            {moment.rejectionReason}
-          </p>
-        </div>
+      {/* A moderator removed it — say why, plainly, and let them clear it. */}
+      {removed && (
+        <>
+          {moment.rejectionReason && (
+            <div className="border-y border-[var(--border)] bg-[var(--paper-2)] px-5 py-3 text-sm">
+              <p className="specimen-label text-[var(--ochre)]">
+                Why this was removed
+              </p>
+              <p className="mt-1.5 leading-relaxed text-[var(--foreground)]/85">
+                {moment.rejectionReason}
+              </p>
+            </div>
+          )}
+        </>
       )}
 
       {/* Photos — the contact sheet. */}
@@ -210,6 +235,21 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
       </div>
 
       {error && <p className="px-5 pb-3 text-sm text-[var(--ochre)]">{error}</p>}
+
+      {/* Controls for a REMOVED moment: just Dismiss (clear from your list).
+          No edit/hide/delete — there's nothing live to change, and the files
+          are the moderator's call now, not the owner's. */}
+      {removed && (
+        <div className="flex items-center justify-end border-t border-[var(--border)] px-5 py-3">
+          <button
+            onClick={onDismiss}
+            disabled={isPending}
+            className="rounded-md px-3 py-1.5 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--ink)] disabled:opacity-50"
+          >
+            {isPending ? "Dismissing…" : "Dismiss"}
+          </button>
+        </div>
+      )}
 
       {/* Controls */}
       {!removed && !editing && (

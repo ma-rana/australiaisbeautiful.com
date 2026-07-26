@@ -33,6 +33,7 @@ import {
   loadView,
   saveView,
 } from "@/components/map/camera";
+import { ONSITE_RADIUS_M } from "@/lib/constants";
 
 // Same module-scope registration reasoning as MapView. addProtocol called from
 // two modules just replaces the handler with an identical one — harmless.
@@ -59,17 +60,11 @@ const ME_SRC = "picker-me";
 const ME_COLOR = "#b06a3f"; // var(--ochre) — layer paint can't read CSS vars
 const ME_FILL = "rgba(176, 106, 63, 0.14)";
 
-// THE ON-SITE ZONE. Pins placed within this distance of the person's located
-// position are flagged fromMyLocation — the "suggested from the spot" trust
-// signal curators see. It is deliberately a SIGNAL and not a wall: browser
-// geolocation is client-claimed and trivially spoofed (DevTools sensor
-// override), so a hard requirement would block honest people — the
-// suggest-it-from-home-after-the-hike case, the desktop with a 50m-wrong WiFi
-// fix — while stopping nobody determined. Quality control stays where it can
-// actually work: the curator queue. The zone's job is to make the honest case
-// legible, and to be VISIBLE, so an explorer standing at the place knows
-// their pin carries extra weight.
-const ONSITE_RADIUS_M = 750;
+// THE ON-SITE ZONE (radius: ONSITE_RADIUS_M in lib/constants — the SAME value
+// the server enforces on submit). Pins within this distance of the person's
+// located position are on-site. The picker draws the ring and reports the
+// located origin; the SERVER re-checks the geometry and is the real gate. The
+// client side is courtesy — instant feedback — not security.
 
 // Ground distance between two points, in metres (haversine).
 function distanceM(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -182,8 +177,13 @@ function showMeHalo(
 export type PickedPoint = {
   latitude: number;
   longitude: number;
-  /** True when the pin came from browser geolocation (curator trust signal). */
+  /** True when the pin is within the on-site ring (client's view; the server
+   *  re-verifies). Drives the live "On-site" tag only. */
   fromMyLocation: boolean;
+  /** The requester's own located position + fix accuracy, if they've located.
+   *  Sent to the server so it can verify on-site status itself rather than
+   *  trust the flag above. Undefined until "use my current location" runs. */
+  origin?: { lat: number; lng: number; accuracyM: number };
 };
 
 export function LocationPicker({
@@ -306,6 +306,11 @@ export function LocationPicker({
         latitude: c.lat,
         longitude: c.lng,
         fromMyLocation: onSite,
+        // Carry the located origin so the SERVER can re-verify. Undefined until
+        // they've located — which the server reads as "not on-site".
+        origin: loc
+          ? { lat: loc.lat, lng: loc.lng, accuracyM: loc.acc }
+          : undefined,
       });
       // Share the view back (see ./camera): a hand-chosen pan is a view
       // preference, same as on the big map. Programmatic moves — including
@@ -373,7 +378,15 @@ export function LocationPicker({
         duration: 700,
       });
     }
-    onChange({ latitude, longitude, fromMyLocation });
+    const loc = locatedRef.current;
+    onChange({
+      latitude,
+      longitude,
+      fromMyLocation,
+      origin: loc
+        ? { lat: loc.lat, lng: loc.lng, accuracyM: loc.acc }
+        : undefined,
+    });
   };
 
   const useMyLocation = () => {

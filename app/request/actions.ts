@@ -22,7 +22,7 @@
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { consume, LIMITS } from "@/lib/rate-limit";
-import { DEDUP_RADIUS_M } from "@/lib/constants";
+import { DEDUP_RADIUS_M, ONSITE_RADIUS_M } from "@/lib/constants";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -30,6 +30,21 @@ import { z } from "zod";
 // its reasoning live in lib/constants.ts, alongside the other radii — §7c wants
 // them findable in one place rather than scattered across queries.
 const CLUSTER_RADIUS_METRES = DEDUP_RADIUS_M;
+
+// Ground distance between two points, in metres (haversine). Same formula the
+// picker uses client-side; duplicated here because the server must not trust
+// the client's on-site verdict — it re-derives it.
+function distanceM(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
 
 const RequestSchema = z.object({
   name: z.string().trim().min(2).max(120),
@@ -45,7 +60,14 @@ const RequestSchema = z.object({
     .max(1000),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
-  fromNearMe: z.boolean().default(false),
+  // The requester's OWN located position + fix accuracy, sent so the server
+  // can verify on-site status itself. Optional at the type level (someone who
+  // never located has none), but its ABSENCE means "not on-site", which the
+  // enforcement below rejects. The old `fromNearMe` boolean is gone: a
+  // client-asserted verdict is exactly what an attacker forges.
+  originLat: z.number().min(-90).max(90).optional(),
+  originLng: z.number().min(-180).max(180).optional(),
+  originAccuracyM: z.number().min(0).max(100000).optional(),
 });
 
 export type RequestResult =
@@ -57,7 +79,9 @@ export async function submitLocationRequest(input: {
   note: string;
   latitude: number;
   longitude: number;
-  fromNearMe?: boolean;
+  originLat?: number;
+  originLng?: number;
+  originAccuracyM?: number;
 }): Promise<RequestResult> {
   // Suggesting a place needs an account (the gentle wall) — viewing never does.
   const user = await requireUser();
@@ -78,7 +102,30 @@ export async function submitLocationRequest(input: {
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid request." };
   }
-  const { name, note, latitude, longitude, fromNearMe } = parsed.data;
+  const { name, note, latitude, longitude, originLat, originLng, originAccuracyM } =
+    parsed.data;
+
+  // ON-SITE ENFORCEMENT, server-side (the client check is a courtesy; THIS is
+  // the rule). The pin must sit within the on-site radius of the requester's
+  // own located position. No position, or too far, = rejected. The fix's
+  // accuracy widens the allowance so a poor GPS reading doesn't punish an
+  // honest pin. `fromNearMe` is DERIVED here from geometry the server checked,
+  // never taken from the client's word.
+  const hasOrigin =
+    originLat !== undefined && originLng !== undefined;
+  const onSite =
+    hasOrigin &&
+    distanceM(latitude, longitude, originLat, originLng) <=
+      ONSITE_RADIUS_M + (originAccuracyM ?? 0);
+
+  if (!onSite) {
+    return {
+      ok: false,
+      error:
+        "Suggestions are made from the place itself. Use “Use my current location” and drop the pin inside the circle — if you're not there right now, save it for your next visit.",
+    };
+  }
+  const fromNearMe = true; // proven by the server, not asserted by the client
 
   try {
     // 1. Is there already an APPROVED location right here? If so, the place is

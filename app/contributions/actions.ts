@@ -87,6 +87,46 @@ export async function updateMomentCaption(
   }
 }
 
+// Dismiss a REMOVED/REJECTED moment from your own dashboard — a hide, not a
+// delete (see the schema note on Moment.dismissedByUser). This is the tidy-up
+// for exhausted records: a moment a moderator took down is already off the
+// public site, so hiding it from your list costs nothing and reclaims nothing.
+//
+// GUARDED to removed/rejected only. A LIVE moment must never be dismissable
+// this way — hiding a live contribution from your own view while it stays
+// public is a confusing half-state; that's what setMomentVisibility is for.
+// The ModerationAudit trail is untouched: the record of what was removed and
+// why survives as the contributor's own evidence.
+export async function dismissRemovedMoment(
+  momentId: string,
+): Promise<ContributionResult> {
+  const user = await requireUser();
+
+  try {
+    // Ownership AND status baked into the filter: only your own, only if it's
+    // actually a removed/rejected record. A live moment won't match.
+    const updated = await db.moment.updateMany({
+      where: {
+        id: momentId,
+        userId: user.id,
+        status: { in: ["REMOVED", "REJECTED"] },
+      },
+      data: { dismissedByUser: true },
+    });
+    if (updated.count === 0) {
+      return {
+        ok: false,
+        error: "Only a removed contribution can be dismissed.",
+      };
+    }
+
+    revalidatePath("/contributions");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Failed" };
+  }
+}
+
 // Delete a moment permanently — the rows AND the stored files.
 //
 // This is a REAL delete, unlike a request being cleared (which is a hide,

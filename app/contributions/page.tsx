@@ -24,7 +24,13 @@ export default async function ContributionsPage() {
   if (!user) redirect("/signin?callbackUrl=/contributions");
 
   const moments = await db.moment.findMany({
-    where: { userId: user.id },
+    where: {
+      userId: user.id,
+      // Dismissed records drop out of the owner's view entirely (the row and
+      // its audit trail persist; see the schema note). A dismissed moment is
+      // gone from here for good.
+      dismissedByUser: false,
+    },
     orderBy: { createdAt: "desc" },
     include: {
       location: { select: { name: true, slug: true, suburb: true, state: true } },
@@ -51,14 +57,27 @@ export default async function ContributionsPage() {
     })),
   }));
 
-  // The summary line. Deliberately modest — a logbook total, not analytics.
-  const placeCount = new Set(moments.map((m) => m.locationId)).size;
-  const photoCount = moments.reduce((n, m) => n + m.media.length, 0);
-  const worthIts = moments.reduce((n, m) => n + m.reactionCount, 0);
+  // Split live from removed. Live contributions are the page's job and lead;
+  // removed ones are exhausted records — kept, but tucked into a quiet
+  // collapsed section at the bottom so the log doesn't open on rejection.
+  const isRemoved = (m: OwnMoment) =>
+    m.status === "REMOVED" || m.status === "REJECTED";
+  const liveMoments = own.filter((m) => !isRemoved(m));
+  const removedMoments = own.filter(isRemoved);
+
+  // The summary line counts LIVE contributions only — removed ones aren't
+  // part of "what you've added to places". Deliberately modest: a logbook
+  // total, not analytics.
+  const liveRaw = moments.filter(
+    (m) => m.status !== "REMOVED" && m.status !== "REJECTED",
+  );
+  const placeCount = new Set(liveRaw.map((m) => m.locationId)).size;
+  const photoCount = liveRaw.reduce((n, m) => n + m.media.length, 0);
+  const worthIts = liveRaw.reduce((n, m) => n + m.reactionCount, 0);
   const summary =
-    own.length > 0
+    liveMoments.length > 0
       ? [
-          `${own.length} moment${own.length === 1 ? "" : "s"} across ${placeCount} place${placeCount === 1 ? "" : "s"}`,
+          `${liveMoments.length} moment${liveMoments.length === 1 ? "" : "s"} across ${placeCount} place${placeCount === 1 ? "" : "s"}`,
           `${photoCount} photo${photoCount === 1 ? "" : "s"}`,
           worthIts > 0 ? `${worthIts} “worth it”` : null,
         ]
@@ -119,13 +138,49 @@ export default async function ContributionsPage() {
           </Link>
         </div>
       ) : (
-        <ul className="mt-10 space-y-6">
-          {own.map((m) => (
-            <li key={m.id}>
-              <MomentRow moment={m} />
-            </li>
-          ))}
-        </ul>
+        <>
+          {liveMoments.length > 0 ? (
+            <ul className="mt-10 space-y-6">
+              {liveMoments.map((m) => (
+                <li key={m.id}>
+                  <MomentRow moment={m} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            // Everything they have is removed — don't show a blank page above
+            // the collapsed section; say it plainly.
+            <p className="mt-10 text-[var(--muted)]">
+              Nothing live right now. Anything a moderator removed is below.
+            </p>
+          )}
+
+          {/* Removed — collapsed by default, out of the way but reachable.
+              <details> is the right primitive here: no client JS, keyboard
+              accessible, and it stays shut until the person chooses to look. */}
+          {removedMoments.length > 0 && (
+            <details className="group mt-12 border-t border-[var(--border)] pt-6">
+              <summary className="specimen-label flex cursor-pointer list-none items-center gap-2 text-[var(--muted)] transition-colors hover:text-[var(--ink)]">
+                <span className="transition-transform group-open:rotate-90">
+                  ›
+                </span>
+                Removed ({removedMoments.length})
+              </summary>
+              <p className="mt-3 max-w-lg text-sm leading-relaxed text-[var(--muted)]">
+                These were taken down and aren&apos;t on the places anymore. The
+                reason is on each one. Dismiss any you don&apos;t need to see —
+                it only clears it from this list.
+              </p>
+              <ul className="mt-6 space-y-6">
+                {removedMoments.map((m) => (
+                  <li key={m.id}>
+                    <MomentRow moment={m} />
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </>
       )}
       </main>
     </>

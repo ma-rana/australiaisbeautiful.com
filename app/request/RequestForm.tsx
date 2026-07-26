@@ -85,7 +85,11 @@ export function RequestForm() {
         note,
         latitude: point.latitude,
         longitude: point.longitude,
-        fromNearMe: point.fromMyLocation,
+        // The located origin — the server re-verifies on-site from this, rather
+        // than trusting the client's fromMyLocation verdict.
+        originLat: point.origin?.lat,
+        originLng: point.origin?.lng,
+        originAccuracyM: point.origin?.accuracyM,
       });
       setResult(res);
       if (res.ok && res.status === "queued") {

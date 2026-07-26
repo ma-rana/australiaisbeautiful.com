@@ -337,6 +337,17 @@ model Moment {
 
   reactionCount Int       @default(0)   // denormalized cache
 
+  // The contributor can DISMISS a removed/rejected moment from their own
+  // dashboard — a HIDE, not a delete (mirrors LocationRequest.hiddenByUser).
+  // Scope is strict: this only ever hides an already-non-public moment from
+  // its owner's list. It does NOT touch the moment's status, its files, or
+  // the ModerationAudit trail — the record of what was removed and why must
+  // survive, both as the contributor's own evidence and the moderator's.
+  // True delete (destroying files) stays a separate action, for LIVE moments
+  // the owner is withdrawing. A removed moment has nothing left to withdraw;
+  // dismissing it is pure view-tidying.
+  dismissedByUser Boolean @default(false)
+
   // --- Queue claiming (multi-moderator safety) ---
   // Without this, two moderators open the same photo and both act on it — one
   // approves, one rejects, last write wins silently. Claim = a short LEASE, not
