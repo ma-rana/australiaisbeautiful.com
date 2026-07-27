@@ -84,61 +84,85 @@ export function AdminSignInForm() {
     });
   };
 
-  const field = "admin-input mt-1";
+  const field = "admin-input mt-1.5";
+
+  // The masthead tile + guarded-door framing, shared by both steps. The AIB
+  // monogram is the same one the rail wears; the key glyph signals this is a
+  // restricted door (password + TOTP), not the public one.
+  const Masthead = () => (
+    <div className="mb-7 flex items-center gap-3">
+      <span
+        aria-hidden
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-[0.72rem] font-bold tracking-wide text-white"
+        style={{ background: "var(--action)" }}
+      >
+        AIB
+      </span>
+      <div className="leading-tight">
+        <p className="admin-eyebrow">Staff access</p>
+        <p className="text-sm font-semibold">Australia Is Beautiful</p>
+      </div>
+    </div>
+  );
 
   // --- Step 2: code screen ---
   if (step === "code") {
     return (
       <main className="admin-root flex min-h-screen flex-col justify-center px-6 py-16">
         <div className="mx-auto w-full max-w-sm">
-          <p className="admin-eyebrow">Step 2 of 2</p>
-          <h1 className="mt-2 text-xl font-semibold">Enter your code</h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Open your authenticator app and enter the current 6-digit code for{" "}
-            <span className="text-[var(--ink)]">{email}</span>.
-          </p>
-
-          <form onSubmit={submitCode} className="mt-8 space-y-4">
-            <input
-              type="text"
-              value={totp}
-              onChange={(e) => setTotp(e.target.value)}
-              placeholder="000000"
-              inputMode="text"
-              autoFocus
-              autoComplete="one-time-code"
-              className="admin-input admin-data py-4 text-center text-2xl tracking-[0.4em]"
-            />
-
-            {error && (
-              <p className="text-sm" style={{ color: "var(--danger)" }}>
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={isPending || totp.trim().length < 6}
-              className="admin-btn admin-btn-primary w-full justify-center py-2.5"
-            >
-              {isPending ? "Verifying…" : "Verify and sign in"}
-            </button>
-          </form>
-
-          <div className="mt-6 space-y-2 text-center text-sm">
-            <p className="text-[var(--muted)]">
-              Lost your phone? Enter one of your recovery codes above instead.
+          <div className="admin-panel px-6 py-7 shadow-sm">
+            <Masthead />
+            <div className="mb-5 flex items-center justify-between">
+              <h1 className="text-lg font-semibold">Enter your code</h1>
+              <span className="admin-eyebrow">Step 2 of 2</span>
+            </div>
+            <p className="-mt-3 mb-6 text-sm text-[var(--muted)]">
+              Open your authenticator app and enter the current 6-digit code
+              for <span className="text-[var(--ink)]">{email}</span>.
             </p>
-            <button
-              onClick={() => {
-                setStep("credentials");
-                setTotp("");
-                setError(null);
-              }}
-              className="text-[var(--muted)] underline underline-offset-4 hover:text-[var(--ink)]"
-            >
-              Back
-            </button>
+
+            <form onSubmit={submitCode} className="space-y-4">
+              <input
+                type="text"
+                value={totp}
+                onChange={(e) => setTotp(e.target.value)}
+                placeholder="000000"
+                inputMode="text"
+                autoFocus
+                autoComplete="one-time-code"
+                className="admin-input admin-data py-4 text-center text-2xl tracking-[0.4em]"
+              />
+
+              {error && (
+                <p className="text-sm" style={{ color: "var(--danger)" }} role="alert">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isPending || totp.trim().length < 6}
+                className="admin-btn admin-btn-primary w-full justify-center py-2.5"
+              >
+                {isPending ? "Verifying…" : "Verify and sign in"}
+              </button>
+            </form>
+
+            <div className="mt-6 border-t border-[var(--line)] pt-4 text-center text-sm">
+              <p className="text-[var(--muted)]">
+                Lost your phone? Enter a recovery code above instead.
+              </p>
+              <button
+                onClick={() => {
+                  setStep("credentials");
+                  setTotp("");
+                  setError(null);
+                }}
+                className="mt-1.5 text-[var(--muted)] underline underline-offset-4 hover:text-[var(--ink)]"
+              >
+                Back
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -149,51 +173,65 @@ export function AdminSignInForm() {
   return (
     <main className="admin-root flex min-h-screen flex-col justify-center px-6 py-16">
       <div className="mx-auto w-full max-w-sm">
-        <p className="admin-eyebrow">Staff access</p>
-        <h1 className="mt-2 text-xl font-semibold">Australia Is Beautiful</h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
-          Restricted to curators, moderators and administrators.
-        </p>
+        <div className="admin-panel px-6 py-7 shadow-sm">
+          <Masthead />
+          <h1 className="text-lg font-semibold">Sign in</h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Restricted to curators, moderators and administrators.
+          </p>
 
-        <form onSubmit={submitCredentials} className="mt-8 space-y-4">
-          <div>
-            <label className="text-sm font-medium">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-              autoComplete="username"
-              className={field}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              className={field}
-            />
-          </div>
+          <form onSubmit={submitCredentials} className="mt-6 space-y-4">
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+                autoComplete="username"
+                className={field}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+                className={field}
+              />
+            </div>
 
-          {error && (
-            <p className="text-sm" style={{ color: "var(--danger)" }}>
-              {error}
-            </p>
-          )}
+            {error && (
+              <p className="text-sm" style={{ color: "var(--danger)" }} role="alert">
+                {error}
+              </p>
+            )}
 
-          <button
-            type="submit"
-            disabled={isPending}
-            className="admin-btn admin-btn-primary w-full justify-center py-2.5"
+            <button
+              type="submit"
+              disabled={isPending}
+              className="admin-btn admin-btn-primary w-full justify-center py-2.5"
+            >
+              {isPending ? "Checking…" : "Continue"}
+            </button>
+          </form>
+        </div>
+
+        {/* The door tag — signals this is the guarded surface, and quietly points
+            explorers back to where they belong. */}
+        <p className="admin-eyebrow mt-5 text-center">
+          Protected by two-factor ·{" "}
+          <a
+            href="https://australiaisbeautiful.com"
+            className="underline underline-offset-4 hover:text-[var(--ink)]"
           >
-            {isPending ? "Checking…" : "Continue"}
-          </button>
-        </form>
+            Not staff? Visit the public site
+          </a>
+        </p>
       </div>
     </main>
   );
