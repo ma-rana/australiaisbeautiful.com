@@ -24,10 +24,12 @@ function line(r: CostReading): string {
   const pct = r.percent === null ? "  ?  " : `${Math.round(r.percent)}%`.padStart(5);
   const usage =
     r.usage === null
-      ? r.status === "pending"
-        ? "(not wired)"
-        : "(couldn't measure)"
-      : `${r.unit === "GB" ? r.usage.toFixed(1) : Math.round(r.usage)} / ${r.freeLimit} ${r.unit}`;
+      ? r.detail
+        ? `(${r.detail})`
+        : r.status === "pending"
+          ? "(not wired)"
+          : "(couldn't measure)"
+      : `${r.unit === "GB" ? r.usage.toFixed(1) : r.usage} / ${r.freeLimit} ${r.unit}`;
   const flag =
     r.status === "over"
       ? "OVER"
@@ -37,8 +39,10 @@ function line(r: CostReading): string {
           ? "UNKNOWN"
           : r.status === "pending"
             ? "pending"
-            : "ok";
-  return `  [${flag.padEnd(7)}] ${r.label.padEnd(22)} ${pct}  ${usage}`;
+            : r.status === "awaiting"
+              ? "awaiting"
+              : "ok";
+  return `  [${flag.padEnd(8)}] ${r.label.padEnd(22)} ${pct}  ${usage}`;
 }
 
 // The seam for real notification. Today it prints; wire email/Discord here when

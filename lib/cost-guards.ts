@@ -18,6 +18,7 @@
 // → counts as a warn condition.
 
 import { promises as fs } from "node:fs";
+import path from "node:path";
 import { db } from "@/lib/db";
 
 export type Metered = {
@@ -32,6 +33,16 @@ export type Metered = {
   /** Shown on the page so a not-yet-wired dependency reads honestly rather
    *  than as a real 0%. A pending row never triggers the alarm. */
   pending?: boolean;
+  /** For rows fed by an external cron file: when true, an ABSENT feed reads as
+   *  "awaiting feed" (pending, no alarm) rather than "unknown" (alarm). The feed
+   *  going STALE after it existed is still a real "unknown" (see readMetricsFile).
+   *  Distinguishes "you haven't set up the cron yet" from "the cron broke". */
+  externalFeed?: boolean;
+  /** When usage() returns null for a STRUCTURAL reason (e.g. statfs missing on
+   *  Windows dev) rather than a real failure, this explains why — so the page
+   *  can say "not measurable here" instead of an alarming "check needed". Only
+   *  set this for genuinely-benign unmeasurability, never to hide a real fault. */
+  unmeasurableReason?: () => string | null;
   note?: string;
 };
 
@@ -45,6 +56,18 @@ const DEFAULT_WARN = num(process.env.COST_GUARD_WARN_FRACTION, 0.8);
 const R2_FREE_GB = num(process.env.R2_FREE_TIER_GB, 10);
 const EMAIL_FREE = num(process.env.EMAIL_MONTHLY_FREE, 3000);
 const DISK_WARN_PERCENT = num(process.env.STORAGE_WARN_PERCENT, 70);
+// Bandwidth cap from the VPS plan (Hostinger shows this on the VPS overview).
+// Measured in TB/month to match how the plan is sold.
+const BANDWIDTH_TB = num(process.env.VPS_BANDWIDTH_TB, 8);
+// Where the VPS-side cron writes its metrics. The app only ever READS this file
+// — it never holds a Hostinger token or calls the API itself (blast-radius: the
+// internet-facing app must not carry a credential that can reboot/restore the
+// box). See scripts/README or docs for the cron that writes it.
+const METRICS_FILE =
+  process.env.VPS_METRICS_FILE || "/var/www/australiaisbeautiful.com/tmp/vps-metrics.json";
+// A feed older than this is STALE — the cron stopped, which is a real "unknown"
+// worth alarming on (a silently-dead feed is exactly §4's failure mode).
+const METRICS_MAX_AGE_MS = 6 * 60 * 60 * 1000; // 6h (cron runs more often)
 
 // --- usage sources -----------------------------------------------------------
 
@@ -97,6 +120,57 @@ async function mediaStorageGB(): Promise<number | null> {
   }
 }
 
+// The VPS metrics feed, written by a cron ON THE BOX (see the cron script the
+// docs describe). The app READS this file; it never calls Hostinger or holds a
+// token — keeping the privileged capability (which can reboot/restore the VPS)
+// out of the internet-facing process. Shape written by the cron:
+//   { "updatedAt": "2026-07-28T12:00:00Z", "bandwidthTB": 0.002 }
+//
+// Three outcomes, each meaningful:
+//   - file ABSENT      → the cron isn't set up yet. An externalFeed row treats
+//                        this as pending (no alarm).
+//   - file STALE       → the cron DIED. A real §4 "unknown" — alarm, because a
+//                        dead feed hides a real limit.
+//   - fresh + parseable → the value.
+type MetricsRead =
+  | { kind: "absent" }
+  | { kind: "stale" }
+  | { kind: "ok"; data: Record<string, unknown> };
+
+async function readMetricsFile(): Promise<MetricsRead> {
+  const target = path.resolve(METRICS_FILE);
+  try {
+    const raw = await fs.readFile(target, "utf8");
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    const updatedAt = Date.parse(String(data.updatedAt ?? ""));
+    if (Number.isFinite(updatedAt) && Date.now() - updatedAt > METRICS_MAX_AGE_MS) {
+      return { kind: "stale" };
+    }
+    return { kind: "ok", data };
+  } catch (e) {
+    // ENOENT = the cron hasn't written it yet (absent, benign). A file that
+    // EXISTS but won't read/parse is more like stale — something's there and we
+    // can't trust it — so escalate only when the path actually exists.
+    const code = (e as NodeJS.ErrnoException)?.code;
+    if (code === "ENOENT") return { kind: "absent" };
+    try {
+      await fs.stat(target);
+      return { kind: "stale" };
+    } catch {
+      return { kind: "absent" };
+    }
+  }
+}
+
+// Bandwidth used this month, in TB, from the metrics feed. Absent/stale → null;
+// evaluate() interprets which one via the externalFeed flag + a re-read.
+async function bandwidthTB(): Promise<number | null> {
+  const read = await readMetricsFile();
+  if (read.kind !== "ok") return null;
+  const v = Number(read.data.bandwidthTB);
+  return Number.isFinite(v) ? v : null;
+}
+
 // --- the registry ------------------------------------------------------------
 //
 // Order: the ceilings most likely to bite first, first. Disk is the live
@@ -113,17 +187,35 @@ export const REGISTRY: Metered[] = [
     warnAt: DISK_WARN_PERCENT / 100,
     usage: diskPercentUsed,
     resets: "never",
+    // On Windows dev, statfs is unavailable — say so plainly, so a local
+    // "unknown" reads as "can't measure here", not "something's broken". On the
+    // VPS (Linux) this returns null and a real null there IS a genuine unknown.
+    unmeasurableReason: () =>
+      (fs as unknown as { statfs?: unknown }).statfs
+        ? null
+        : "not measurable in this environment (Linux-only) — real on the VPS",
     note: "A full disk takes Postgres down — the real ceiling while on local storage.",
   },
   {
     key: "media_storage",
-    label: "Media storage",
+    label: "Uploaded media size",
     unit: "GB",
     freeLimit: R2_FREE_GB,
     warnAt: DEFAULT_WARN,
     usage: mediaStorageGB,
     resets: "never",
-    note: "Summed from stored media. Trends toward R2's free tier when we move off local disk.",
+    note: "Total size of all uploaded photos, summed from the database. Trends toward R2's free tier when media moves off local disk.",
+  },
+  {
+    key: "bandwidth",
+    label: "VPS bandwidth",
+    unit: "TB/mo",
+    freeLimit: BANDWIDTH_TB,
+    warnAt: DEFAULT_WARN,
+    usage: bandwidthTB,
+    resets: "monthly",
+    externalFeed: true, // fed by the on-box cron; absent feed = awaiting, not alarm
+    note: "Monthly data served by the VPS, against the plan's cap. Fed by an on-box cron (the app never calls Hostinger or holds its token).",
   },
   {
     key: "email_sends",
@@ -144,7 +236,7 @@ export const REGISTRY: Metered[] = [
 // as a warning" is defined ONCE and can't drift between awareness and
 // prevention.
 
-export type CostStatus = "ok" | "warn" | "over" | "unknown" | "pending";
+export type CostStatus = "ok" | "warn" | "over" | "unknown" | "pending" | "awaiting";
 
 export type CostReading = {
   key: string;
@@ -155,6 +247,9 @@ export type CostReading = {
   usage: number | null;
   percent: number | null;
   status: CostStatus;
+  /** Extra human context for the non-numeric states — e.g. WHY it's unknown
+   *  ("not measurable here") or what "awaiting" is waiting for. */
+  detail?: string;
   note?: string;
 };
 
@@ -175,9 +270,52 @@ export async function evaluate(row: Metered): Promise<CostReading> {
 
   const usage = await row.usage();
 
-  // §4: a failed measurement is a WARN, never green. null → "unknown".
   if (usage === null) {
-    return { ...base, usage: null, percent: null, status: "unknown" };
+    // An external-feed row distinguishes "not set up yet" from "the feed died".
+    if (row.externalFeed) {
+      const read = await readMetricsFile();
+      if (read.kind === "absent") {
+        return {
+          ...base,
+          usage: null,
+          percent: null,
+          status: "awaiting",
+          detail: "awaiting the on-box metrics feed (cron not set up yet)",
+        };
+      }
+      // stale (or present-but-unusable) → a real §4 unknown: the feed broke.
+      return {
+        ...base,
+        usage: null,
+        percent: null,
+        status: "unknown",
+        detail: "metrics feed is stale — the on-box cron may have stopped",
+      };
+    }
+
+    // A structurally-unmeasurable row (e.g. statfs on Windows) says so, and does
+    // NOT alarm — it's a benign "can't measure here", not a broken guard. On the
+    // VPS the reason function returns null, so a real null there stays a true
+    // "unknown" that DOES alarm (§4).
+    const reason = row.unmeasurableReason?.() ?? null;
+    if (reason) {
+      return {
+        ...base,
+        usage: null,
+        percent: null,
+        status: "awaiting",
+        detail: reason,
+      };
+    }
+
+    // §4: a genuine failed measurement is a WARN, never green. null → "unknown".
+    return {
+      ...base,
+      usage: null,
+      percent: null,
+      status: "unknown",
+      detail: "couldn't measure — check needed",
+    };
   }
 
   const percent = row.freeLimit > 0 ? (usage / row.freeLimit) * 100 : 0;
@@ -192,7 +330,9 @@ export async function evaluateAll(): Promise<CostReading[]> {
 }
 
 // A single boolean the cron uses: does anything need a human? Over, warn, and
-// unknown all qualify — pending and ok do not.
+// a genuine unknown all qualify. "pending" (not wired) and "awaiting" (feed not
+// set up, or not measurable in this environment) do NOT — those are known,
+// benign not-yet states, not silent failures.
 export function needsAttention(readings: CostReading[]): boolean {
   return readings.some(
     (r) => r.status === "over" || r.status === "warn" || r.status === "unknown",

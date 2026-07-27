@@ -38,12 +38,25 @@ const STATUS_STYLE: Record<
     bar: "var(--attention)",
   },
   pending: { label: "Not wired yet", color: "var(--muted)", bar: "var(--line-strong)" },
+  // Known, benign not-yet: feed not set up, or not measurable in this
+  // environment. Muted, NOT ochre — it isn't a problem, it's an "expected blank".
+  awaiting: { label: "Awaiting feed", color: "var(--muted)", bar: "var(--line-strong)" },
 };
 
 function fmt(n: number, unit: string): string {
-  // Whole-ish numbers read cleaner; keep one decimal for GB-scale.
-  const v = unit === "GB" ? n.toFixed(1) : Math.round(n).toString();
-  return `${v} ${unit}`;
+  // GB that's still tiny reads better as MB (early on, media is a few MB — a
+  // flat "0.0 GB" looks broken). Everything else: whole-ish numbers, one decimal
+  // for fractional units.
+  if (unit === "GB") {
+    if (n > 0 && n < 0.1) return `${Math.round(n * 1024)} MB`;
+    return `${n.toFixed(1)} GB`;
+  }
+  if (unit.startsWith("TB")) {
+    // Bandwidth: show more precision when small (0.002 TB shouldn't round to 0).
+    const v = n < 1 ? n.toFixed(3) : n.toFixed(2);
+    return `${v} ${unit}`;
+  }
+  return `${Math.round(n)} ${unit}`;
 }
 
 function GaugeRow({ r }: { r: CostReading }) {
@@ -82,8 +95,9 @@ function GaugeRow({ r }: { r: CostReading }) {
               style={{ width: `${pct}%`, background: s.bar }}
             />
           )}
-          {/* Warn-line tick — where the alarm fires. */}
-          {r.status !== "pending" && (
+          {/* Warn-line tick — where the alarm fires. Hidden for the states
+              that have no real bar to compare it against. */}
+          {r.status !== "pending" && r.status !== "awaiting" && (
             <div
               className="absolute inset-y-0 w-px"
               style={{
@@ -96,16 +110,17 @@ function GaugeRow({ r }: { r: CostReading }) {
           )}
         </div>
 
-        <div className="admin-data mt-1.5 flex justify-between text-xs text-[var(--muted)]">
+        <div className="admin-data mt-1.5 flex justify-between gap-3 text-xs text-[var(--muted)]">
           <span>
             {r.usage === null
-              ? r.status === "pending"
-                ? "—"
-                : "couldn't measure"
+              ? // For the non-numeric states, the detail line explains WHAT and
+                // WHY ("awaiting feed", "not measurable here", "stale") — far more
+                // honest than a bare "couldn't measure".
+                (r.detail ?? "—")
               : `${fmt(r.usage, r.unit)} of ${fmt(r.freeLimit, r.unit)}`}
           </span>
-          <span style={{ color: s.color }}>
-            {r.percent === null ? "" : `${Math.round(r.percent)}% of free tier`}
+          <span className="shrink-0" style={{ color: s.color }}>
+            {r.percent === null ? "" : `${Math.round(r.percent)}% of cap`}
           </span>
         </div>
       </div>
