@@ -21,6 +21,7 @@
 import { db } from "@/lib/db";
 import { resolveMediaSrc } from "@/lib/media/resolve";
 import { NEARBY_SEARCH_RADIUS_KM } from "@/lib/constants";
+import { formatCategory } from "@/lib/category";
 
 export type NearbyPlace = {
   slug: string;
@@ -119,7 +120,7 @@ export async function placesNear(
         slug: r.slug,
         name: r.name,
         place: [r.suburb, r.state].filter(Boolean).join(", "),
-        kind: r.category.toLowerCase().replace(/_/g, " "),
+        kind: formatCategory(r.category),
         face: resolveMediaSrc(
           r.heroThumb ?? r.heroMedia ?? r.coverThumbKey ?? r.coverKey,
         ),

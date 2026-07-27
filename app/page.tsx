@@ -11,6 +11,7 @@
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { resolveMediaSrc } from "@/lib/media/resolve";
+import { formatCategory } from "@/lib/category";
 import { MapShell } from "@/components/map/MapShell";
 import { MapNav } from "@/components/map/MapNav";
 import type { MapPlace } from "@/components/map/MapView";
@@ -25,6 +26,7 @@ export default async function Home() {
       name: true,
       suburb: true,
       state: true,
+      category: true,
       latitude: true,
       longitude: true,
       coverThumbKey: true,
@@ -46,6 +48,10 @@ export default async function Home() {
     slug: l.slug,
     name: l.name,
     place: [l.suburb, l.state].filter(Boolean).join(", "),
+    // Human-readable category for the preview sheet's specimen line, matching
+    // the nearby rows. OTHER/unknown resolve to "" so the sheet shows just the
+    // locality rather than the non-word "other".
+    kind: formatCategory(l.category),
     latitude: l.latitude,
     longitude: l.longitude,
     face: resolveMediaSrc(

@@ -29,6 +29,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { placesNear, type NearbyPlace } from "./nearby-actions";
 import { MapControls } from "./MapControls";
 import { NEARBY_RADIUS_M, NEARBY_SEARCH_RADIUS_KM } from "@/lib/constants";
+import { specimenLine } from "@/lib/category";
 import {
   AUSTRALIA_BOUNDS,
   AUSTRALIA_MAX_BOUNDS,
@@ -60,6 +61,9 @@ export type MapPlace = {
   slug: string;
   name: string;
   place: string;
+  /** Category, human-readable lowercase ("national park") — the specimen line
+   *  on the preview sheet, matching the nearby rows. */
+  kind: string;
   latitude: number;
   longitude: number;
   face: string | null;
@@ -444,6 +448,8 @@ export function MapView({ places }: { places: MapPlace[] }) {
               id: p.id,
               slug: p.slug,
               name: p.name,
+              place: p.place,
+              kind: p.kind,
               icon: withIcons.has(p.id) ? `place-${p.id}` : "",
             },
           })),
@@ -1044,7 +1050,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
                   <li key={p.slug}>
                     <button
                       onClick={() => router.push(`/location/${p.slug}`)}
-                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--paper-2)]"
+                      className="group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--paper-2)]"
                     >
                       {/* The place's face — a photo makes the "go here?" case
                           better than a name can. No face yet → a quiet
@@ -1074,15 +1080,25 @@ export function MapView({ places }: { places: MapPlace[] }) {
                           {p.name}
                         </span>
                         <span className="specimen-label mt-0.5 block truncate">
-                          {p.kind}
-                          {p.place ? ` · ${p.place}` : ""}
+                          {specimenLine(p.kind, p.place)}
                         </span>
                       </span>
 
-                      <span className="shrink-0 text-right text-sm tabular-nums text-[var(--muted)]">
-                        {p.metres < 1000
-                          ? `${Math.round(p.metres)} m`
-                          : `${(p.metres / 1000).toFixed(1)} km`}
+                      {/* Distance, right-aligned and tabular so a column of
+                          them stays visually straight. The chevron is the
+                          "this opens" affordance, brightening on row hover. */}
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        <span className="text-right text-sm tabular-nums text-[var(--muted)]">
+                          {p.metres < 1000
+                            ? `${Math.round(p.metres)} m`
+                            : `${(p.metres / 1000).toFixed(1)} km`}
+                        </span>
+                        <span
+                          aria-hidden
+                          className="text-[var(--muted)]/40 transition-colors group-hover:text-[var(--eucalypt)]"
+                        >
+                          ›
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -1093,40 +1109,64 @@ export function MapView({ places }: { places: MapPlace[] }) {
         </div>
       )}
 
-      {/* Place preview — the photo lives here, where there's room for it. */}
+      {/* Place preview — the photo lives here, where there's room for it.
+          Sibling to the Near-You sheet above and built from the same parts:
+          a close control in the header row, the specimen category line, the
+          Fraunces name, and a eucalypt primary action. Where the nearby sheet
+          is anchored to YOU (ochre), this is anchored to a PLACE (eucalypt) —
+          the same colour every place-marker on the map already wears. */}
       {selected && (
         <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
           <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
-            {selected.face && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={selected.face}
-                alt=""
-                className="h-32 w-full object-cover"
-              />
-            )}
-            <div className="p-4">
-              <p className="specimen-label">{selected.place}</p>
-              <h2
-                className="mt-1 text-xl text-[var(--ink)]"
-                style={{ fontFamily: "var(--font-display)" }}
-              >
-                {selected.name}
-              </h2>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => router.push(`/location/${selected.slug}`)}
-                  className="rounded-md bg-[var(--ink)] px-3 py-2 text-sm text-[var(--paper)]"
-                >
-                  Open this place
-                </button>
+            {selected.face ? (
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selected.face}
+                  alt=""
+                  className="h-36 w-full object-cover"
+                />
+                {/* A quiet scrim at the top so the close control stays legible
+                    over any photo. */}
+                <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/35 to-transparent" />
                 <button
                   onClick={() => setSelected(null)}
-                  className="rounded-md border border-[var(--border)] px-3 py-2 text-sm"
+                  aria-label="Close"
+                  className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/45 text-sm text-white backdrop-blur-sm transition-colors hover:bg-black/65"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              // No photo yet — don't leave a bald header. A slim eucalypt band
+              // with the close control keeps the sheet's shape and colour.
+              <div className="flex items-center justify-end bg-[var(--eucalypt)]/10 px-4 py-2">
+                <button
+                  onClick={() => setSelected(null)}
+                  className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
                 >
                   Close
                 </button>
               </div>
+            )}
+
+            <div className="p-4">
+              {/* Category + locality, the same specimen line the nearby rows
+                  and location pages use. OTHER resolves away cleanly. */}
+              <p className="specimen-label">{specimenLine(selected.kind, selected.place)}</p>
+              <h2
+                className="mt-1 text-xl leading-snug text-[var(--ink)]"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                {selected.name}
+              </h2>
+
+              <button
+                onClick={() => router.push(`/location/${selected.slug}`)}
+                className="mt-4 w-full rounded-md bg-[var(--eucalypt)] px-3 py-2.5 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
+              >
+                Open this place
+              </button>
             </div>
           </div>
         </div>
