@@ -35,7 +35,7 @@ export function GoogleButton({
         // odd value can't send the user off-site.
         void signIn("google", { callbackUrl });
       }}
-      className="flex w-full items-center justify-center gap-3 rounded-md border border-[var(--border)] bg-[var(--paper)] px-3.5 py-2.5 text-[15px] font-medium text-[var(--ink)] transition-colors hover:bg-[var(--ink)]/[0.03] focus:outline-none focus:ring-2 focus:ring-[var(--eucalypt)]/20 disabled:opacity-60"
+      className="btn btn-secondary w-full py-2.5 text-[15px]"
     >
       <GoogleMark />
       {isPending ? "Redirecting…" : label}
@@ -70,12 +70,16 @@ function GoogleMark() {
 }
 
 // A labelled "or" divider, shared so both pages separate Google from the form
-// the same way.
+// the same way. Hairline rules with a small letterspaced label — set like the
+// specimen tags, so the divider belongs to the field-guide system rather than
+// being generic form chrome.
 export function OrDivider() {
   return (
     <div className="my-6 flex items-center gap-3" aria-hidden>
       <span className="h-px flex-1 bg-[var(--border)]" />
-      <span className="text-xs text-[var(--muted)]">or</span>
+      <span className="specimen-label text-[0.6rem] text-[var(--muted)]/70">
+        or
+      </span>
       <span className="h-px flex-1 bg-[var(--border)]" />
     </div>
   );
