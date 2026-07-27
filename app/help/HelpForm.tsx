@@ -203,7 +203,9 @@ export function HelpForm({ defaultEmail }: { defaultEmail: string }) {
         </div>
 
         <p className="specimen-label mt-6 text-center text-[0.62rem] text-[var(--muted)]/70">
-          We read every message · one-way, no account needed
+          {/* "no account needed" only reassures a SIGNED-OUT visitor — telling
+              someone who's logged in they don't need an account is noise. */}
+          We read every message · one-way{defaultEmail ? "" : " · no account needed"}
         </p>
       </div>
     </main>
