@@ -109,6 +109,10 @@ export const LIMITS = {
   /** Place suggestions per user. Ten a day covers an ambitious road trip;
    *  a hundred is a script scattering clusters across the curator queue. */
   REQUEST: { limit: 10, windowMs: 24 * 60 * 60 * 1000 },
+  /** Support/help/bug submissions per IP. The form is open to signed-out
+   *  visitors (a broken signup must be reportable), so it's a spam surface.
+   *  Five in ten minutes is a frustrated person retrying; fifty is a flood. */
+  SUPPORT_IP: { limit: 5, windowMs: 10 * 60 * 1000 },
 } as const satisfies Record<string, RateLimitOptions>;
 
 // Periodic sweep so idle keys don't accumulate forever. One hour is plenty:

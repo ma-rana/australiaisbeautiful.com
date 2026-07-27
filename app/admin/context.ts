@@ -39,6 +39,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     places,
     placesNeedingImage,
     moments,
+    messages,
     takedowns,
     staff,
     account,
@@ -50,6 +51,10 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     }),
     isModerator
       ? db.moment.count({ where: { status: "APPROVED" } })
+      : Promise.resolve(undefined),
+    // Open support messages — moderator+ work, same as the moment queue.
+    isModerator
+      ? db.supportMessage.count({ where: { status: "OPEN" } })
       : Promise.resolve(undefined),
     isAdmin
       ? db.escalation.count({
@@ -73,6 +78,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     places,
     placesNeedingImage,
     moments,
+    messages,
     takedowns,
     staff,
   };

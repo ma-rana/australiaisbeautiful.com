@@ -49,6 +49,7 @@ export function SiteHeader({ email }: { email: string | null }) {
     pathname === "/signin" ||
     pathname === "/signup" ||
     pathname === "/request" ||
+    pathname === "/help" ||
     pathname === "/contributions" ||
     pathname.startsWith("/location/") ||
     pathname.startsWith("/contribute/")
@@ -83,6 +84,12 @@ export function SiteHeader({ email }: { email: string | null }) {
               Your contributions
             </Link>
           )}
+
+          {/* Help is reachable by anyone, signed in or not — it's also where a
+              signed-out person reports a broken sign-up. */}
+          <Link href="/help" className={LINK}>
+            Help
+          </Link>
 
           {email ? (
             <button

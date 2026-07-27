@@ -104,6 +104,11 @@ model User {
   escalationsClosed Escalation[]     @relation("EscalationCloser")
   reviewedClusters  LocationRequestCluster[] @relation("ClusterReviewer")
 
+  // Support inbox relations (see SupportMessage).
+  supportMessages   SupportMessage[] @relation("SupportSender")
+  claimedSupport    SupportMessage[] @relation("SupportClaimer")
+  resolvedSupport   SupportMessage[] @relation("SupportResolver")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -718,6 +723,9 @@ enum ReportTarget {
   // taken ON a user account (role grants, suspensions). The audit log and the
   // report queue share this enum; a USER row will never appear in Report.
   USER
+  // Likewise present only for the audit trail: resolving a SupportMessage.
+  // A SUPPORT row will never appear in Report.
+  SUPPORT
 }
 
 enum ReportReason {
@@ -886,6 +894,7 @@ enum AuditAction {
   USER_SUSPEND
   USER_REINSTATE
   ESCALATE
+  SUPPORT_RESOLVE     // a support/help/bug message marked resolved
 }
 
 // ---------------------------------------------------------------------------
@@ -953,5 +962,83 @@ enum EscalationCategory {
 enum EscalationStatus {
   OPEN
   ACKNOWLEDGED
+  RESOLVED
+}
+
+// ---------------------------------------------------------------------------
+// Support messages — the public feedback / help / bug-report inbox
+// ---------------------------------------------------------------------------
+
+// One message from a user (or an anonymous visitor) to the team: a bug report,
+// a question, or a content complaint. This is the "tell us something's wrong"
+// channel a growing platform needs — without it, the only signal a broken
+// upload button gives is silence and churn.
+//
+// ONE-WAY BY DESIGN (D23 holds). Users send; the team reads and acts. There is
+// no in-app reply thread — a two-way messaging system would be a person-to-
+// person channel this product deliberately doesn't have (no DMs, no profiles).
+// If a reply is warranted and the sender left an email, the team replies out of
+// band. Resolution normally happens by FIXING THE THING, not by chatting.
+//
+// ANONYMOUS-FRIENDLY. Signed-out visitors can submit (a broken sign-up is
+// exactly the thing you most need reported, and that person has no account).
+// userId links the sender when known; email is optional and the ONLY way to
+// follow up with an anonymous sender. Rate-limited per IP on submit
+// (SECURITY.md §11, LIMITS.SUPPORT_IP) because an open form is a spam surface.
+//
+// Modelled like the other queues: OPEN → RESOLVED, claim-lease for multi-admin
+// safety, resolution audited via ModerationAudit (targetType SUPPORT).
+model SupportMessage {
+  id       String              @id @default(cuid())
+  category SupportCategory
+  // The message itself. Required; the whole point of the row.
+  body     String
+
+  // Optional contact email. For an anonymous sender it's the only follow-up
+  // path; for a signed-in one it defaults from their account but they may
+  // change it. Never required — forcing it would suppress reports.
+  email    String?
+  // Linked sender when signed in. SetNull so deleting a user doesn't erase the
+  // report (the bug is still real). Anonymous submissions leave this null.
+  userId   String?
+  user     User?               @relation("SupportSender", fields: [userId], references: [id], onDelete: SetNull)
+
+  // Context captured at submit time — priceless for bug reports. The path the
+  // user was on, and a coarse user-agent string. NEVER any precise location or
+  // tracking (D8); this is "which screen", not "where is this person".
+  path      String?
+  userAgent String?
+
+  status   SupportStatus       @default(OPEN)
+
+  // Queue claiming — see Moment.claimedById for the full reasoning.
+  claimedById   String?
+  claimedBy     User?          @relation("SupportClaimer", fields: [claimedById], references: [id], onDelete: SetNull)
+  claimedAt     DateTime?
+  claimExpiresAt DateTime?
+
+  resolvedById String?
+  resolvedBy   User?            @relation("SupportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?
+  // A short internal note on how it was handled ("fixed in a1b2c3", "replied by
+  // email", "dupe of #x"). Internal only — never shown to the sender.
+  resolutionNote String?
+
+  createdAt DateTime           @default(now())
+
+  @@index([status, createdAt])          // the inbox: open first, newest first
+  @@index([status, claimExpiresAt])     // unclaimed/expired items in the queue
+  @@index([userId, createdAt])          // a sender's history, if ever needed
+}
+
+enum SupportCategory {
+  BUG              // something's broken / a glitch
+  HELP             // a question or request for help
+  CONTENT_REPORT   // "something on the site is wrong/inappropriate" from a
+                   // visitor with no obvious in-context report button
+}
+
+enum SupportStatus {
+  OPEN
   RESOLVED
 }

@@ -31,6 +31,7 @@ import {
   InboxIcon,
   PinIcon,
   PhotoIcon,
+  MessageIcon,
   ShieldIcon,
   UsersIcon,
   KeyIcon,
@@ -44,6 +45,7 @@ export type RailCounts = {
   places?: number;
   placesNeedingImage?: number;
   moments?: number;
+  messages?: number;
   takedowns?: number;
   staff?: number;
 };
@@ -106,6 +108,17 @@ function itemsFor(role: AdminRole, counts: RailCounts): Item[] {
       roles: ["MODERATOR", "ADMIN"],
       icon: PhotoIcon,
       count: counts.moments,
+    },
+    {
+      // The public support/help/bug inbox. Moderator work (the user-facing
+      // side of keeping the platform healthy), so it sits on the moderator+
+      // rail. Open messages are work waiting on you → ochre.
+      href: "/messages",
+      label: "Messages",
+      roles: ["MODERATOR", "ADMIN"],
+      icon: MessageIcon,
+      count: counts.messages,
+      awaiting: (counts.messages ?? 0) > 0,
     },
     {
       href: "/takedowns",

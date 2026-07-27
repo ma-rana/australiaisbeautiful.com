@@ -138,6 +138,20 @@ function MinusIcon() {
   );
 }
 
+// A question mark in a circle — the universally-read "help" glyph. Drawn on the
+// same 24px grid at the stack's stroke so it sits in the column as an equal,
+// not a special case. It's the one affordance here that LEAVES the map for a
+// reading page (like Suggest), which is why it's a circle too.
+function HelpIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" strokeWidth={STROKE} {...S} aria-hidden>
+      <circle cx="12" cy="12" r="8.4" />
+      <path d="M9.6 9.4a2.4 2.4 0 114.1 1.9c-.9.7-1.7 1.2-1.7 2.3" />
+      <path d="M12 16.6h.01" strokeWidth="2.4" />
+    </svg>
+  );
+}
+
 /* -------------------------------------------------------------- primitives */
 
 // Shared with MapNav so the top and bottom chrome can't drift apart — see
@@ -258,6 +272,22 @@ export function MapControls({
           <Tip>Zoom out</Tip>
         </button>
       </div>
+
+      {/* Help & feedback — the quietest thing in the corner, at the bottom of
+          the stack (lowest frequency, least-prominent slot). It's the only
+          persistent way a SIGNED-OUT visitor reaches the help form — which is
+          exactly the person most likely to need it (a broken sign-up). Signed
+          in, the account menu carries it too; this stays for the "I need help"
+          mental model, which isn't "account stuff". Leaves the map, like
+          Suggest, so it's a circle. */}
+      <Link
+        href="/help"
+        aria-label="Help & feedback"
+        className={`${SURFACE} ${BTN} rounded-full text-[var(--ink)]`}
+      >
+        <HelpIcon />
+        <Tip>Help &amp; feedback</Tip>
+      </Link>
     </div>
   );
 }

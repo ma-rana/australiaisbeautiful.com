@@ -160,6 +160,18 @@ export function MapNav({ email }: { email: string | null }) {
                 Your contributions
               </Link>
 
+              {/* Help is a low-frequency action — exactly what a menu is for.
+                  Also reachable from the "?" in the control stack for the
+                  "I need help" mental model; here for the "account stuff" one. */}
+              <Link
+                href="/help"
+                role="menuitem"
+                className={ITEM}
+                onClick={() => setOpen(false)}
+              >
+                Help &amp; feedback
+              </Link>
+
               <div className="my-1.5 h-px bg-[var(--border)]" />
 
               {/* The address is the only identity this product has, and it's

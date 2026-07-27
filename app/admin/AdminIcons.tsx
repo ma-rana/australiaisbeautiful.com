@@ -119,6 +119,19 @@ export const KeyIcon = (p: IconProps) =>
     </>,
   );
 
+// Messages — the support/help/feedback inbox. A speech bubble: someone is
+// telling you something. Distinct from InboxIcon (a tray of arriving requests)
+// and PhotoIcon, so the three queues never read alike at rail size.
+export const MessageIcon = (p: IconProps) =>
+  base(
+    p,
+    <>
+      <path d="M5 5h14a1.5 1.5 0 011.5 1.5v8A1.5 1.5 0 0119 16H9l-4 3.5V16a1.5 1.5 0 01-1.5-1.5v-8A1.5 1.5 0 015 5z" />
+      <path d="M8.5 9.5h7" />
+      <path d="M8.5 12.5h4.5" />
+    </>,
+  );
+
 // The rail's collapse / expand control — double chevrons, like every
 // minimizable side panel people already know.
 export const CollapseIcon = (p: IconProps) =>
