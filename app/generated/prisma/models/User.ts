@@ -309,6 +309,9 @@ export type UserWhereInput = {
   escalationsRaised?: Prisma.EscalationListRelationFilter
   escalationsClosed?: Prisma.EscalationListRelationFilter
   reviewedClusters?: Prisma.LocationRequestClusterListRelationFilter
+  supportMessages?: Prisma.SupportMessageListRelationFilter
+  claimedSupport?: Prisma.SupportMessageListRelationFilter
+  resolvedSupport?: Prisma.SupportMessageListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -347,6 +350,9 @@ export type UserOrderByWithRelationInput = {
   escalationsRaised?: Prisma.EscalationOrderByRelationAggregateInput
   escalationsClosed?: Prisma.EscalationOrderByRelationAggregateInput
   reviewedClusters?: Prisma.LocationRequestClusterOrderByRelationAggregateInput
+  supportMessages?: Prisma.SupportMessageOrderByRelationAggregateInput
+  claimedSupport?: Prisma.SupportMessageOrderByRelationAggregateInput
+  resolvedSupport?: Prisma.SupportMessageOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -388,6 +394,9 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   escalationsRaised?: Prisma.EscalationListRelationFilter
   escalationsClosed?: Prisma.EscalationListRelationFilter
   reviewedClusters?: Prisma.LocationRequestClusterListRelationFilter
+  supportMessages?: Prisma.SupportMessageListRelationFilter
+  claimedSupport?: Prisma.SupportMessageListRelationFilter
+  resolvedSupport?: Prisma.SupportMessageListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -467,6 +476,9 @@ export type UserCreateInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -504,6 +516,9 @@ export type UserUncheckedCreateInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUpdateInput = {
@@ -541,6 +556,9 @@ export type UserUpdateInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -578,6 +596,9 @@ export type UserUncheckedUpdateInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1091,6 +1112,54 @@ export type UserUpdateOneWithoutEscalationsClosedNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutEscalationsClosedInput, Prisma.UserUpdateWithoutEscalationsClosedInput>, Prisma.UserUncheckedUpdateWithoutEscalationsClosedInput>
 }
 
+export type UserCreateNestedOneWithoutSupportMessagesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSupportMessagesInput, Prisma.UserUncheckedCreateWithoutSupportMessagesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSupportMessagesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutClaimedSupportInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutClaimedSupportInput, Prisma.UserUncheckedCreateWithoutClaimedSupportInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutClaimedSupportInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutResolvedSupportInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutResolvedSupportInput, Prisma.UserUncheckedCreateWithoutResolvedSupportInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutResolvedSupportInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutSupportMessagesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSupportMessagesInput, Prisma.UserUncheckedCreateWithoutSupportMessagesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSupportMessagesInput
+  upsert?: Prisma.UserUpsertWithoutSupportMessagesInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSupportMessagesInput, Prisma.UserUpdateWithoutSupportMessagesInput>, Prisma.UserUncheckedUpdateWithoutSupportMessagesInput>
+}
+
+export type UserUpdateOneWithoutClaimedSupportNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutClaimedSupportInput, Prisma.UserUncheckedCreateWithoutClaimedSupportInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutClaimedSupportInput
+  upsert?: Prisma.UserUpsertWithoutClaimedSupportInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutClaimedSupportInput, Prisma.UserUpdateWithoutClaimedSupportInput>, Prisma.UserUncheckedUpdateWithoutClaimedSupportInput>
+}
+
+export type UserUpdateOneWithoutResolvedSupportNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutResolvedSupportInput, Prisma.UserUncheckedCreateWithoutResolvedSupportInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutResolvedSupportInput
+  upsert?: Prisma.UserUpsertWithoutResolvedSupportInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutResolvedSupportInput, Prisma.UserUpdateWithoutResolvedSupportInput>, Prisma.UserUncheckedUpdateWithoutResolvedSupportInput>
+}
+
 export type UserCreateWithoutBackupCodesInput = {
   id?: string
   email: string
@@ -1125,6 +1194,9 @@ export type UserCreateWithoutBackupCodesInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutBackupCodesInput = {
@@ -1161,6 +1233,9 @@ export type UserUncheckedCreateWithoutBackupCodesInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutBackupCodesInput = {
@@ -1213,6 +1288,9 @@ export type UserUpdateWithoutBackupCodesInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBackupCodesInput = {
@@ -1249,6 +1327,9 @@ export type UserUncheckedUpdateWithoutBackupCodesInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutSubmittedLocationsInput = {
@@ -1285,6 +1366,9 @@ export type UserCreateWithoutSubmittedLocationsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutSubmittedLocationsInput = {
@@ -1321,6 +1405,9 @@ export type UserUncheckedCreateWithoutSubmittedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutSubmittedLocationsInput = {
@@ -1362,6 +1449,9 @@ export type UserCreateWithoutClaimedLocationsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutClaimedLocationsInput = {
@@ -1398,6 +1488,9 @@ export type UserUncheckedCreateWithoutClaimedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutClaimedLocationsInput = {
@@ -1439,6 +1532,9 @@ export type UserCreateWithoutModeratedLocationsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutModeratedLocationsInput = {
@@ -1475,6 +1571,9 @@ export type UserUncheckedCreateWithoutModeratedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutModeratedLocationsInput = {
@@ -1527,6 +1626,9 @@ export type UserUpdateWithoutSubmittedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSubmittedLocationsInput = {
@@ -1563,6 +1665,9 @@ export type UserUncheckedUpdateWithoutSubmittedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutClaimedLocationsInput = {
@@ -1610,6 +1715,9 @@ export type UserUpdateWithoutClaimedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClaimedLocationsInput = {
@@ -1646,6 +1754,9 @@ export type UserUncheckedUpdateWithoutClaimedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutModeratedLocationsInput = {
@@ -1693,6 +1804,9 @@ export type UserUpdateWithoutModeratedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutModeratedLocationsInput = {
@@ -1729,6 +1843,9 @@ export type UserUncheckedUpdateWithoutModeratedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutMomentsInput = {
@@ -1765,6 +1882,9 @@ export type UserCreateWithoutMomentsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutMomentsInput = {
@@ -1801,6 +1921,9 @@ export type UserUncheckedCreateWithoutMomentsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutMomentsInput = {
@@ -1842,6 +1965,9 @@ export type UserCreateWithoutClaimedMomentsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutClaimedMomentsInput = {
@@ -1878,6 +2004,9 @@ export type UserUncheckedCreateWithoutClaimedMomentsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutClaimedMomentsInput = {
@@ -1919,6 +2048,9 @@ export type UserCreateWithoutModeratedMomentsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutModeratedMomentsInput = {
@@ -1955,6 +2087,9 @@ export type UserUncheckedCreateWithoutModeratedMomentsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutModeratedMomentsInput = {
@@ -2007,6 +2142,9 @@ export type UserUpdateWithoutMomentsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMomentsInput = {
@@ -2043,6 +2181,9 @@ export type UserUncheckedUpdateWithoutMomentsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutClaimedMomentsInput = {
@@ -2090,6 +2231,9 @@ export type UserUpdateWithoutClaimedMomentsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClaimedMomentsInput = {
@@ -2126,6 +2270,9 @@ export type UserUncheckedUpdateWithoutClaimedMomentsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutModeratedMomentsInput = {
@@ -2173,6 +2320,9 @@ export type UserUpdateWithoutModeratedMomentsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutModeratedMomentsInput = {
@@ -2209,6 +2359,9 @@ export type UserUncheckedUpdateWithoutModeratedMomentsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutReactionsInput = {
@@ -2245,6 +2398,9 @@ export type UserCreateWithoutReactionsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutReactionsInput = {
@@ -2281,6 +2437,9 @@ export type UserUncheckedCreateWithoutReactionsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutReactionsInput = {
@@ -2333,6 +2492,9 @@ export type UserUpdateWithoutReactionsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReactionsInput = {
@@ -2369,6 +2531,9 @@ export type UserUncheckedUpdateWithoutReactionsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutRatingsInput = {
@@ -2405,6 +2570,9 @@ export type UserCreateWithoutRatingsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutRatingsInput = {
@@ -2441,6 +2609,9 @@ export type UserUncheckedCreateWithoutRatingsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutRatingsInput = {
@@ -2493,6 +2664,9 @@ export type UserUpdateWithoutRatingsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRatingsInput = {
@@ -2529,6 +2703,9 @@ export type UserUncheckedUpdateWithoutRatingsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutChatMessagesInput = {
@@ -2565,6 +2742,9 @@ export type UserCreateWithoutChatMessagesInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutChatMessagesInput = {
@@ -2601,6 +2781,9 @@ export type UserUncheckedCreateWithoutChatMessagesInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutChatMessagesInput = {
@@ -2653,6 +2836,9 @@ export type UserUpdateWithoutChatMessagesInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatMessagesInput = {
@@ -2689,6 +2875,9 @@ export type UserUncheckedUpdateWithoutChatMessagesInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutActivityJoinsInput = {
@@ -2725,6 +2914,9 @@ export type UserCreateWithoutActivityJoinsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutActivityJoinsInput = {
@@ -2761,6 +2953,9 @@ export type UserUncheckedCreateWithoutActivityJoinsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutActivityJoinsInput = {
@@ -2813,6 +3008,9 @@ export type UserUpdateWithoutActivityJoinsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutActivityJoinsInput = {
@@ -2849,6 +3047,9 @@ export type UserUncheckedUpdateWithoutActivityJoinsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutSavedLocationsInput = {
@@ -2885,6 +3086,9 @@ export type UserCreateWithoutSavedLocationsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutSavedLocationsInput = {
@@ -2921,6 +3125,9 @@ export type UserUncheckedCreateWithoutSavedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutSavedLocationsInput = {
@@ -2973,6 +3180,9 @@ export type UserUpdateWithoutSavedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSavedLocationsInput = {
@@ -3009,6 +3219,9 @@ export type UserUncheckedUpdateWithoutSavedLocationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutPartnerInput = {
@@ -3045,6 +3258,9 @@ export type UserCreateWithoutPartnerInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutPartnerInput = {
@@ -3081,6 +3297,9 @@ export type UserUncheckedCreateWithoutPartnerInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutPartnerInput = {
@@ -3163,6 +3382,9 @@ export type UserCreateWithoutVerificationRequestsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutVerificationRequestsInput = {
@@ -3199,6 +3421,9 @@ export type UserUncheckedCreateWithoutVerificationRequestsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutVerificationRequestsInput = {
@@ -3240,6 +3465,9 @@ export type UserCreateWithoutReviewedVerificationsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutReviewedVerificationsInput = {
@@ -3276,6 +3504,9 @@ export type UserUncheckedCreateWithoutReviewedVerificationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutReviewedVerificationsInput = {
@@ -3328,6 +3559,9 @@ export type UserUpdateWithoutVerificationRequestsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutVerificationRequestsInput = {
@@ -3364,6 +3598,9 @@ export type UserUncheckedUpdateWithoutVerificationRequestsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutReviewedVerificationsInput = {
@@ -3411,6 +3648,9 @@ export type UserUpdateWithoutReviewedVerificationsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedVerificationsInput = {
@@ -3447,6 +3687,9 @@ export type UserUncheckedUpdateWithoutReviewedVerificationsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutClaimedReportsInput = {
@@ -3483,6 +3726,9 @@ export type UserCreateWithoutClaimedReportsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutClaimedReportsInput = {
@@ -3519,6 +3765,9 @@ export type UserUncheckedCreateWithoutClaimedReportsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutClaimedReportsInput = {
@@ -3560,6 +3809,9 @@ export type UserCreateWithoutResolvedReportsInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutResolvedReportsInput = {
@@ -3596,6 +3848,9 @@ export type UserUncheckedCreateWithoutResolvedReportsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutResolvedReportsInput = {
@@ -3648,6 +3903,9 @@ export type UserUpdateWithoutClaimedReportsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutClaimedReportsInput = {
@@ -3684,6 +3942,9 @@ export type UserUncheckedUpdateWithoutClaimedReportsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutResolvedReportsInput = {
@@ -3731,6 +3992,9 @@ export type UserUpdateWithoutResolvedReportsInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResolvedReportsInput = {
@@ -3767,6 +4031,9 @@ export type UserUncheckedUpdateWithoutResolvedReportsInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutReviewedClustersInput = {
@@ -3803,6 +4070,9 @@ export type UserCreateWithoutReviewedClustersInput = {
   auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutReviewedClustersInput = {
@@ -3839,6 +4109,9 @@ export type UserUncheckedCreateWithoutReviewedClustersInput = {
   auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutReviewedClustersInput = {
@@ -3891,6 +4164,9 @@ export type UserUpdateWithoutReviewedClustersInput = {
   auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReviewedClustersInput = {
@@ -3927,6 +4203,9 @@ export type UserUncheckedUpdateWithoutReviewedClustersInput = {
   auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutAuditEntriesInput = {
@@ -3963,6 +4242,9 @@ export type UserCreateWithoutAuditEntriesInput = {
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutAuditEntriesInput = {
@@ -3999,6 +4281,9 @@ export type UserUncheckedCreateWithoutAuditEntriesInput = {
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutAuditEntriesInput = {
@@ -4051,6 +4336,9 @@ export type UserUpdateWithoutAuditEntriesInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditEntriesInput = {
@@ -4087,6 +4375,9 @@ export type UserUncheckedUpdateWithoutAuditEntriesInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserCreateWithoutEscalationsRaisedInput = {
@@ -4123,6 +4414,9 @@ export type UserCreateWithoutEscalationsRaisedInput = {
   auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
   escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutEscalationsRaisedInput = {
@@ -4159,6 +4453,9 @@ export type UserUncheckedCreateWithoutEscalationsRaisedInput = {
   auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
   escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutEscalationsRaisedInput = {
@@ -4200,6 +4497,9 @@ export type UserCreateWithoutEscalationsClosedInput = {
   auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
   escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
   reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserUncheckedCreateWithoutEscalationsClosedInput = {
@@ -4236,6 +4536,9 @@ export type UserUncheckedCreateWithoutEscalationsClosedInput = {
   auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
   escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
 }
 
 export type UserCreateOrConnectWithoutEscalationsClosedInput = {
@@ -4288,6 +4591,9 @@ export type UserUpdateWithoutEscalationsRaisedInput = {
   auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEscalationsRaisedInput = {
@@ -4324,6 +4630,9 @@ export type UserUncheckedUpdateWithoutEscalationsRaisedInput = {
   auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUpsertWithoutEscalationsClosedInput = {
@@ -4371,6 +4680,9 @@ export type UserUpdateWithoutEscalationsClosedInput = {
   auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEscalationsClosedInput = {
@@ -4407,6 +4719,525 @@ export type UserUncheckedUpdateWithoutEscalationsClosedInput = {
   auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserCreateWithoutSupportMessagesInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  sessionVersion?: number
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
+  partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
+  moments?: Prisma.MomentCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
+}
+
+export type UserUncheckedCreateWithoutSupportMessagesInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  sessionVersion?: number
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  partnerId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
+  moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationUncheckedCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinUncheckedCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
+}
+
+export type UserCreateOrConnectWithoutSupportMessagesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSupportMessagesInput, Prisma.UserUncheckedCreateWithoutSupportMessagesInput>
+}
+
+export type UserCreateWithoutClaimedSupportInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  sessionVersion?: number
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
+  partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
+  moments?: Prisma.MomentCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  resolvedSupport?: Prisma.SupportMessageCreateNestedManyWithoutResolvedByInput
+}
+
+export type UserUncheckedCreateWithoutClaimedSupportInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  sessionVersion?: number
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  partnerId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
+  moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationUncheckedCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinUncheckedCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutResolvedByInput
+}
+
+export type UserCreateOrConnectWithoutClaimedSupportInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutClaimedSupportInput, Prisma.UserUncheckedCreateWithoutClaimedSupportInput>
+}
+
+export type UserCreateWithoutResolvedSupportInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  sessionVersion?: number
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeCreateNestedManyWithoutUserInput
+  partner?: Prisma.PartnerCreateNestedOneWithoutUsersInput
+  moments?: Prisma.MomentCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageCreateNestedManyWithoutClaimedByInput
+}
+
+export type UserUncheckedCreateWithoutResolvedSupportInput = {
+  id?: string
+  email: string
+  password: string
+  role?: $Enums.Role
+  status?: $Enums.UserStatus
+  sessionVersion?: number
+  isVerified?: boolean
+  verifiedName?: string | null
+  totpSecret?: string | null
+  totpEnabled?: boolean
+  totpEnrolledAt?: Date | string | null
+  partnerId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedCreateNestedManyWithoutUserInput
+  moments?: Prisma.MomentUncheckedCreateNestedManyWithoutUserInput
+  ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
+  reactions?: Prisma.ReactionUncheckedCreateNestedManyWithoutUserInput
+  chatMessages?: Prisma.ChatMessageUncheckedCreateNestedManyWithoutUserInput
+  savedLocations?: Prisma.SavedLocationUncheckedCreateNestedManyWithoutUserInput
+  activityJoins?: Prisma.ActivityJoinUncheckedCreateNestedManyWithoutUserInput
+  submittedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutSubmittedByInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutUserInput
+  moderatedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutModeratedByInput
+  moderatedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutModeratedByInput
+  resolvedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutResolvedByInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedCreateNestedManyWithoutReviewedByInput
+  claimedLocations?: Prisma.LocationUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedMoments?: Prisma.MomentUncheckedCreateNestedManyWithoutClaimedByInput
+  claimedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutClaimedByInput
+  auditEntries?: Prisma.ModerationAuditUncheckedCreateNestedManyWithoutActorInput
+  escalationsRaised?: Prisma.EscalationUncheckedCreateNestedManyWithoutRaisedByInput
+  escalationsClosed?: Prisma.EscalationUncheckedCreateNestedManyWithoutClosedByInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedCreateNestedManyWithoutReviewedByInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutUserInput
+  claimedSupport?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutClaimedByInput
+}
+
+export type UserCreateOrConnectWithoutResolvedSupportInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutResolvedSupportInput, Prisma.UserUncheckedCreateWithoutResolvedSupportInput>
+}
+
+export type UserUpsertWithoutSupportMessagesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSupportMessagesInput, Prisma.UserUncheckedUpdateWithoutSupportMessagesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSupportMessagesInput, Prisma.UserUncheckedCreateWithoutSupportMessagesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSupportMessagesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSupportMessagesInput, Prisma.UserUncheckedUpdateWithoutSupportMessagesInput>
+}
+
+export type UserUpdateWithoutSupportMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
+  partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
+  moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSupportMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
+  moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUncheckedUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUncheckedUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUncheckedUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUncheckedUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUncheckedUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUncheckedUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUncheckedUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserUpsertWithoutClaimedSupportInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutClaimedSupportInput, Prisma.UserUncheckedUpdateWithoutClaimedSupportInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutClaimedSupportInput, Prisma.UserUncheckedCreateWithoutClaimedSupportInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutClaimedSupportInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutClaimedSupportInput, Prisma.UserUncheckedUpdateWithoutClaimedSupportInput>
+}
+
+export type UserUpdateWithoutClaimedSupportInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
+  partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
+  moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutClaimedSupportInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
+  moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUncheckedUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUncheckedUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUncheckedUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUncheckedUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUncheckedUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUncheckedUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUncheckedUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
+}
+
+export type UserUpsertWithoutResolvedSupportInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutResolvedSupportInput, Prisma.UserUncheckedUpdateWithoutResolvedSupportInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutResolvedSupportInput, Prisma.UserUncheckedCreateWithoutResolvedSupportInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutResolvedSupportInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutResolvedSupportInput, Prisma.UserUncheckedUpdateWithoutResolvedSupportInput>
+}
+
+export type UserUpdateWithoutResolvedSupportInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUpdateManyWithoutUserNestedInput
+  partner?: Prisma.PartnerUpdateOneWithoutUsersNestedInput
+  moments?: Prisma.MomentUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+}
+
+export type UserUncheckedUpdateWithoutResolvedSupportInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  password?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  status?: Prisma.EnumUserStatusFieldUpdateOperationsInput | $Enums.UserStatus
+  sessionVersion?: Prisma.IntFieldUpdateOperationsInput | number
+  isVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  verifiedName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  totpEnrolledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  partnerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  backupCodes?: Prisma.BackupCodeUncheckedUpdateManyWithoutUserNestedInput
+  moments?: Prisma.MomentUncheckedUpdateManyWithoutUserNestedInput
+  ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
+  reactions?: Prisma.ReactionUncheckedUpdateManyWithoutUserNestedInput
+  chatMessages?: Prisma.ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+  savedLocations?: Prisma.SavedLocationUncheckedUpdateManyWithoutUserNestedInput
+  activityJoins?: Prisma.ActivityJoinUncheckedUpdateManyWithoutUserNestedInput
+  submittedLocations?: Prisma.LocationUncheckedUpdateManyWithoutSubmittedByNestedInput
+  verificationRequests?: Prisma.VerificationRequestUncheckedUpdateManyWithoutUserNestedInput
+  moderatedLocations?: Prisma.LocationUncheckedUpdateManyWithoutModeratedByNestedInput
+  moderatedMoments?: Prisma.MomentUncheckedUpdateManyWithoutModeratedByNestedInput
+  resolvedReports?: Prisma.ReportUncheckedUpdateManyWithoutResolvedByNestedInput
+  reviewedVerifications?: Prisma.VerificationRequestUncheckedUpdateManyWithoutReviewedByNestedInput
+  claimedLocations?: Prisma.LocationUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedMoments?: Prisma.MomentUncheckedUpdateManyWithoutClaimedByNestedInput
+  claimedReports?: Prisma.ReportUncheckedUpdateManyWithoutClaimedByNestedInput
+  auditEntries?: Prisma.ModerationAuditUncheckedUpdateManyWithoutActorNestedInput
+  escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
+  escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
+  reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
 }
 
 export type UserCreateManyPartnerInput = {
@@ -4459,6 +5290,9 @@ export type UserUpdateWithoutPartnerInput = {
   escalationsRaised?: Prisma.EscalationUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPartnerInput = {
@@ -4495,6 +5329,9 @@ export type UserUncheckedUpdateWithoutPartnerInput = {
   escalationsRaised?: Prisma.EscalationUncheckedUpdateManyWithoutRaisedByNestedInput
   escalationsClosed?: Prisma.EscalationUncheckedUpdateManyWithoutClosedByNestedInput
   reviewedClusters?: Prisma.LocationRequestClusterUncheckedUpdateManyWithoutReviewedByNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutUserNestedInput
+  claimedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutClaimedByNestedInput
+  resolvedSupport?: Prisma.SupportMessageUncheckedUpdateManyWithoutResolvedByNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutPartnerInput = {
@@ -4539,6 +5376,9 @@ export type UserCountOutputType = {
   escalationsRaised: number
   escalationsClosed: number
   reviewedClusters: number
+  supportMessages: number
+  claimedSupport: number
+  resolvedSupport: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4562,6 +5402,9 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   escalationsRaised?: boolean | UserCountOutputTypeCountEscalationsRaisedArgs
   escalationsClosed?: boolean | UserCountOutputTypeCountEscalationsClosedArgs
   reviewedClusters?: boolean | UserCountOutputTypeCountReviewedClustersArgs
+  supportMessages?: boolean | UserCountOutputTypeCountSupportMessagesArgs
+  claimedSupport?: boolean | UserCountOutputTypeCountClaimedSupportArgs
+  resolvedSupport?: boolean | UserCountOutputTypeCountResolvedSupportArgs
 }
 
 /**
@@ -4714,6 +5557,27 @@ export type UserCountOutputTypeCountReviewedClustersArgs<ExtArgs extends runtime
   where?: Prisma.LocationRequestClusterWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSupportMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportMessageWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountClaimedSupportArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportMessageWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountResolvedSupportArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportMessageWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -4751,6 +5615,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   escalationsRaised?: boolean | Prisma.User$escalationsRaisedArgs<ExtArgs>
   escalationsClosed?: boolean | Prisma.User$escalationsClosedArgs<ExtArgs>
   reviewedClusters?: boolean | Prisma.User$reviewedClustersArgs<ExtArgs>
+  supportMessages?: boolean | Prisma.User$supportMessagesArgs<ExtArgs>
+  claimedSupport?: boolean | Prisma.User$claimedSupportArgs<ExtArgs>
+  resolvedSupport?: boolean | Prisma.User$resolvedSupportArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -4830,6 +5697,9 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   escalationsRaised?: boolean | Prisma.User$escalationsRaisedArgs<ExtArgs>
   escalationsClosed?: boolean | Prisma.User$escalationsClosedArgs<ExtArgs>
   reviewedClusters?: boolean | Prisma.User$reviewedClustersArgs<ExtArgs>
+  supportMessages?: boolean | Prisma.User$supportMessagesArgs<ExtArgs>
+  claimedSupport?: boolean | Prisma.User$claimedSupportArgs<ExtArgs>
+  resolvedSupport?: boolean | Prisma.User$resolvedSupportArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4863,6 +5733,9 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     escalationsRaised: Prisma.$EscalationPayload<ExtArgs>[]
     escalationsClosed: Prisma.$EscalationPayload<ExtArgs>[]
     reviewedClusters: Prisma.$LocationRequestClusterPayload<ExtArgs>[]
+    supportMessages: Prisma.$SupportMessagePayload<ExtArgs>[]
+    claimedSupport: Prisma.$SupportMessagePayload<ExtArgs>[]
+    resolvedSupport: Prisma.$SupportMessagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -5294,6 +6167,9 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   escalationsRaised<T extends Prisma.User$escalationsRaisedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$escalationsRaisedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EscalationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   escalationsClosed<T extends Prisma.User$escalationsClosedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$escalationsClosedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$EscalationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   reviewedClusters<T extends Prisma.User$reviewedClustersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$reviewedClustersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LocationRequestClusterPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  supportMessages<T extends Prisma.User$supportMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$supportMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  claimedSupport<T extends Prisma.User$claimedSupportArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$claimedSupportArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  resolvedSupport<T extends Prisma.User$resolvedSupportArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$resolvedSupportArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6234,6 +7110,78 @@ export type User$reviewedClustersArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.LocationRequestClusterScalarFieldEnum | Prisma.LocationRequestClusterScalarFieldEnum[]
+}
+
+/**
+ * User.supportMessages
+ */
+export type User$supportMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportMessage
+   */
+  select?: Prisma.SupportMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportMessage
+   */
+  omit?: Prisma.SupportMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportMessageInclude<ExtArgs> | null
+  where?: Prisma.SupportMessageWhereInput
+  orderBy?: Prisma.SupportMessageOrderByWithRelationInput | Prisma.SupportMessageOrderByWithRelationInput[]
+  cursor?: Prisma.SupportMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportMessageScalarFieldEnum | Prisma.SupportMessageScalarFieldEnum[]
+}
+
+/**
+ * User.claimedSupport
+ */
+export type User$claimedSupportArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportMessage
+   */
+  select?: Prisma.SupportMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportMessage
+   */
+  omit?: Prisma.SupportMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportMessageInclude<ExtArgs> | null
+  where?: Prisma.SupportMessageWhereInput
+  orderBy?: Prisma.SupportMessageOrderByWithRelationInput | Prisma.SupportMessageOrderByWithRelationInput[]
+  cursor?: Prisma.SupportMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportMessageScalarFieldEnum | Prisma.SupportMessageScalarFieldEnum[]
+}
+
+/**
+ * User.resolvedSupport
+ */
+export type User$resolvedSupportArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportMessage
+   */
+  select?: Prisma.SupportMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportMessage
+   */
+  omit?: Prisma.SupportMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportMessageInclude<ExtArgs> | null
+  where?: Prisma.SupportMessageWhereInput
+  orderBy?: Prisma.SupportMessageOrderByWithRelationInput | Prisma.SupportMessageOrderByWithRelationInput[]
+  cursor?: Prisma.SupportMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportMessageScalarFieldEnum | Prisma.SupportMessageScalarFieldEnum[]
 }
 
 /**

@@ -12,6 +12,7 @@
 import { db } from "@/lib/db";
 import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { MessageCard, type QueueMessage } from "./MessageCard";
 import { AdminShell } from "../AdminShell";
 import { getAdminContext } from "../context";
@@ -76,6 +77,14 @@ export default async function MessagesQueue() {
       twoFactorOn={ctx.twoFactorOn}
       title="Messages"
       subtitle="Bugs, help requests and content reports from the public. Resolve each once it's handled."
+      actions={
+        <Link
+          href="/messages/archive"
+          className="rounded border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--sunken)] hover:text-[var(--ink)]"
+        >
+          Search archive
+        </Link>
+      }
     >
       {open.length === 0 ? (
         <div className="admin-panel px-5 py-12 text-center">

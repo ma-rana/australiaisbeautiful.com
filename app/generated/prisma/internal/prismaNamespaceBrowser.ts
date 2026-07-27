@@ -68,7 +68,8 @@ export const ModelName = {
   LocationRequest: 'LocationRequest',
   LocationRequestCluster: 'LocationRequestCluster',
   ModerationAudit: 'ModerationAudit',
-  Escalation: 'Escalation'
+  Escalation: 'Escalation',
+  SupportMessage: 'SupportMessage'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -381,6 +382,27 @@ export const EscalationScalarFieldEnum = {
 } as const
 
 export type EscalationScalarFieldEnum = (typeof EscalationScalarFieldEnum)[keyof typeof EscalationScalarFieldEnum]
+
+
+export const SupportMessageScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  body: 'body',
+  email: 'email',
+  userId: 'userId',
+  path: 'path',
+  userAgent: 'userAgent',
+  status: 'status',
+  claimedById: 'claimedById',
+  claimedAt: 'claimedAt',
+  claimExpiresAt: 'claimExpiresAt',
+  resolvedById: 'resolvedById',
+  resolvedAt: 'resolvedAt',
+  resolutionNote: 'resolutionNote',
+  createdAt: 'createdAt'
+} as const
+
+export type SupportMessageScalarFieldEnum = (typeof SupportMessageScalarFieldEnum)[keyof typeof SupportMessageScalarFieldEnum]
 
 
 export const SortOrder = {

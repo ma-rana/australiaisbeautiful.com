@@ -167,7 +167,8 @@ export const ReportTarget = {
   MOMENT: 'MOMENT',
   CHAT_MESSAGE: 'CHAT_MESSAGE',
   ACTIVITY: 'ACTIVITY',
-  USER: 'USER'
+  USER: 'USER',
+  SUPPORT: 'SUPPORT'
 } as const
 
 export type ReportTarget = (typeof ReportTarget)[keyof typeof ReportTarget]
@@ -217,7 +218,8 @@ export const AuditAction = {
   VERIFY_REVOKE: 'VERIFY_REVOKE',
   USER_SUSPEND: 'USER_SUSPEND',
   USER_REINSTATE: 'USER_REINSTATE',
-  ESCALATE: 'ESCALATE'
+  ESCALATE: 'ESCALATE',
+  SUPPORT_RESOLVE: 'SUPPORT_RESOLVE'
 } as const
 
 export type AuditAction = (typeof AuditAction)[keyof typeof AuditAction]
@@ -253,3 +255,20 @@ export const EscalationStatus = {
 } as const
 
 export type EscalationStatus = (typeof EscalationStatus)[keyof typeof EscalationStatus]
+
+
+export const SupportCategory = {
+  BUG: 'BUG',
+  HELP: 'HELP',
+  CONTENT_REPORT: 'CONTENT_REPORT'
+} as const
+
+export type SupportCategory = (typeof SupportCategory)[keyof typeof SupportCategory]
+
+
+export const SupportStatus = {
+  OPEN: 'OPEN',
+  RESOLVED: 'RESOLVED'
+} as const
+
+export type SupportStatus = (typeof SupportStatus)[keyof typeof SupportStatus]

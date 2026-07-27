@@ -67,6 +67,40 @@ export function MessageCard({ message }: { message: QueueMessage }) {
     minute: "2-digit",
   });
 
+  // A pre-composed mailto: the admin's OWN email client opens, filled in, and
+  // they send it themselves. No email infrastructure — this is a courtesy
+  // reply, human-sent, which keeps the app honest to the one-way design (it
+  // never sends mail on its own). Only meaningful when the sender left an
+  // address; the button is hidden otherwise.
+  //
+  // The body quotes the original message so the person has context (they may
+  // have forgotten a report they fired off days ago), then the resolution note
+  // if one's been written. \r\n is the mailto-safe newline; encodeURIComponent
+  // handles the rest.
+  const notifyHref = (() => {
+    if (!message.email) return null;
+    const subject = "Re: your message to Australia Is Beautiful";
+    const lines = [
+      "Hi,",
+      "",
+      "Thanks for getting in touch with Australia Is Beautiful. You wrote:",
+      "",
+      // Quote the original, indented, so it reads as a quote.
+      ...message.body.split("\n").map((l) => `> ${l}`),
+      "",
+      message.resolutionNote
+        ? `We've looked into it: ${message.resolutionNote}`
+        : "We've looked into it and it's now sorted.",
+      "",
+      "Thanks for helping make the map better.",
+      "",
+      "— The Australia Is Beautiful team",
+    ];
+    return `mailto:${encodeURIComponent(message.email)}?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(lines.join("\r\n"))}`;
+  })();
+
   return (
     <div className={`admin-panel px-4 py-3.5 ${resolved ? "opacity-70" : ""}`}>
       {/* Header row — category tag, when, and origin context. */}
@@ -140,7 +174,7 @@ export function MessageCard({ message }: { message: QueueMessage }) {
       )}
 
       {/* Actions. */}
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {resolved ? (
           <button
             onClick={doReopen}
@@ -150,7 +184,7 @@ export function MessageCard({ message }: { message: QueueMessage }) {
             Reopen
           </button>
         ) : resolving ? (
-          <div className="rounded px-3 py-3" style={{ background: "var(--sunken)" }}>
+          <div className="w-full rounded px-3 py-3" style={{ background: "var(--sunken)" }}>
             <label htmlFor={`note-${message.id}`} className="text-xs font-medium">
               How was this handled? (optional, internal)
             </label>
@@ -189,6 +223,16 @@ export function MessageCard({ message }: { message: QueueMessage }) {
           >
             Resolve
           </button>
+        )}
+
+        {/* Notify sender — opens the admin's own email client, pre-filled.
+            Shown whenever the sender left an email, in both states. Hidden
+            during the resolve-note entry (that panel takes the full row). An
+            anonymous sender left no address, so there's nothing to notify. */}
+        {notifyHref && !resolving && (
+          <a href={notifyHref} className="admin-btn admin-btn-quiet">
+            Notify sender
+          </a>
         )}
       </div>
     </div>

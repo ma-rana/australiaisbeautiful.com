@@ -107,3 +107,8 @@ export type ModerationAudit = Prisma.ModerationAuditModel
  * 
  */
 export type Escalation = Prisma.EscalationModel
+/**
+ * Model SupportMessage
+ * 
+ */
+export type SupportMessage = Prisma.SupportMessageModel

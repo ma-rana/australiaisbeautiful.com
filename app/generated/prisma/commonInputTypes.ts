@@ -705,6 +705,40 @@ export type EnumEscalationStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumEscalationStatusFilter<$PrismaModel>
 }
 
+export type EnumSupportCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportCategory | Prisma.EnumSupportCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportCategoryFilter<$PrismaModel> | $Enums.SupportCategory
+}
+
+export type EnumSupportStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportStatus | Prisma.EnumSupportStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportStatusFilter<$PrismaModel> | $Enums.SupportStatus
+}
+
+export type EnumSupportCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportCategory | Prisma.EnumSupportCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportCategoryWithAggregatesFilter<$PrismaModel> | $Enums.SupportCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSupportCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSupportCategoryFilter<$PrismaModel>
+}
+
+export type EnumSupportStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportStatus | Prisma.EnumSupportStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportStatusWithAggregatesFilter<$PrismaModel> | $Enums.SupportStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSupportStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSupportStatusFilter<$PrismaModel>
+}
+
 export type NestedStringFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -1342,6 +1376,40 @@ export type NestedEnumEscalationStatusWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumEscalationStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumEscalationStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumSupportCategoryFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportCategory | Prisma.EnumSupportCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportCategoryFilter<$PrismaModel> | $Enums.SupportCategory
+}
+
+export type NestedEnumSupportStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportStatus | Prisma.EnumSupportStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportStatusFilter<$PrismaModel> | $Enums.SupportStatus
+}
+
+export type NestedEnumSupportCategoryWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportCategory | Prisma.EnumSupportCategoryFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportCategory[] | Prisma.ListEnumSupportCategoryFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportCategoryWithAggregatesFilter<$PrismaModel> | $Enums.SupportCategory
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSupportCategoryFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSupportCategoryFilter<$PrismaModel>
+}
+
+export type NestedEnumSupportStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SupportStatus | Prisma.EnumSupportStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.SupportStatus[] | Prisma.ListEnumSupportStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumSupportStatusWithAggregatesFilter<$PrismaModel> | $Enums.SupportStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSupportStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSupportStatusFilter<$PrismaModel>
 }
 
 
