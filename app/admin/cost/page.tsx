@@ -117,10 +117,17 @@ function GaugeRow({ r }: { r: CostReading }) {
                 // WHY ("awaiting feed", "not measurable here", "stale") — far more
                 // honest than a bare "couldn't measure".
                 (r.detail ?? "—")
-              : `${fmt(r.usage, r.unit)} of ${fmt(r.freeLimit, r.unit)}`}
+              : // A percent-unit row (disk) IS its own reading — "78% full" says
+                // it all; "78% of 100%" is a tautology. Everything else shows
+                // "used of limit" (e.g. "2 GB of 10 GB").
+                r.unit === "%"
+                ? `${Math.round(r.usage)}% full`
+                : `${fmt(r.usage, r.unit)} of ${fmt(r.freeLimit, r.unit)}`}
           </span>
           <span className="shrink-0" style={{ color: s.color }}>
-            {r.percent === null ? "" : `${Math.round(r.percent)}% of cap`}
+            {r.percent === null || r.unit === "%"
+              ? ""
+              : `${Math.round(r.percent)}% of cap`}
           </span>
         </div>
       </div>
