@@ -34,6 +34,7 @@ import {
   MessageIcon,
   ShieldIcon,
   UsersIcon,
+  StatsIcon,
   CostIcon,
   KeyIcon,
   CollapseIcon,
@@ -139,6 +140,15 @@ function itemsFor(role: AdminRole, counts: RailCounts): Item[] {
       roles: ["ADMIN"],
       icon: UsersIcon,
       count: counts.staff,
+    },
+    {
+      // Read-only aggregate numbers (ADMIN.md §3). Moderator+ — staff see the
+      // operational pulse (queue depth, decision SLA). No count; it's not a
+      // queue, it's a place you go to answer "how are we doing".
+      href: "/stats",
+      label: "Stats",
+      roles: ["MODERATOR", "ADMIN"],
+      icon: StatsIcon,
     },
     {
       // Free-tier headroom (COST_GUARDS.md). Admin-only — cost is an admin

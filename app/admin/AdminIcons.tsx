@@ -132,6 +132,20 @@ export const MessageIcon = (p: IconProps) =>
     </>,
   );
 
+// Stats — a small bar chart. The read-only numbers page. Bars (not a line)
+// because the page is mostly discrete counts; reads as "figures" at a glance,
+// distinct from the cost gauge and the queue glyphs.
+export const StatsIcon = (p: IconProps) =>
+  base(
+    p,
+    <>
+      <path d="M4.5 19.5h15" />
+      <rect x="6" y="11" width="3" height="6" rx="0.6" />
+      <rect x="10.5" y="7.5" width="3" height="9.5" rx="0.6" />
+      <rect x="15" y="13" width="3" height="4" rx="0.6" />
+    </>,
+  );
+
 // Cost / usage — a gauge (a dial with a needle). Reads as "how full is the
 // tank", which is exactly the headroom question the cost page answers. Distinct
 // from the shield (takedowns) and speech bubble (messages) at rail size.
