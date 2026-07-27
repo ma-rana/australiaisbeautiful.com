@@ -4,17 +4,15 @@
 // pass (auth.ts door separation), and it lives on the admin surface — the
 // admin subdomain in production, admin.localhost in dev.
 //
-// THE GUARD: a staff member with a live session who lands back on this page
-// (bookmark, back button, typed URL) is bounced straight to the dashboard —
-// same pattern and reasoning as the public /signin (see app/signin/page.tsx).
+// THE GUARD: a staff member ALREADY signed in through the admin door who lands
+// back on this page (bookmark, back button, typed URL) is bounced straight to
+// the dashboard — same pattern and reasoning as the public /signin.
 //
-// The guard checks the ROLE, not just the session. The session cookie is
-// host-scoped, so the session read here is the admin host's own — but if a
-// non-staff session ever does appear on this host (a dev cookie-domain
-// misconfiguration is the realistic way), redirecting it to "/" would bounce
-// it into the admin layout's own rejection and could loop. A non-staff
-// session gets the form, where the admin door will refuse it with the honest
-// message.
+// The check is role AND door: only a session minted through the admin door
+// (door === "admin") counts as "already in here". A staff member who merely
+// has a public/Google session (e.g. they signed into the public site too) is
+// NOT bounced — they still need to authenticate at this door, which is the
+// whole point. getSessionUser exposes the door; the admin guards enforce it.
 //
 // Redirect target is "/" — on the admin host the middleware rewrites that to
 // the app/admin dashboard, which is where a signed-in staff member belongs.
@@ -30,7 +28,9 @@ export default async function AdminSignInPage() {
     user?.role === "MODERATOR" ||
     user?.role === "ADMIN";
 
-  if (isStaff) redirect("/");
+  // Only an admin-door session belongs past this page. A public session — even
+  // a staff member's — gets the form, because it can't satisfy the admin guards.
+  if (isStaff && user?.door === "admin") redirect("/");
 
   return <AdminSignInForm />;
 }

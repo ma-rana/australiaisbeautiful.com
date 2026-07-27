@@ -67,6 +67,12 @@ export async function POST(req: NextRequest) {
     if (!user || user.status !== "ACTIVE") {
       return NextResponse.json({ needsCode: false });
     }
+    // Google-only account (empty stored password): there's no password to need
+    // a code for. Same generic answer — the sign-in form will fail the password
+    // step and the user takes the Google button instead.
+    if (!user.password) {
+      return NextResponse.json({ needsCode: false });
+    }
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
       // A wrong password here is the same event as a wrong password at login.

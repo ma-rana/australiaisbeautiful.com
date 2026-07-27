@@ -52,6 +52,7 @@ export default async function UsersPage({
       status: true,
       createdAt: true,
       totpEnabled: true,
+      password: true,
     },
   });
 
@@ -70,6 +71,7 @@ export default async function UsersPage({
           status: true,
           createdAt: true,
           totpEnabled: true,
+          password: true,
         },
       })
     : [];
@@ -81,6 +83,10 @@ export default async function UsersPage({
     status: u.status,
     createdAt: u.createdAt.toISOString(),
     twoFactorOn: u.totpEnabled,
+    // Never send the hash to the client — only whether one exists. This is what
+    // tells the row a Google-only account needs an initial password to become
+    // staff (see UserRow / setUserRole).
+    hasPassword: Boolean(u.password),
     isSelf: u.id === ctx.userId,
   });
 

@@ -19,6 +19,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell, FIELD, LABEL, PRIMARY } from "@/components/AuthShell";
+import { GoogleButton, OrDivider } from "@/components/GoogleButton";
 import { safeCallbackUrl } from "@/lib/safe-callback";
 import { createAccount } from "./actions";
 
@@ -77,7 +78,12 @@ export function SignUpForm() {
         the places, not to a page about you.
       </p>
 
-      <form onSubmit={submit} className="mt-8 space-y-4">
+      <div className="mt-8">
+        <GoogleButton callbackUrl={callbackUrl} label="Sign up with Google" />
+      </div>
+      <OrDivider />
+
+      <form onSubmit={submit} className="space-y-4">
         <div>
           <label htmlFor="email" className={LABEL}>
             Email

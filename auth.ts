@@ -5,17 +5,26 @@
 // Known v5 shape: NextAuth(config) returns { handlers, auth, signIn, signOut }.
 //
 // Design decisions here:
-// - Credentials provider (email + password) for phase 1. Google added later.
+// - Credentials provider (email + password) + Google OAuth for the PUBLIC side.
 // - Session strategy MUST be "jwt": the Credentials provider does not support
-//   database sessions. The user's id + role ride in the token.
-// - We do NOT use the PrismaAdapter with credentials+jwt (the adapter is for
-//   OAuth/database sessions). We verify the password ourselves in authorize()
-//   and put id/role into the JWT. When we add Google later, the adapter comes in
-//   for that provider.
+//   database sessions. The user's id + role ride in the token. Google works
+//   fine under JWT too — we do NOT use the PrismaAdapter; instead the signIn
+//   callback upserts a real User row on first Google login, so a Google user is
+//   an ordinary EXPLORER row (moments, rate limits, sessionVersion all apply)
+//   and there's still ONE code path minting sessions.
 // - Password check uses bcryptjs (pure JS — no native build issues on Windows).
+//
+// GOOGLE = PUBLIC-SIDE ONLY (see the signIn callback for enforcement):
+//   - A staff member MAY sign in with Google on the public site; they get an
+//     ordinary public session and can browse/contribute. It does NOT grant
+//     admin access — admin pages require a session minted through the admin
+//     door (door === "admin", i.e. password + TOTP), which Google never is.
+//   - First Google login for a new email creates an EXPLORER. A verified Google
+//     email matching an existing account LINKS (both methods work).
 
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { verifyTotp, hashBackupCode } from "@/lib/twofactor";
@@ -109,6 +118,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         if (user.status !== "ACTIVE") return null; // suspended/deleted can't log in
 
+        // GOOGLE-ONLY ACCOUNTS have an empty stored password (see the signIn
+        // callback). bcrypt.compare(anything, "") is always false, so this can't
+        // be bypassed — but we reject explicitly and early rather than trust that
+        // incidental behaviour, and so the failure budget still gets charged.
+        // A person with a Google-only account who tries the password form should
+        // use "Continue with Google"; the generic failure nudges them there.
+        if (!user.password) {
+          recordFailure(rlKey, LIMITS.LOGIN_EMAIL);
+          return null;
+        }
+
         const ok = await bcrypt.compare(password, user.password);
         if (!ok) {
           recordFailure(rlKey, LIMITS.LOGIN_EMAIL);
@@ -177,11 +197,97 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           role: user.role,
           sessionVersion: user.sessionVersion,
+          // Which door this session was minted through. The admin guards
+          // (lib/auth require*) require door === "admin", so a public/Google
+          // session can never satisfy an admin page even if its cookie somehow
+          // reached the admin host (a dev cookie-domain quirk). Belt to the
+          // host-scoping braces.
+          door,
         };
       },
     }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // We only want the identity, nothing else. Default scopes (openid email
+      // profile) are enough; we read email + email_verified in signIn().
+      //
+      // allowDangerousEmailAccountLinking is NOT set (defaults false). It
+      // wouldn't do the right thing here anyway — our linking rule (verified
+      // email, EXPLORER only, staff refused) lives in the signIn callback where
+      // we can enforce all three conditions, not in a blanket provider flag.
+    }),
   ],
   callbacks: {
+    // GATE + LINK for OAuth (Google). Credentials sign-ins already did all their
+    // checking in authorize(), so they pass straight through. This callback is
+    // where Google's identity meets our rules:
+    //
+    //   1. email_verified — Google must assert the person controls the inbox.
+    //      Without it, linking would let anyone who can make a Google profile
+    //      claiming someone's address walk into that account. Google sends this
+    //      reliably; if it's ever false, we refuse.
+    //   2. LINK or CREATE — a verified Google email that matches an existing
+    //      account logs into that same account; a new email creates a fresh
+    //      EXPLORER. Either way the result is a real User row, so the rest of
+    //      the app (moments, limits, sessionVersion) is unchanged.
+    //
+    // ON STAFF + GOOGLE (deliberate, see SECURITY/door separation): Google is a
+    // PUBLIC-side convenience. A staff member MAY sign in with Google on the
+    // public site — they simply get an ordinary public session and can browse
+    // and contribute like anyone else. This does NOT grant admin access: the
+    // session cookie is host-scoped (no `domain` set), so a session minted on
+    // australiaisbeautiful.com is never sent to admin.australiaisbeautiful.com.
+    // The admin surface therefore never sees this session at all — staff must
+    // still sign in at the admin door with password + TOTP (door: "admin",
+    // enforced in authorize()). The cookie scope IS the door; Google can't
+    // cross it. So we do NOT refuse staff here — that only broke the public
+    // login without adding any protection the cookie scope wasn't already
+    // giving us.
+    //
+    // We mutate `user.id` to the DB row's id so the jwt callback stamps the
+    // right subject — Auth.js otherwise uses Google's opaque profile id, which
+    // is not our primary key.
+    async signIn({ user, account, profile }) {
+      // Not Google → credentials, already fully vetted in authorize().
+      if (account?.provider !== "google") return true;
+
+      const email = user.email?.trim().toLowerCase();
+      if (!email) return false;
+
+      // (1) Google must vouch for the address. `profile.email_verified` is the
+      // OIDC claim; be strict — only an explicit true passes.
+      const verified = (profile as { email_verified?: boolean } | null)
+        ?.email_verified;
+      if (verified !== true) return false;
+
+      const existing = await db.user.findUnique({
+        where: { email },
+        select: { id: true, status: true },
+      });
+
+      if (existing) {
+        // Suspended/deleted can't sign in, same as the password path. (Role is
+        // NOT checked — staff get a normal public session here; see the note
+        // above on why that's safe.)
+        if (existing.status !== "ACTIVE") return false;
+
+        // LINK: point the session at the existing account row.
+        user.id = existing.id;
+        return true;
+      }
+
+      // CREATE: brand-new EXPLORER. No password (Google is the credential).
+      // Mirrors signup/actions.ts: only ever mints EXPLORER, collects no
+      // identity beyond the email.
+      const created = await db.user.create({
+        data: { email, password: "" }, // role/status default EXPLORER/ACTIVE
+        select: { id: true },
+      });
+      user.id = created.id;
+      return true;
+    },
+
     // Keep redirects on the host the request came from. Auth.js validates
     // callbackUrl against its base URL and will otherwise bounce a signing-out
     // admin (on admin.*) back to the public site. We allow any URL whose origin
@@ -206,20 +312,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     // getSessionUser can identify the user and validate the token's freshness.
     // (getSessionUser re-reads role/status from the DB; the token's copies are
     // just the starting point, and `sv` is the invalidation check.)
+    //
+    // Two sign-in shapes reach here:
+    //   - Credentials: `user` is exactly what authorize() returned (id, role,
+    //     sessionVersion present).
+    //   - Google: `user.id` was set to the DB row id in signIn(), but role and
+    //     sessionVersion aren't on it — so we read them from the row. One extra
+    //     query, only on the login request (when `user` is present), never on
+    //     subsequent requests.
     async jwt({ token, user }) {
       if (user) {
         token.id = (user as { id: string }).id;
-        token.role = (user as { role: string }).role;
-        token.sv = (user as { sessionVersion?: number }).sessionVersion ?? 0;
+        const maybeRole = (user as { role?: string }).role;
+        const maybeSv = (user as { sessionVersion?: number }).sessionVersion;
+        if (maybeRole !== undefined && maybeSv !== undefined) {
+          token.role = maybeRole;
+          token.sv = maybeSv;
+        } else {
+          // Google path: fill role + sessionVersion from the DB row.
+          const row = await db.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true, sessionVersion: true },
+          });
+          token.role = row?.role ?? "EXPLORER";
+          token.sv = row?.sessionVersion ?? 0;
+        }
+        // The door this session came through. Credentials pass their own
+        // ("public" or "admin"); Google is a public-only provider, so any
+        // session without an explicit door is "public" by definition.
+        token.door = (user as { door?: string }).door ?? "public";
       }
       return token;
     },
-    // Expose id + role + sv on the session object.
+    // Expose id + role + sv + door on the session object.
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id?: string }).id = token.id as string;
         (session.user as { role?: string }).role = token.role as string;
         (session.user as { sv?: number }).sv = token.sv as number;
+        (session.user as { door?: string }).door = token.door as string;
       }
       return session;
     },

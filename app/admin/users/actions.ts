@@ -23,6 +23,7 @@
 
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
+import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
 export type UserActionResult = { ok: true } | { ok: false; error: string };
@@ -46,6 +47,9 @@ async function wouldStrandPlatform(userId: string): Promise<boolean> {
 export async function setUserRole(
   userId: string,
   role: string,
+  // Optional initial password. REQUIRED only when promoting a passwordless
+  // (Google-only) account to staff — see the block below. Ignored otherwise.
+  initialPassword?: string,
 ): Promise<UserActionResult> {
   const actor = await requireAdmin();
 
@@ -70,13 +74,43 @@ export async function setUserRole(
   try {
     const target = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, password: true },
     });
     if (!target) return { ok: false, error: "That account no longer exists." };
     if (target.role === role) return { ok: true }; // no-op
 
     const promoting =
       ROLES.indexOf(role as Role) > ROLES.indexOf(target.role as Role);
+    const toStaff = role !== "EXPLORER";
+
+    // STAFF PASSWORD RULES (door separation, auth.ts):
+    //   - A Google-only account (empty stored password) CANNOT become staff
+    //     without a password — the admin door has no Google button, so it would
+    //     be locked out. Required.
+    //   - For any staff promotion, the admin MAY also supply a password to set
+    //     or reset one (e.g. issuing a fresh admin-door credential). Optional.
+    // Either way: if a password is supplied it must be valid; if the account is
+    // passwordless and none is supplied, refuse.
+    let passwordHash: string | null = null;
+    const supplied = initialPassword?.trim() ?? "";
+
+    if (toStaff && !target.password && supplied.length === 0) {
+      return {
+        ok: false,
+        error:
+          "This account signs in with Google and has no password. Staff sign in at the admin door with a password, so set an initial one (at least 8 characters) to promote them. They can change it after signing in.",
+      };
+    }
+
+    if (toStaff && supplied.length > 0) {
+      if (supplied.length < 8) {
+        return { ok: false, error: "Password must be at least 8 characters." };
+      }
+      if (supplied.length > 200) {
+        return { ok: false, error: "That password is too long (200 max)." };
+      }
+      passwordHash = await bcrypt.hash(supplied, 12);
+    }
 
     await db.$transaction(async (tx) => {
       // Bump sessionVersion so the change is INSTANT: a demotion (or any role
@@ -85,7 +119,13 @@ export async function setUserRole(
       // and the whole point of the field — a promotion bumps too, harmlessly.
       await tx.user.update({
         where: { id: userId },
-        data: { role: role as never, sessionVersion: { increment: 1 } },
+        data: {
+          role: role as never,
+          sessionVersion: { increment: 1 },
+          // Only set when we minted one above (Google-only → staff). Never
+          // touches an existing password.
+          ...(passwordHash ? { password: passwordHash } : {}),
+        },
       });
       await tx.moderationAudit.create({
         data: {
@@ -93,7 +133,11 @@ export async function setUserRole(
           action: promoting ? "ROLE_GRANT" : "ROLE_REVOKE",
           targetType: "USER",
           targetId: userId,
-          note: `${target.email}: ${target.role} → ${role}`,
+          // Record that a password was set, so the trail explains the credential
+          // change alongside the role change. Never log the password itself.
+          note: `${target.email}: ${target.role} → ${role}${
+            passwordHash ? " (password set)" : ""
+          }`,
         },
       });
     });

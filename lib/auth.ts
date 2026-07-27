@@ -38,16 +38,23 @@ export interface SessionUser {
   id: string;
   email: string;
   role: Role;
+  // Which door this session was minted through: "admin" (password + TOTP on the
+  // admin host) or "public" (public password OR Google). The staff guards below
+  // require "admin" — door separation enforced in the SESSION, not just by the
+  // host-scoped cookie. A public/Google session, even one belonging to a staff
+  // member, can never satisfy requireCurator/Moderator/Admin.
+  door: "admin" | "public";
 }
 
 // Session shape carried in the JWT. `sv` is the sessionVersion stamped at
 // sign-in (see auth.ts jwt callback); getSessionUser rejects the token if it
-// no longer matches the live row.
+// no longer matches the live row. `door` records which door minted it.
 interface TokenUser {
   id?: string;
   email?: string;
   role?: string;
   sv?: number;
+  door?: string;
 }
 
 export class UnauthorizedError extends Error {
@@ -110,7 +117,12 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const tokenVersion = typeof u.sv === "number" ? u.sv : 0;
   if (tokenVersion !== row.sessionVersion) return null;
 
-  return { id: row.id, email: row.email, role: row.role as Role };
+  // Door defaults to "public": a token without the field (minted before this
+  // shipped, or any non-admin sign-in) is treated as a public session, which
+  // is the safe default — the staff guards will refuse it.
+  const door = u.door === "admin" ? "admin" : "public";
+
+  return { id: row.id, email: row.email, role: row.role as Role, door };
 }
 
 // Any authenticated explorer. Use for: uploading a moment, rating, chatting.
@@ -121,9 +133,23 @@ export async function requireUser(): Promise<SessionUser> {
 }
 
 // The one place tier comparison happens.
+//
+// STAFF GUARDS ALSO REQUIRE THE ADMIN DOOR. A staff-ranked session is not
+// enough — it must have been minted through the admin door (password + TOTP on
+// the admin host). This makes door separation a property of the session, so a
+// public or Google session belonging to a staff member cannot reach any admin
+// surface regardless of cookie scoping (belt to the host-scoping braces; the
+// realistic gap it closes is a dev cookie-domain quirk). requireUser stays
+// door-agnostic: contributing on the public site is exactly what a public
+// session is for.
 async function requireRank(min: Role): Promise<SessionUser> {
   const user = await requireUser();
   if (ROLE_RANK[user.role] < ROLE_RANK[min]) throw new ForbiddenError();
+  // "CURATOR" is the lowest staff rank; anything at or above it is a staff
+  // surface and must have come through the admin door.
+  if (ROLE_RANK[min] >= ROLE_RANK["CURATOR"] && user.door !== "admin") {
+    throw new ForbiddenError();
+  }
   return user;
 }
 

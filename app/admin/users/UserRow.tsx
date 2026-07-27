@@ -19,6 +19,10 @@ export type ManagedUser = {
   status: string;
   createdAt: string;
   twoFactorOn: boolean;
+  // Whether the account has a password at all. A Google-only account has none,
+  // and can't be promoted to staff without the admin setting an initial one
+  // (the admin door has no Google button). Only the boolean crosses the wire.
+  hasPassword: boolean;
   isSelf: boolean;
 };
 
@@ -34,21 +38,39 @@ export function UserRow({ user }: { user: ManagedUser }) {
   const [role, setRole] = useState(user.role);
   const [status, setStatus] = useState(user.status);
   const [pendingRole, setPendingRole] = useState<string | null>(null);
+  const [initialPassword, setInitialPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+
+  // Promoting TO a staff role opens the password affordance. Two cases:
+  //   - passwordless account (Google-only): a password is REQUIRED, because the
+  //     admin door has no Google button (server enforces this too).
+  //   - existing-password account: the field is OPTIONAL — leave it blank to
+  //     keep their current password, or fill it to set/reset one at the same
+  //     time as the promotion.
+  const promotingToStaff = pendingRole !== null && pendingRole !== "EXPLORER";
+  const passwordRequired = promotingToStaff && !user.hasPassword;
 
   const applyRole = (next: string) => {
     setError(null);
     setNote(null);
     startTransition(async () => {
-      const res = await setUserRole(user.id, next);
+      const toStaff = next !== "EXPLORER";
+      const pw = initialPassword.trim();
+      const res = await setUserRole(
+        user.id,
+        next,
+        // Send the password only when promoting to staff and one was entered.
+        // Blank on an existing-password account = keep current password.
+        toStaff && pw.length > 0 ? pw : undefined,
+      );
       if (res.ok) {
         setRole(next);
         setPendingRole(null);
+        setInitialPassword("");
         setNote(`Now a ${next.toLowerCase()}.`);
       } else {
         setError(res.error);
-        setPendingRole(null);
       }
     });
   };
@@ -139,16 +161,78 @@ export function UserRow({ user }: { user: ManagedUser }) {
                 {pendingRole === "ADMIN" &&
                   " Admins can grant roles and remove places — this hands over the keys."}
               </p>
+
+              {/* Promoting to staff → set the password they'll sign in with at
+                  the admin door. Required for a Google-only account (no
+                  password yet); optional otherwise (blank keeps the current
+                  one). */}
+              {promotingToStaff && (
+                <div className="mt-3">
+                  <label
+                    htmlFor={`pw-${user.id}`}
+                    className="block text-xs font-medium"
+                  >
+                    {passwordRequired
+                      ? "Set an initial password"
+                      : "Set or reset password (optional)"}
+                  </label>
+                  <p className="mt-0.5 text-xs text-[var(--muted)]">
+                    {passwordRequired ? (
+                      <>
+                        This account signs in with Google and has no password.
+                        Staff sign in at the admin door with a password, so set
+                        a temporary one (8+ characters) to share securely —
+                        they can change it and enrol two-factor after their
+                        first sign-in.
+                      </>
+                    ) : (
+                      <>
+                        Leave blank to keep their current password, or set a new
+                        one (8+ characters) — useful if they need a fresh
+                        credential for the admin door.
+                      </>
+                    )}
+                  </p>
+                  <input
+                    id={`pw-${user.id}`}
+                    type="text"
+                    value={initialPassword}
+                    onChange={(e) => setInitialPassword(e.target.value)}
+                    autoComplete="off"
+                    placeholder={
+                      passwordRequired
+                        ? "At least 8 characters"
+                        : "Leave blank to keep current password"
+                    }
+                    className="admin-input mt-1.5 w-full"
+                  />
+                </div>
+              )}
+
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => applyRole(pendingRole)}
-                  disabled={isPending}
+                  disabled={
+                    isPending ||
+                    // Required case: need 8+ chars. Optional case: either blank
+                    // (keep current) or 8+ chars — block a too-short partial.
+                    (passwordRequired &&
+                      initialPassword.trim().length < 8) ||
+                    (promotingToStaff &&
+                      !passwordRequired &&
+                      initialPassword.trim().length > 0 &&
+                      initialPassword.trim().length < 8)
+                  }
                   className="admin-btn admin-btn-primary"
                 >
                   {isPending ? "…" : "Confirm"}
                 </button>
                 <button
-                  onClick={() => setPendingRole(null)}
+                  onClick={() => {
+                    setPendingRole(null);
+                    setInitialPassword("");
+                    setError(null);
+                  }}
                   className="admin-btn admin-btn-quiet"
                 >
                   Cancel

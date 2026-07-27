@@ -16,6 +16,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthShell, FIELD, LABEL, PRIMARY } from "@/components/AuthShell";
+import { GoogleButton, OrDivider } from "@/components/GoogleButton";
 import { safeCallbackUrl } from "@/lib/safe-callback";
 
 export function SignInForm() {
@@ -157,7 +158,12 @@ export function SignInForm() {
         been.
       </p>
 
-      <form onSubmit={submitCredentials} className="mt-8 space-y-4">
+      <div className="mt-8">
+        <GoogleButton callbackUrl={callbackUrl} />
+      </div>
+      <OrDivider />
+
+      <form onSubmit={submitCredentials} className="space-y-4">
         <div>
           <label htmlFor="email" className={LABEL}>
             Email

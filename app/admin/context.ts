@@ -23,6 +23,12 @@ export async function getAdminContext(): Promise<AdminContext | null> {
   const user = await getSessionUser();
   if (!user) return null;
   if (user.role === "EXPLORER") return null;
+  // Defence in depth: this helper must not admit a staff-ranked session that
+  // came through the PUBLIC door (e.g. a staff member's Google session). Pages
+  // already gate with require* (which enforces the same rule), but a future
+  // page that forgot its guard and only called getAdminContext would otherwise
+  // leak the rail + counts. The door check makes this helper safe on its own.
+  if (user.door !== "admin") return null;
 
   const role = user.role as AdminRole;
   const isModerator = role === "MODERATOR" || role === "ADMIN";
