@@ -1140,14 +1140,6 @@ export type EnumAuStateFieldUpdateOperationsInput = {
   set?: $Enums.AuState
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type NullableEnumRejectionKindFieldUpdateOperationsInput = {
   set?: $Enums.RejectionKind | null
 }

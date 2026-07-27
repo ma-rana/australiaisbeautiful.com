@@ -87,7 +87,7 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
         <div className="mt-5 flex flex-wrap gap-2">
           <button
             onClick={() => router.push(`/location/${slug}`)}
-            className="rounded-md bg-[var(--eucalypt)] px-4 py-2 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
+            className="btn btn-primary"
           >
             See it on the place
           </button>
@@ -97,13 +97,13 @@ export function Composer({ locationId, slug }: { locationId: string; slug: strin
               setCaption("");
               setSubmitted(false);
             }}
-            className="rounded-md border border-[var(--border)] px-4 py-2 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--paper-2)]"
+            className="btn btn-secondary"
           >
             Add another
           </button>
           <button
             onClick={() => router.push("/contributions")}
-            className="rounded-md border border-[var(--border)] px-4 py-2 text-sm text-[var(--ink)] transition-colors hover:bg-[var(--paper-2)]"
+            className="btn btn-secondary"
           >
             Your contributions
           </button>

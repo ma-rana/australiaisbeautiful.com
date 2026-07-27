@@ -55,8 +55,9 @@ export const FIELD =
 
 export const LABEL = "block text-sm text-[var(--ink)]/85";
 
-export const PRIMARY =
-  "w-full rounded-md bg-[var(--eucalypt)] px-4 py-2.5 text-sm font-medium " +
-  "text-[var(--paper)] transition-opacity hover:opacity-90 " +
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--eucalypt)]/40 " +
-  "disabled:opacity-50";
+// The shared PRIMARY button now delegates to the .btn system in globals.css
+// (defined once, used everywhere). `w-full` stays because auth/contribute
+// forms want a full-width action; the look, hover-lift, press and focus ring
+// all come from the shared classes now, so this constant can't drift from the
+// map's buttons the way the old bespoke string did.
+export const PRIMARY = "btn btn-primary w-full";

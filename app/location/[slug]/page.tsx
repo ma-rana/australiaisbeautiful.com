@@ -21,6 +21,8 @@ import {
 } from "@/lib/queries/visibility";
 import { MomentGrid, type ViewerMoment } from "./MomentGrid";
 import { RatingBlock } from "./RatingBlock";
+import { ShareButton } from "./ShareButton";
+import { Camera, Directions as DirectionsIcon } from "@/components/icons";
 import { BackToMap } from "@/components/BackToMap";
 import { MapBackdropShell } from "@/components/MapBackdropShell";
 
@@ -243,23 +245,48 @@ export default async function LocationPage({
         >
           {location.name}
         </h1>
+
+        {/* The meta row — one balanced line under the title, the Airbnb/Google
+            grammar: the place's numbers on the LEFT (community score + your
+            ballot), the things you can DO with the place on the RIGHT
+            (Directions, Share — compact secondaries; the page's one primary
+            stays Add your photos). Wraps to two lines on narrow screens. */}
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <RatingBlock
+            locationId={location.id}
+            slug={slug}
+            signedIn={!!viewer}
+            initialAvg={location.ratingAvg}
+            initialCount={location.ratingCount}
+            threshold={location.ratingThreshold}
+            initialMyScore={myRating?.score ?? null}
+          />
+          <div className="flex items-center gap-2">
+            {/* Coordinates, not the name, in the destination — the name could
+                match the wrong place; the lat/lng IS the place. Opens the
+                native maps app on phones; no API key, nothing to maintain. */}
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${location.latitude},${location.longitude}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary btn-sm"
+            >
+              <DirectionsIcon size={15} />
+              Directions
+            </a>
+            <ShareButton slug={slug} name={location.name} />
+          </div>
+        </div>
+
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--foreground)]/85">
           {location.intro}
         </p>
       </header>
 
-      {/* Rating — the place's, never a person's. Hidden until the threshold. */}
-      <RatingBlock
-        locationId={location.id}
-        slug={slug}
-        signedIn={!!viewer}
-        initialAvg={location.ratingAvg}
-        initialCount={location.ratingCount}
-        threshold={location.ratingThreshold}
-        initialMyScore={myRating?.score ?? null}
-      />
-
-      {/* Facts — a quiet two-column margin-notes block. */}
+      {/* Facts — a quiet two-column margin-notes block, straight under the
+          header now that the rating ballot has moved to the foot of the page
+          (it reads as a contribution alongside "Add your photos", not as a
+          headline). The header carries the read-only score at a glance. */}
       {facts.length > 0 && (
         <dl className="mt-8 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
           {facts.map((f) => (
@@ -280,17 +307,21 @@ export default async function LocationPage({
 
       {/* Experiences — the living content. */}
       <section className="mt-14">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-center justify-between gap-4">
           <h2 className="specimen-label">Experiences here</h2>
-          {/* The contribute path. Viewing is open to all; contributing asks for
-              an account at the moment of intent (the gentle wall, UX §7b) — the
-              contribute page handles that redirect. */}
-          <Link
-            href={`/contribute/${slug}`}
-            className="text-sm text-[var(--eucalypt)] underline-offset-4 hover:underline"
-          >
-            Add your photos
-          </Link>
+          {/* The contribute path — THE primary action of the page, so it wears
+              the primary button (btn system: one clear next step, eucalypt —
+              the same identity as the place markers). Only when the grid has
+              content: the empty state below carries its own CTA, and two
+              identical primary buttons a few lines apart is a smell. Viewing
+              is open to all; contributing asks for an account at the moment of
+              intent (the gentle wall, UX §7b) — the contribute page redirects. */}
+          {moments.length > 0 && (
+            <Link href={`/contribute/${slug}`} className="btn btn-primary">
+              <Camera size={17} />
+              Add your photos
+            </Link>
+          )}
         </div>
         <MomentGrid moments={moments} slug={slug} signedIn={!!viewer} />
       </section>

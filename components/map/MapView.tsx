@@ -1163,7 +1163,7 @@ export function MapView({ places }: { places: MapPlace[] }) {
 
               <button
                 onClick={() => router.push(`/location/${selected.slug}`)}
-                className="mt-4 w-full rounded-md bg-[var(--eucalypt)] px-3 py-2.5 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
+                className="btn btn-primary mt-4 w-full"
               >
                 Open this place
               </button>

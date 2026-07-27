@@ -60,9 +60,12 @@ export interface MapControlsProps {
 // (CLAUDE.md — never add one without asking), and these need to inherit the
 // palette variables anyway.
 //
-// Drawn on a 24px grid at 1.6 stroke, which is the weight that stays crisp at
-// the 18-19px they actually render at. Heavier reads clumsy against the map's
-// fine linework; lighter disappears over a photograph.
+// WEIGHT: drawn on a 24px grid at 2.1 stroke (2.4 for the zoom glyphs), up from
+// the old hairline 1.6. The thin version read as flimsy and half-vanished over
+// busy tiles; this weight has presence and stays crisp at the 20px they render
+// at — the weight Google/Apple map controls use. Round caps and joins keep it
+// friendly rather than blocky. Heavier than this starts to look clumsy against
+// the map's fine linework, so 2.1 is the ceiling, not a floor.
 
 const S = {
   fill: "none",
@@ -71,24 +74,26 @@ const S = {
   strokeLinejoin: "round",
 } as const;
 
+const STROKE = 2.1;
+
 // A compass. Suggesting a place IS an exploration action (§7c: "suggesting a
 // place is an exploration action") — a pencil framed it as editing a database,
 // which is Waze's model, not this one. The compass says "go find something
 // that isn't here yet".
 //
-// The needle is solid against the hollow ring, so at 18px it reads as a compass
+// The needle is solid against the hollow ring, so at 20px it reads as a compass
 // rather than as another circle. That matters because "Near me" directly below
 // is also round — the reticle's ticks break its outline into a cross, this one
 // stays a clean disc, and the filled needle is the tiebreaker.
 function CompassIcon() {
   return (
-    <svg width="19" height="19" viewBox="0 0 24 24" strokeWidth="1.6" {...S} aria-hidden>
-      <circle cx="12" cy="12" r="8.6" />
+    <svg width="20" height="20" viewBox="0 0 24 24" strokeWidth={STROKE} {...S} aria-hidden>
+      <circle cx="12" cy="12" r="8.4" />
       <path
-        d="M15.7 8.3l-2.2 5.2-5.2 2.2 2.2-5.2z"
+        d="M15.9 8.1l-2.4 5.4-5.4 2.4 2.4-5.4z"
         fill="currentColor"
         stroke="currentColor"
-        strokeWidth="0.9"
+        strokeWidth="1.2"
       />
     </svg>
   );
@@ -99,36 +104,36 @@ function CompassIcon() {
 // routing (PLAN, "turn-by-turn navigation — deep-link out, permanently").
 function ReticleIcon({ filled }: { filled: boolean }) {
   return (
-    <svg width="19" height="19" viewBox="0 0 24 24" strokeWidth="1.6" {...S} aria-hidden>
-      <circle cx="12" cy="12" r="6.1" />
-      {filled && <circle cx="12" cy="12" r="2.7" fill="currentColor" stroke="none" />}
-      <path d="M12 2.4v3.1M12 18.5v3.1M2.4 12h3.1M18.5 12h3.1" />
+    <svg width="20" height="20" viewBox="0 0 24 24" strokeWidth={STROKE} {...S} aria-hidden>
+      <circle cx="12" cy="12" r="5.9" />
+      {filled && <circle cx="12" cy="12" r="2.8" fill="currentColor" stroke="none" />}
+      <path d="M12 2.2v3.3M12 18.5v3.3M2.2 12h3.3M18.5 12h3.3" />
     </svg>
   );
 }
 
 function ReticleOffIcon() {
   return (
-    <svg width="19" height="19" viewBox="0 0 24 24" strokeWidth="1.6" {...S} aria-hidden>
-      <circle cx="12" cy="12" r="6.1" />
-      <path d="M12 2.4v3.1M12 18.5v3.1M2.4 12h3.1M18.5 12h3.1" />
-      <path d="M4.7 4.7l14.6 14.6" strokeWidth="1.7" />
+    <svg width="20" height="20" viewBox="0 0 24 24" strokeWidth={STROKE} {...S} aria-hidden>
+      <circle cx="12" cy="12" r="5.9" />
+      <path d="M12 2.2v3.3M12 18.5v3.3M2.2 12h3.3M18.5 12h3.3" />
+      <path d="M4.4 4.4l15.2 15.2" strokeWidth="2.3" />
     </svg>
   );
 }
 
 function PlusIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" strokeWidth="1.8" {...S} aria-hidden>
-      <path d="M12 5.6v12.8M5.6 12h12.8" />
+    <svg width="18" height="18" viewBox="0 0 24 24" strokeWidth="2.4" {...S} aria-hidden>
+      <path d="M12 5.4v13.2M5.4 12h13.2" />
     </svg>
   );
 }
 
 function MinusIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" strokeWidth="1.8" {...S} aria-hidden>
-      <path d="M5.6 12h12.8" />
+    <svg width="18" height="18" viewBox="0 0 24 24" strokeWidth="2.4" {...S} aria-hidden>
+      <path d="M5.4 12h13.2" />
     </svg>
   );
 }

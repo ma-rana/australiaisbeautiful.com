@@ -5,17 +5,25 @@
 // a post-publication review list: what's live, newest first, so a moderator can
 // spot and remove anything that shouldn't be there.
 //
+// Accepts ?location=<id> — the drill-in from the admin map (§2c): the map shows
+// WHERE new content is landing; this grid is where the looking happens.
+//
 // Shows CONTENT, not the contributor.
 
 import { db } from "@/lib/db";
 import { requireModerator, ForbiddenError, UnauthorizedError } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { resolveMediaSrc } from "@/lib/media/resolve";
 import { ReviewCard, type QueueMoment } from "./ReviewCard";
 import { AdminShell } from "../AdminShell";
 import { getAdminContext } from "../context";
 
-export default async function ModerationQueue() {
+export default async function ModerationQueue({
+  searchParams,
+}: {
+  searchParams: Promise<{ location?: string }>;
+}) {
   try {
     await requireModerator();
   } catch (e) {
@@ -35,8 +43,21 @@ export default async function ModerationQueue() {
 
   const ctx = (await getAdminContext())!;
 
+  // The map's drill-in: an unknown/mistyped id simply matches nothing — the
+  // empty state below reads honestly either way.
+  const { location: locationId } = await searchParams;
+  const filterLocation = locationId
+    ? await db.location.findUnique({
+        where: { id: locationId },
+        select: { id: true, name: true },
+      })
+    : null;
+
   const moments = await db.moment.findMany({
-    where: { status: "APPROVED" },
+    where: {
+      status: "APPROVED",
+      ...(filterLocation ? { locationId: filterLocation.id } : {}),
+    },
     orderBy: { createdAt: "desc" },
     take: 50,
     include: {
@@ -66,12 +87,28 @@ export default async function ModerationQueue() {
       current="/moments"
       counts={ctx.counts}
       twoFactorOn={ctx.twoFactorOn}
-      title="Moments"
-      subtitle="Live now, newest first. Remove anything that shouldn't be here."
+      title={filterLocation ? filterLocation.name : "Moments"}
+      subtitle={
+        filterLocation
+          ? "This place's live moments, newest first."
+          : "Live now, newest first. Remove anything that shouldn't be here."
+      }
+      actions={
+        filterLocation ? (
+          <Link
+            href="/moments"
+            className="rounded border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--sunken)] hover:text-[var(--ink)]"
+          >
+            Show all places
+          </Link>
+        ) : undefined
+      }
     >
       {queue.length === 0 ? (
         <div className="admin-panel px-5 py-12 text-center">
-          <p className="text-sm font-medium">Nothing published yet</p>
+          <p className="text-sm font-medium">
+            {filterLocation ? "No live moments at this place" : "Nothing published yet"}
+          </p>
           <p className="mt-1 text-sm text-[var(--muted)]">
             Contributions appear here as soon as they go live.
           </p>

@@ -170,7 +170,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         reset(rlKey);
 
         // What we return becomes the basis of the JWT (see callbacks).
-        return { id: user.id, email: user.email, role: user.role };
+        // sessionVersion is stamped in so a later suspend/demote/password
+        // change can invalidate this exact token (lib/auth getSessionUser).
+        return {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          sessionVersion: user.sessionVersion,
+        };
       },
     }),
   ],
@@ -195,20 +202,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return baseUrl;
     },
-    // Put id + role into the token on sign-in, so getSessionUser can read them
-    // without a DB hit on every request.
+    // Put id + role + sessionVersion into the token on sign-in, so
+    // getSessionUser can identify the user and validate the token's freshness.
+    // (getSessionUser re-reads role/status from the DB; the token's copies are
+    // just the starting point, and `sv` is the invalidation check.)
     async jwt({ token, user }) {
       if (user) {
         token.id = (user as { id: string }).id;
         token.role = (user as { role: string }).role;
+        token.sv = (user as { sessionVersion?: number }).sessionVersion ?? 0;
       }
       return token;
     },
-    // Expose id + role on the session object.
+    // Expose id + role + sv on the session object.
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id?: string }).id = token.id as string;
         (session.user as { role?: string }).role = token.role as string;
+        (session.user as { sv?: number }).sv = token.sv as number;
       }
       return session;
     },

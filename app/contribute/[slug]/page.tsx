@@ -8,6 +8,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
 import { MapBackdropShell } from "@/components/MapBackdropShell";
+import { ArrowLeft } from "@/components/icons";
 import { Composer } from "./Composer";
 
 export default async function ContributePage({
@@ -37,9 +38,10 @@ export default async function ContributePage({
             your photos are going onto it. Same specimen device as everywhere. */}
         <Link
           href={`/location/${slug}`}
-          className="specimen-label transition-colors hover:text-[var(--ink)]"
+          className="specimen-label inline-flex items-center gap-1.5 transition-colors hover:text-[var(--ink)]"
         >
-          ← Back to {location.name}
+          <ArrowLeft size={15} strokeWidth={2.4} />
+          Back to {location.name}
         </Link>
 
         {/* Field-guide header — the place stays the hero even while you're

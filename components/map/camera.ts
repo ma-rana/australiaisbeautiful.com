@@ -38,6 +38,13 @@ export const AUSTRALIA_MAX_BOUNDS: [[number, number], [number, number]] = [
 
 const VIEW_KEY = "aib:map-view:v1";
 
+/** The ADMIN map's own saved view. Deliberately a separate key from the
+ *  public one: the public key is "where this PERSON was browsing" (shared by
+ *  the big map and the request picker); the admin key is "where this STAFF
+ *  MEMBER was working". A moderator sweeping Perth's queue must not teleport
+ *  their personal browsing view there — nor the reverse. */
+export const ADMIN_VIEW_KEY = "aib:admin-map-view:v1";
+
 export type SavedView = { lng: number; lat: number; zoom: number };
 
 /**
@@ -46,10 +53,13 @@ export type SavedView = { lng: number; lat: number; zoom: number };
  * value written by an older build, someone editing devtools) falls back to the
  * continent — a wrong-but-valid view is worse than the default, because the
  * clamp would drag the camera to an edge and the map would look broken.
+ *
+ * `key` selects which surface's view (public by default; ADMIN_VIEW_KEY for
+ * the staff map). Same validation either way.
  */
-export function loadView(): SavedView | null {
+export function loadView(key: string = VIEW_KEY): SavedView | null {
   try {
-    const raw = localStorage.getItem(VIEW_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const v = JSON.parse(raw) as SavedView;
     if (
@@ -68,9 +78,9 @@ export function loadView(): SavedView | null {
   }
 }
 
-export function saveView(v: SavedView) {
+export function saveView(v: SavedView, key: string = VIEW_KEY) {
   try {
-    localStorage.setItem(VIEW_KEY, JSON.stringify(v));
+    localStorage.setItem(key, JSON.stringify(v));
   } catch {
     // Storage can be unavailable (private mode, quota). Losing the saved view
     // is a minor inconvenience, not worth failing over.

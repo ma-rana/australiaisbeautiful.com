@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight, Close, GoodSpot, Camera } from "@/components/icons";
 import { toggleReaction } from "./reaction-actions";
 
 export type ViewerMedia = { id: string; src: string };
@@ -111,7 +112,10 @@ export function MomentGrid({
   }, [current, close, next, prev]);
 
   if (moments.length === 0) {
-    // Empty state as invitation, not absence (design writing guidance).
+    // Empty state as invitation, not absence (design writing guidance) — and
+    // the invitation carries its own door: the primary CTA sits right here,
+    // where the want-to-contribute feeling actually happens, not up in a
+    // corner the reader has already scrolled past.
     return (
       <div className="mt-4 rounded-lg border border-dashed border-[var(--border)] px-6 py-12 text-center">
         <p
@@ -123,6 +127,13 @@ export function MomentGrid({
         <p className="mt-2 text-[var(--muted)]">
           This place is waiting for its first photo and field note.
         </p>
+        <Link
+          href={`/contribute/${slug}`}
+          className="btn btn-primary mt-6"
+        >
+          <Camera size={17} />
+          Be the first to add photos
+        </Link>
       </div>
     );
   }
@@ -166,19 +177,25 @@ export function MomentGrid({
           role="dialog"
           aria-modal="true"
         >
-          {/* Top bar */}
+          {/* Top bar. The counter appears ONLY when there's something to
+              count — announcing "one frame" is stating an absence, which no
+              viewer worth copying does. When it shows, it speaks the grid
+              badge's own language ("2 / 5"), so the fact wears one name
+              through the whole flow. Single photo → a quiet bar, just Close. */}
           <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
-            <span className="specimen-label">
-              {current.media.length > 1
-                ? `Frame ${photoIndex + 1} of ${current.media.length}`
-                : "One frame"}
-            </span>
+            {current.media.length > 1 ? (
+              <span className="specimen-label tabular-nums">
+                {photoIndex + 1} / {current.media.length}
+              </span>
+            ) : (
+              <span aria-hidden />
+            )}
             <button
               onClick={close}
-              className="specimen-label rounded-full px-3 py-1 transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--ink)]"
+              className="specimen-label inline-flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--ink)]"
               aria-label="Close viewer"
             >
-              Close ✕
+              Close <Close size={15} strokeWidth={2.4} />
             </button>
           </div>
 
@@ -196,19 +213,19 @@ export function MomentGrid({
                 {photoIndex > 0 && (
                   <button
                     onClick={prev}
-                    className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--paper)]/80 text-2xl text-[var(--ink)] shadow-sm ring-1 ring-[var(--border)] backdrop-blur transition hover:bg-[var(--paper)]"
+                    className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--paper)]/80 text-[var(--ink)] shadow-sm ring-1 ring-[var(--border)] backdrop-blur transition hover:bg-[var(--paper)]"
                     aria-label="Previous frame"
                   >
-                    ‹
+                    <ChevronLeft size={22} />
                   </button>
                 )}
                 {photoIndex < current.media.length - 1 && (
                   <button
                     onClick={next}
-                    className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--paper)]/80 text-2xl text-[var(--ink)] shadow-sm ring-1 ring-[var(--border)] backdrop-blur transition hover:bg-[var(--paper)]"
+                    className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--paper)]/80 text-[var(--ink)] shadow-sm ring-1 ring-[var(--border)] backdrop-blur transition hover:bg-[var(--paper)]"
                     aria-label="Next frame"
                   >
-                    ›
+                    <ChevronRight size={22} />
                   </button>
                 )}
               </>
@@ -253,8 +270,8 @@ export function MomentGrid({
                       : "border-[var(--border)] text-[var(--ink)] hover:border-[var(--eucalypt)]"
                   }`}
                 >
-                  <span aria-hidden>
-                    {reactions[current.id]?.mine ? "★" : "☆"}
+                  <span aria-hidden className="flex">
+                    <GoodSpot size={17} filled={reactions[current.id]?.mine ?? false} />
                   </span>
                   Good spot
                   {(reactions[current.id]?.count ?? 0) > 0 && (

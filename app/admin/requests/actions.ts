@@ -193,6 +193,7 @@ export async function approveCluster(
     });
 
     revalidatePath("/admin/requests");
+    revalidatePath("/admin/map");
     revalidatePath("/");
     return { ok: true };
   } catch (e) {
@@ -243,6 +244,7 @@ export async function rejectCluster(
     });
 
     revalidatePath("/admin/requests");
+    revalidatePath("/admin/map");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed" };

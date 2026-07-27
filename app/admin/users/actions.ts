@@ -79,7 +79,14 @@ export async function setUserRole(
       ROLES.indexOf(role as Role) > ROLES.indexOf(target.role as Role);
 
     await db.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { role: role as never } });
+      // Bump sessionVersion so the change is INSTANT: a demotion (or any role
+      // change) invalidates the target's existing tokens on their next request,
+      // rather than letting stale privileges ride the 8h JWT. Cheap insurance,
+      // and the whole point of the field — a promotion bumps too, harmlessly.
+      await tx.user.update({
+        where: { id: userId },
+        data: { role: role as never, sessionVersion: { increment: 1 } },
+      });
       await tx.moderationAudit.create({
         data: {
           actorId: actor.id,
@@ -122,7 +129,15 @@ export async function setUserStatus(
     if (!target) return { ok: false, error: "That account no longer exists." };
 
     await db.$transaction(async (tx) => {
-      await tx.user.update({ where: { id: userId }, data: { status } });
+      // Bump sessionVersion so a SUSPEND takes hold immediately — the
+      // suspended user's live tokens die on their next request instead of
+      // lingering for up to 8h. (getSessionUser also rejects non-ACTIVE status
+      // outright; this additionally kills any token even if status races back.)
+      // Reinstating bumps too, which is harmless.
+      await tx.user.update({
+        where: { id: userId },
+        data: { status, sessionVersion: { increment: 1 } },
+      });
       await tx.moderationAudit.create({
         data: {
           actorId: actor.id,

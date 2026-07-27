@@ -17,6 +17,7 @@ import { getSessionUser } from "@/lib/auth";
 import { resolveMediaSrc } from "@/lib/media/resolve";
 import { BackToMap } from "@/components/BackToMap";
 import { MapBackdropShell } from "@/components/MapBackdropShell";
+import { Disclosure } from "@/components/icons";
 import { MomentRow, type OwnMoment } from "./MomentRow";
 
 export default async function ContributionsPage() {
@@ -132,7 +133,7 @@ export default async function ContributionsPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 inline-block rounded-md bg-[var(--eucalypt)] px-4 py-2.5 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90"
+            className="btn btn-primary mt-6 inline-flex"
           >
             Find a place you know
           </Link>
@@ -161,8 +162,8 @@ export default async function ContributionsPage() {
           {removedMoments.length > 0 && (
             <details className="group mt-12 border-t border-[var(--border)] pt-6">
               <summary className="specimen-label flex cursor-pointer list-none items-center gap-2 text-[var(--muted)] transition-colors hover:text-[var(--ink)]">
-                <span className="transition-transform group-open:rotate-90">
-                  ›
+                <span className="flex transition-transform group-open:rotate-90">
+                  <Disclosure size={16} strokeWidth={2.4} />
                 </span>
                 Removed ({removedMoments.length})
               </summary>

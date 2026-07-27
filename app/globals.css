@@ -72,6 +72,108 @@ body {
   color: var(--muted);
 }
 
+/* ---------------------------------------------------------------------------
+   THE BUTTON SYSTEM. Three roles, defined once, used everywhere on the public
+   side — so "the primary action" looks identical whether it's on the map, an
+   auth page, or a location page, and can't drift into a fourth ad-hoc style.
+
+   PRIMARY is eucalypt, never ink. --ink is the TEXT colour; a button wearing
+   it reads as a block of text rather than an action. Eucalypt is the palette's
+   designated accent (the same colour every place-marker wears), so the primary
+   action and the places it acts on share one identity.
+
+   The polish that reads as "intentional" rather than "default": a 1px lift on
+   hover, a settle-back on press (never a jump), and a focus ring that's the
+   action's own colour at low alpha — visible for keyboards, quiet for mice.
+   Ochre is deliberately NOT a button colour: it means "you" and "caution" in
+   this system (the me-dot, the removed-tag), and a wall of ochre buttons would
+   dilute both. Destructive actions opt in explicitly via .btn-danger.
+   --------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease,
+    box-shadow 150ms ease;
+}
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eucalypt) 35%, transparent);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* SMALL — the header-action size. Same roles, same behaviour, just compact:
+   for meta rows (Directions/Share beside the rating) where the full size
+   would out-shout the content it sits next to. A size, not a fourth role. */
+.btn-sm {
+  padding: 0.4375rem 0.8125rem;
+  font-size: 0.8125rem;
+  gap: 0.4rem;
+  border-radius: 0.4375rem;
+}
+
+/* PRIMARY — the one clear next step. Filled eucalypt, paper text. */
+.btn-primary {
+  background: var(--eucalypt);
+  color: var(--paper);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--eucalypt) 30%, transparent);
+}
+
+/* SECONDARY — a real alternative, not a lesser primary. Bordered, ink text,
+   fills faintly eucalypt on hover so it clearly belongs to the same family. */
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--eucalypt) 50%, transparent);
+  background: color-mix(in srgb, var(--eucalypt) 6%, transparent);
+}
+
+/* GHOST — tertiary. No chrome until you touch it. For "Cancel", "Close". */
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+
+/* DANGER — destructive, opt-in. Ochre (the system's caution colour), and only
+   ever behind a confirm step. Not red: the public side has no red, and an
+   alarm colour in this calm palette reads as a different product. */
+.btn-danger {
+  background: var(--ochre);
+  color: var(--paper);
+}
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--ochre) 30%, transparent);
+}
+
 /* Map markers live entirely in MapView now, as GeoJSON layers.
 
    The ~90 lines that used to sit here (.aib-pin, .aib-pin-photo,

@@ -37,13 +37,19 @@ export type OwnMoment = {
   media: { id: string; src: string }[];
 };
 
-// The shared button vocabulary for this card.
+// The card's compact button vocabulary. Smaller than the global .btn system
+// (these are dense inline controls, not page actions), but the SAME colours
+// and behaviours: eucalypt fill for confirm, bordered secondary, ochre for the
+// destructive confirm. Kept local because the size differs; the palette does
+// not.
 const GHOST =
   "rounded-md border border-[var(--border)] px-3 py-1.5 text-sm text-[var(--ink)] " +
-  "transition-colors hover:bg-[var(--paper-2)] disabled:opacity-50";
+  "transition-colors hover:border-[color-mix(in_srgb,var(--eucalypt)_50%,transparent)] " +
+  "hover:bg-[color-mix(in_srgb,var(--eucalypt)_6%,transparent)] disabled:opacity-50";
 const SOLID =
   "rounded-md bg-[var(--eucalypt)] px-3 py-1.5 text-sm font-medium text-[var(--paper)] " +
-  "transition-opacity hover:opacity-90 disabled:opacity-50";
+  "shadow-sm transition-all hover:-translate-y-px hover:shadow-md disabled:opacity-50 " +
+  "disabled:hover:translate-y-0";
 
 // Status, as a specimen tag with a coloured dot — the card's one glanceable
 // signal. Eucalypt = live on the place; stone = you've hidden it; ochre = a
@@ -271,7 +277,7 @@ export function MomentRow({ moment }: { moment: OwnMoment }) {
               <button
                 onClick={onDelete}
                 disabled={isPending}
-                className="rounded-md bg-[var(--ochre)] px-3 py-1.5 text-sm font-medium text-[var(--paper)] transition-opacity hover:opacity-90 disabled:opacity-50"
+                className="rounded-md bg-[var(--ochre)] px-3 py-1.5 text-sm font-medium text-[var(--paper)] shadow-sm transition-all hover:-translate-y-px hover:shadow-md disabled:opacity-50"
               >
                 {isPending ? "Deleting…" : "Delete permanently"}
               </button>

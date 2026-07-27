@@ -37,6 +37,16 @@ model User {
   role         Role       @default(EXPLORER)
   status       UserStatus @default(ACTIVE)
 
+  // Session invalidation counter (SECURITY: instant logout-everywhere).
+  //
+  // Sessions are stateless JWTs, so a revoked credential (suspend, demote,
+  // password change) would otherwise stay valid until the token's 8h expiry —
+  // a demoted admin keeps ADMIN power for up to 8 hours. This version rides in
+  // the JWT at sign-in; getSessionUser compares it to the live row and rejects
+  // any token whose version is stale. Bump it (see lib/auth actions) to kill
+  // every existing session for this user on the next request.
+  sessionVersion Int      @default(0)
+
   // Verification proves IDENTITY ONLY. It grants no reach, ranking, or
   // promotion. Enforce that in query layer: never sort/boost by this.
   isVerified   Boolean    @default(false)

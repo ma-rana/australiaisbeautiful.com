@@ -40,6 +40,16 @@ export interface SessionUser {
   role: Role;
 }
 
+// Session shape carried in the JWT. `sv` is the sessionVersion stamped at
+// sign-in (see auth.ts jwt callback); getSessionUser rejects the token if it
+// no longer matches the live row.
+interface TokenUser {
+  id?: string;
+  email?: string;
+  role?: string;
+  sv?: number;
+}
+
 export class UnauthorizedError extends Error {
   constructor() {
     super("Unauthorized");
@@ -56,6 +66,23 @@ export class ForbiddenError extends Error {
 
 // Returns the session user or null. Never throws — for optional-auth pages
 // (e.g. a location page renders for signed-out visitors too).
+//
+// SECURITY — this does ONE indexed DB read per call, deliberately, and does
+// NOT trust the token's role/status. The JWT is stateless and lives up to 8
+// hours; without re-reading the row, a suspend/demote/password-change wouldn't
+// take effect until the token expired (a demoted admin keeps ADMIN power all
+// afternoon; a suspended user keeps acting). The read closes that window:
+//
+//   - status must be ACTIVE right now, or the session is dead (suspend is
+//     instant, everywhere).
+//   - role comes from the DB, never the token, so a demotion takes hold on the
+//     victim's very next request even mid-session.
+//   - sessionVersion must match what was stamped into the token at sign-in;
+//     bumping the column (suspend, demote, password change) invalidates every
+//     outstanding token for that user — "log out everywhere".
+//
+// The cost is one findUnique on a primary key. That is cheap, and correctness
+// of authz is not the place to save a query (see docs/SECURITY.md, ADMIN.md §5).
 export async function getSessionUser(): Promise<SessionUser | null> {
   // Real Auth.js v5 session. Imported lazily to avoid a circular import
   // (auth.ts imports lib/db, which is fine; this keeps the module graph clean).
@@ -63,10 +90,27 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const session = await auth();
   if (!session?.user) return null;
 
-  const u = session.user as { id?: string; email?: string; role?: string };
-  if (!u.id || !u.email || !u.role) return null;
+  const u = session.user as TokenUser;
+  if (!u.id) return null;
 
-  return { id: u.id, email: u.email, role: u.role as Role };
+  // The authority is the live row, not the token.
+  const { db } = await import("@/lib/db");
+  const row = await db.user.findUnique({
+    where: { id: u.id },
+    select: { id: true, email: true, role: true, status: true, sessionVersion: true },
+  });
+
+  // Gone, suspended, or deleted → no session, whatever the token still claims.
+  if (!row || row.status !== "ACTIVE") return null;
+
+  // A token minted before the last credential change is dead. `sv` is absent
+  // only in tokens issued before this field shipped; treat that as version 0,
+  // which matches the column default, so existing sessions keep working until
+  // their natural 8h expiry rather than being force-killed on deploy.
+  const tokenVersion = typeof u.sv === "number" ? u.sv : 0;
+  if (tokenVersion !== row.sessionVersion) return null;
+
+  return { id: row.id, email: row.email, role: row.role as Role };
 }
 
 // Any authenticated explorer. Use for: uploading a moment, rating, chatting.

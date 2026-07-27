@@ -38,7 +38,15 @@ const REJECT_KINDS = [
   { value: "ABUSE", label: "Abuse" },
 ];
 
-export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
+export function ClusterCard({
+  cluster,
+  onDone,
+}: {
+  cluster: QueueCluster;
+  /** Optional: notified when a decision lands, so a host surface (the admin
+   *  map) can drop the pin / row without refetching. The list page ignores it. */
+  onDone?: (outcome: "approved" | "rejected") => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<"idle" | "approve" | "reject">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -97,8 +105,10 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
 
     startTransition(async () => {
       const res = await approveCluster(cluster.id, fd);
-      if (res.ok) setDone("approved");
-      else setError(res.error);
+      if (res.ok) {
+        setDone("approved");
+        onDone?.("approved");
+      } else setError(res.error);
     });
   };
 
@@ -108,8 +118,10 @@ export function ClusterCard({ cluster }: { cluster: QueueCluster }) {
     if (reason.trim().length < 10) return setError("Give a reason of at least 10 characters.");
     startTransition(async () => {
       const res = await rejectCluster(cluster.id, { kind, reason });
-      if (res.ok) setDone("rejected");
-      else setError(res.error);
+      if (res.ok) {
+        setDone("rejected");
+        onDone?.("rejected");
+      } else setError(res.error);
     });
   };
 

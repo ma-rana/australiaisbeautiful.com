@@ -56,17 +56,18 @@ import { MAP_SURFACE, MAP_BUTTON } from "./chrome";
 function AccountIcon() {
   return (
     <svg
-      width="19"
-      height="19"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.6"
+      strokeWidth="2.1"
       strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden
     >
-      <circle cx="12" cy="8.4" r="3.6" />
-      <path d="M5 19.6c0-3.6 3.1-6.1 7-6.1s7 2.5 7 6.1" />
+      <circle cx="12" cy="8.4" r="3.7" />
+      <path d="M5 19.4c0-3.7 3.1-6 7-6s7 2.3 7 6" />
     </svg>
   );
 }
