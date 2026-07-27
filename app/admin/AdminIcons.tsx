@@ -132,6 +132,19 @@ export const MessageIcon = (p: IconProps) =>
     </>,
   );
 
+// Cost / usage — a gauge (a dial with a needle). Reads as "how full is the
+// tank", which is exactly the headroom question the cost page answers. Distinct
+// from the shield (takedowns) and speech bubble (messages) at rail size.
+export const CostIcon = (p: IconProps) =>
+  base(
+    p,
+    <>
+      <path d="M4.2 17.5a8.4 8.4 0 1115.6 0" />
+      <path d="M12 13.2l3.4-3.1" />
+      <circle cx="12" cy="13.6" r="1.5" fill="currentColor" stroke="none" />
+    </>,
+  );
+
 // The rail's collapse / expand control — double chevrons, like every
 // minimizable side panel people already know.
 export const CollapseIcon = (p: IconProps) =>

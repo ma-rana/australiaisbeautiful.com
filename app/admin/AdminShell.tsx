@@ -34,6 +34,7 @@ import {
   MessageIcon,
   ShieldIcon,
   UsersIcon,
+  CostIcon,
   KeyIcon,
   CollapseIcon,
 } from "./AdminIcons";
@@ -48,6 +49,10 @@ export type RailCounts = {
   messages?: number;
   takedowns?: number;
   staff?: number;
+  /** True when any metered service is near/over its free tier or unmeasurable.
+   *  Surfaces as an ochre dot on the Cost rail item — the page is awareness,
+   *  but a rail dot means "look" without adding a number that implies a count. */
+  costWarning?: boolean;
 };
 
 type Item = {
@@ -134,6 +139,16 @@ function itemsFor(role: AdminRole, counts: RailCounts): Item[] {
       roles: ["ADMIN"],
       icon: UsersIcon,
       count: counts.staff,
+    },
+    {
+      // Free-tier headroom (COST_GUARDS.md). Admin-only — cost is an admin
+      // decision. No count (it's not a queue); an ochre awaiting-dot appears
+      // when something's near a line, so the rail says "look" without a number.
+      href: "/cost",
+      label: "Cost",
+      roles: ["ADMIN"],
+      icon: CostIcon,
+      awaiting: counts.costWarning ?? false,
     },
   ];
   return all.filter((i) => i.roles.includes(role));
@@ -289,12 +304,20 @@ export function AdminShell({
                       {i.count! > 99 ? "99+" : i.count}
                     </span>
                   )}
+                  {/* Awaiting with NO count (e.g. Cost near a limit) — a plain
+                      ochre dot: "look here" without implying a number. */}
+                  {collapsed && i.awaiting && i.count === undefined && (
+                    <span
+                      className="absolute -right-1 -top-1 h-2 w-2 rounded-full"
+                      style={{ background: "var(--attention)" }}
+                    />
+                  )}
                 </span>
 
                 {!collapsed && (
                   <>
                     <span className="min-w-0 flex-1 truncate">{i.label}</span>
-                    {typeof i.count === "number" && (
+                    {typeof i.count === "number" ? (
                       <span
                         className="admin-data text-xs"
                         style={{
@@ -304,6 +327,15 @@ export function AdminShell({
                       >
                         {i.count}
                       </span>
+                    ) : (
+                      // Countless awaiting (Cost) — an ochre dot at the row's end.
+                      i.awaiting && (
+                        <span
+                          aria-hidden
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ background: "var(--attention)" }}
+                        />
+                      )
                     )}
                   </>
                 )}

@@ -9,6 +9,7 @@
 
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/auth";
+import { evaluateAll, needsAttention } from "@/lib/cost-guards";
 import type { AdminRole, RailCounts } from "./AdminShell";
 
 export type AdminContext = {
@@ -43,6 +44,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     takedowns,
     staff,
     account,
+    costWarning,
   ] = await Promise.all([
     db.locationRequestCluster.count({ where: { status: "OPEN" } }),
     db.location.count({ where: { status: "APPROVED" } }),
@@ -71,6 +73,15 @@ export async function getAdminContext(): Promise<AdminContext | null> {
       where: { id: user.id },
       select: { totpEnabled: true },
     }),
+    // Cost headroom — admin-only. Evaluates the metered registry so the rail
+    // can show an ochre "look" dot when anything's near a line or unmeasurable.
+    // Cheap (a statfs + one SUM query); wrapped so a failure never breaks the
+    // shell — but a thrown error reads as "attention", never as fine (§4).
+    isAdmin
+      ? evaluateAll()
+          .then(needsAttention)
+          .catch(() => true)
+      : Promise.resolve(undefined),
   ]);
 
   const counts: RailCounts = {
@@ -81,6 +92,7 @@ export async function getAdminContext(): Promise<AdminContext | null> {
     messages,
     takedowns,
     staff,
+    costWarning,
   };
 
   return {
