@@ -71,8 +71,20 @@ export default async function Home() {
       <MapNav email={user?.email ?? null} />
 
       {places.length === 0 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-8 z-10 flex justify-center px-4">
-          <p className="pointer-events-auto rounded-full border border-[var(--border)] bg-[var(--paper)]/95 px-5 py-2.5 text-sm text-[var(--muted)] shadow-sm backdrop-blur">
+        // Positioned to clear the bottom-right control stack (MapControls sits
+        // at bottom-4/right-3 on mobile, ~4 buttons tall). On phones the pill
+        // sits well ABOVE that column so the two never overlap, and it's padded
+        // off the very bottom edge — content at bottom-8 can hide behind the
+        // mobile browser's address bar / home indicator, so we lift it and add
+        // the safe-area inset. On desktop the controls are a compact bottom-
+        // right cluster and the centred pill has room, so it drops back down.
+        // Inset from the right on mobile so a long line can't run under the
+        // control column.
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-28 z-10 flex justify-center px-4 pr-16 sm:bottom-8 sm:pr-4"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <p className="pointer-events-auto max-w-[calc(100vw-5rem)] rounded-full border border-[var(--border)] bg-[var(--paper)]/95 px-5 py-2.5 text-center text-sm text-[var(--muted)] shadow-sm backdrop-blur">
             The first places are being added.
           </p>
         </div>
