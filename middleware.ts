@@ -40,10 +40,31 @@ export function middleware(req: NextRequest) {
   if (ADMIN_HOSTS.has(hostname)) {
     // On the admin host, map page paths into the app/admin/* file tree.
     // /moments → /admin/moments, /signin → /admin/signin, / → /admin
+    //
+    // IMPORTANT (Next 16 + reverse proxy): clone the URL and change ONLY the
+    // pathname. Do NOT hand rewrite() a URL whose protocol/host came from the
+    // forwarded headers — behind Nginx the forwarded proto is https while the
+    // app actually listens on http://127.0.0.1:3100, and rewrite() then treats
+    // the target as an EXTERNAL proxy to https://localhost:3100, which fails
+    // with `EPROTO: wrong version number` (https request → http server) and
+    // times out as a 504. Cloning nextUrl and mutating only pathname keeps the
+    // rewrite INTERNAL, which is what we want (host-based routing, not a proxy).
     if (!url.pathname.startsWith("/admin")) {
-      url.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`;
+      const rewriteUrl = req.nextUrl.clone();
+      rewriteUrl.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`;
+      const res = NextResponse.rewrite(rewriteUrl);
+      res.headers.set(
+        "Cache-Control",
+        "no-store, no-cache, must-revalidate, max-age=0",
+      );
+      res.headers.set("Pragma", "no-cache");
+      res.headers.set("X-Robots-Tag", "noindex, nofollow");
+      res.headers.set("Referrer-Policy", "same-origin");
+      return res;
     }
-    const res = NextResponse.rewrite(url);
+
+    // Already under /admin — no rewrite needed, just apply the admin headers.
+    const res = NextResponse.next();
 
     // Never let an admin page sit in a cache. Without this the BROWSER can
     // serve a previously-rendered admin screen from its back/forward cache
