@@ -32,10 +32,22 @@ export default async function RootLayout({
 
   // The admin host renders its own chrome — no public header there. The host is
   // the boundary (middleware.ts), so we check it here too.
+  //
+  // LOOPBACK COUNTS AS ADMIN IN PRODUCTION: when Next satisfies the admin
+  // rewrite via its internal self-proxy, that hop arrives with the app's own
+  // Host (localhost:3100 / 127.0.0.1:3100) — neither admin nor public — and
+  // this check used to conclude "public", mounting the public SiteHeader on
+  // top of the admin portal. Real public traffic always carries the public
+  // domain (Nginx sets Host $host), so in production a loopback Host can only
+  // be the app talking to itself about an admin page. Production-only on
+  // purpose: in dev, localhost:3000 IS the public site.
   const h = await headers();
   const hostname = (h.get("host") ?? "").split(":")[0];
   const isAdminHost =
-    hostname === "admin.australiaisbeautiful.com" || hostname === "admin.localhost";
+    hostname === "admin.australiaisbeautiful.com" ||
+    hostname === "admin.localhost" ||
+    (process.env.NODE_ENV === "production" &&
+      (hostname === "localhost" || hostname === "127.0.0.1"));
 
   return (
     <html
