@@ -42,7 +42,10 @@ export default async function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="flex h-screen flex-col overflow-hidden">
+      {/* app-viewport (globals.css): 100dvh with a vh fallback — h-screen's
+          100vh runs under the mobile address bar and hid the bottom of the
+          map's control stack behind the browser chrome. */}
+      <body className="app-viewport flex flex-col overflow-hidden">
         <Providers>
           {!isAdminHost && <SiteHeader email={user?.email ?? null} />}
           {/* min-h-0 lets a flex child actually shrink — without it a full-height

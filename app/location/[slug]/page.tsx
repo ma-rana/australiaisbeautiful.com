@@ -239,8 +239,11 @@ export default async function LocationPage({
           {location.suburb ? `${location.suburb}, ` : ""}
           {location.state}
         </p>
+        {/* text-4xl on phones: real place names run long (“Werribee Gorge
+            Circuit Walk”), and at 5xl they wrapped to three heavy lines that
+            pushed the score row and intro below the fold on a phone. */}
         <h1
-          className="mt-4 text-5xl leading-[1.05] tracking-tight text-[var(--ink)] sm:text-6xl"
+          className="mt-4 text-4xl leading-[1.08] tracking-tight text-[var(--ink)] sm:text-6xl sm:leading-[1.05]"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {location.name}

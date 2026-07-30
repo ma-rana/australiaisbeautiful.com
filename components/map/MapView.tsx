@@ -1011,7 +1011,11 @@ export function MapView({ places }: { places: MapPlace[] }) {
           header because this list is anchored to YOU (the ochre "me" dot),
           unlike everything else on the map, which is eucalypt-place. */}
       {(nearby?.length || locateError) && !selected && (
-        <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-96 sm:p-4">
+        <div
+          className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-96 sm:p-4"
+          // Keep the sheet's lower edge off the home indicator on phones.
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
           <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
             <div className="flex items-baseline justify-between border-b border-[var(--border)] px-4 py-3">
               <div>
@@ -1116,7 +1120,11 @@ export function MapView({ places }: { places: MapPlace[] }) {
           is anchored to YOU (ochre), this is anchored to a PLACE (eucalypt) —
           the same colour every place-marker on the map already wears. */}
       {selected && (
-        <div className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4">
+        <div
+          className="absolute inset-x-0 bottom-0 z-10 p-3 sm:left-4 sm:right-auto sm:w-80 sm:p-4"
+          // Same safe-area lift as the nearby sheet above.
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
           <div className="aib-sheet overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--paper)] shadow-lg">
             {selected.face ? (
               <div className="relative">

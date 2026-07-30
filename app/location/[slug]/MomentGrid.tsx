@@ -232,8 +232,16 @@ export function MomentGrid({
             )}
           </div>
 
-          {/* The field note — the product. Set in the display serif, given room. */}
-          <div className="border-t border-[var(--border)] px-6 py-6">
+          {/* The field note — the product. Set in the display serif, given
+              room — but not unbounded room: notes run to 2000 chars, and on a
+              phone an uncapped panel squeezed the photo to a sliver. Capped at
+              45% of the visible height, scrolling internally past that, with
+              the safe-area inset so the reaction button clears the home
+              indicator. */}
+          <div
+            className="max-h-[45dvh] overflow-y-auto border-t border-[var(--border)] px-5 py-5 sm:px-6 sm:py-6"
+            style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+          >
             <div className="mx-auto max-w-2xl">
               {current.caption && (
                 <p

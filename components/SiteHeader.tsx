@@ -58,7 +58,12 @@ export function SiteHeader({ email }: { email: string | null }) {
 
   return (
     <header className="border-b border-[var(--border)] bg-[var(--paper)]">
-      <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-6 py-3.5">
+      {/* flex-wrap: on a phone the wordmark plus the full nav genuinely don't
+          fit one row (~390px of content in ~310px), and with the body's
+          overflow-hidden the pill was silently clipped. Wrapping gives two
+          clean rows on narrow screens — wordmark, then actions — and one row
+          the moment there's room. */}
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6 sm:py-3.5">
         {/* The wordmark is the way BACK — to the map, which is home. The
             eucalypt dot is the same mark that stands for a place on the map
             itself: a quiet signature, not a logo. */}
@@ -76,11 +81,14 @@ export function SiteHeader({ email }: { email: string | null }) {
           </span>
         </Link>
 
-        <nav className="flex items-center gap-4 sm:gap-5">
+        <nav className="flex items-center gap-3.5 sm:gap-5">
           {/* Self-links are omitted — a nav item pointing at the page you're on
               is a button to nowhere (same reasoning as the map wordmark). */}
+          {/* hidden below sm: the longest label is what forced a third row on
+              narrow phones, and it stays one tap away in the map's account
+              menu — nav filtering, not a lost destination. */}
           {email && pathname !== "/contributions" && (
-            <Link href="/contributions" className={LINK}>
+            <Link href="/contributions" className={`${LINK} hidden sm:inline`}>
               Your contributions
             </Link>
           )}

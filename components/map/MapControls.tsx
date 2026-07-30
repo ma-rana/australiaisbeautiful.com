@@ -206,6 +206,10 @@ export function MapControls({
       className={`absolute bottom-4 right-3 z-10 flex-col items-end gap-2.5 sm:bottom-6 sm:right-4 ${
         sheetOpen ? "hidden sm:flex" : "flex"
       }`}
+      // Lift the stack clear of the home indicator on phones that have one.
+      // Padding (not a bigger bottom offset) so it costs nothing where the
+      // inset is zero.
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       {/* Suggest a place — a circle, because it's one action.
           Ink by default: findable, not shouting (§7c). Ochre only when
