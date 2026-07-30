@@ -8,8 +8,9 @@
 // admin. The /admin path segment exists only as a FILE location (app/admin/*),
 // never as a public URL.
 //
-// /admin/* on the PUBLIC host is always 404 — in dev and prod alike. There is
-// exactly one way to reach admin: the admin hostname.
+// /admin/* on a PUBLIC host is always 404 — in dev and prod alike. There is
+// exactly one way to reach admin: the admin hostname. (Loopback hosts are the
+// app talking to ITSELF — see the pass-through below — not a public door.)
 //
 // IMPORTANT: this is ROUTING, not AUTH. Admin pages must STILL check the session
 // (requireModerator/requireAdmin). The host decides which routes render; it
@@ -24,6 +25,10 @@ const ADMIN_HOSTS = new Set([
   "admin.australiaisbeautiful.com",
   "admin.localhost",
 ]);
+
+// The app's own address, as the app itself sees it. When Next self-proxies an
+// admin rewrite (see below), the second hop arrives with one of these Hosts.
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
@@ -41,30 +46,36 @@ export function middleware(req: NextRequest) {
     // On the admin host, map page paths into the app/admin/* file tree.
     // /moments → /admin/moments, /signin → /admin/signin, / → /admin
     //
-    // IMPORTANT (Next 16 + reverse proxy): clone the URL and change ONLY the
-    // pathname. Do NOT hand rewrite() a URL whose protocol/host came from the
-    // forwarded headers — behind Nginx the forwarded proto is https while the
-    // app actually listens on http://127.0.0.1:3100, and rewrite() then treats
-    // the target as an EXTERNAL proxy to https://localhost:3100, which fails
-    // with `EPROTO: wrong version number` (https request → http server) and
-    // times out as a 504. Cloning nextUrl and mutating only pathname keeps the
-    // rewrite INTERNAL, which is what we want (host-based routing, not a proxy).
+    // HOW THE REWRITE MUST BE BUILT (hard-won, do not "simplify"):
+    //
+    // NextResponse.rewrite() only performs an INTERNAL rewrite when the target
+    // URL's origin STRING-matches what Next considers its own origin. Behind
+    // Nginx + TLS, req.nextUrl resolves to `https://localhost:3100/...` — the
+    // forwarded https proto glued onto the app's real bind. Two failure modes
+    // came out of that on the VPS:
+    //
+    //   1. Leaving the cloned URL's protocol as `https:` → the target origin
+    //      (https://localhost:3100) differs from the app's http self, so Next
+    //      PROXIES to https://localhost:3100 → `EPROTO wrong version number`
+    //      (a TLS handshake against a plain-http server) → 500.
+    //   2. Pinning the host to `127.0.0.1:3100` → still not a string match for
+    //      `localhost:3100`, so Next proxies over http to itself; that second
+    //      hop re-entered this middleware with a loopback Host and was shot by
+    //      the public-host `/admin → 404` rule below.
+    //
+    // So: clone req.nextUrl (its host is ALREADY the app's own notion of self —
+    // never override it), force ONLY the protocol to http (the bind is plain
+    // http; the https came from X-Forwarded-Proto), and set the pathname. In
+    // dev, nextUrl is already http://admin.localhost:3000 and this is a no-op
+    // origin-wise. Rewrite must be a URL object — a bare path string throws
+    // "Please use only absolute URLs" in middleware, which is itself a 500.
+    const rewriteUrl = url.clone();
+    rewriteUrl.protocol = "http:";
     if (!url.pathname.startsWith("/admin")) {
-      const rewriteUrl = req.nextUrl.clone();
       rewriteUrl.pathname = `/admin${url.pathname === "/" ? "" : url.pathname}`;
-      const res = NextResponse.rewrite(rewriteUrl);
-      res.headers.set(
-        "Cache-Control",
-        "no-store, no-cache, must-revalidate, max-age=0",
-      );
-      res.headers.set("Pragma", "no-cache");
-      res.headers.set("X-Robots-Tag", "noindex, nofollow");
-      res.headers.set("Referrer-Policy", "same-origin");
-      return res;
     }
 
-    // Already under /admin — no rewrite needed, just apply the admin headers.
-    const res = NextResponse.next();
+    const res = NextResponse.rewrite(rewriteUrl);
 
     // Never let an admin page sit in a cache. Without this the BROWSER can
     // serve a previously-rendered admin screen from its back/forward cache
@@ -80,8 +91,20 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
-  // Public host: /admin is not a thing. Never was. 404 — dev and prod alike.
   if (url.pathname.startsWith("/admin")) {
+    // LOOPBACK PASS-THROUGH (safety net for the rewrite above): if Next ever
+    // decides the rewrite target is cross-origin, it satisfies it by PROXYING
+    // to its own bind — and that internal hop arrives here with Host
+    // `localhost:3100` / `127.0.0.1:3100` and the /admin path already applied.
+    // That hop must be allowed to render, or the admin host 404s even though
+    // every layer did its job. This is NOT a public door: the loopback Host
+    // only reaches the app from the box itself (the bind is 127.0.0.1), and
+    // every admin page still runs its own require* auth guard regardless.
+    if (LOOPBACK_HOSTS.has(hostname)) {
+      return NextResponse.next();
+    }
+
+    // Public host: /admin is not a thing. Never was. 404 — dev and prod alike.
     return new NextResponse("Not found", { status: 404 });
   }
 
