@@ -14,6 +14,7 @@
 
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import QRCode from "qrcode";
 import {
   generateTotpSecret,
   totpUri,
@@ -24,7 +25,7 @@ import {
 import { revalidatePath } from "next/cache";
 
 export type StartEnrolResult =
-  | { ok: true; secret: string; uri: string }
+  | { ok: true; secret: string; uri: string; qrDataUrl: string }
   | { ok: false; error: string };
 
 // Step 1: create a secret and hand back the URI for the QR. Nothing is enabled
@@ -48,7 +49,20 @@ export async function startEnrolment(): Promise<StartEnrolResult> {
       data: { totpSecret: secret, totpEnabled: false },
     });
 
-    return { ok: true, secret, uri: totpUri(secret, user.email) };
+    // The QR is rendered HERE, on the server, into a data URL — never via a
+    // third-party image service. The otpauth URI embeds the TOTP secret, so
+    // an external QR API would be handed the second factor of a staff account
+    // at the moment of its creation (the exact hole the old api.qrserver.com
+    // <img> opened). The data URL travels only to the enrolling user, who owns
+    // the secret anyway.
+    const uri = totpUri(secret, user.email);
+    const qrDataUrl = await QRCode.toDataURL(uri, {
+      width: 200,
+      margin: 1,
+      errorCorrectionLevel: "M",
+    });
+
+    return { ok: true, secret, uri, qrDataUrl };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Failed" };
   }

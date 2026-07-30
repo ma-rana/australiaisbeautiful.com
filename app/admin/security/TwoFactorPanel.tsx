@@ -32,7 +32,7 @@ export function TwoFactorPanel({
   const [isOn, setIsOn] = useState(enabled);
 
   // Enrolment state
-  const [uri, setUri] = useState<string | null>(null);
+  const [qr, setQr] = useState<string | null>(null);
   const [secret, setSecret] = useState<string | null>(null);
   const [token, setToken] = useState("");
   const [codes, setCodes] = useState<string[] | null>(null);
@@ -47,7 +47,7 @@ export function TwoFactorPanel({
     startTransition(async () => {
       const res = await startEnrolment();
       if (res.ok) {
-        setUri(res.uri);
+        setQr(res.qrDataUrl);
         setSecret(res.secret);
       } else setError(res.error);
     });
@@ -60,7 +60,7 @@ export function TwoFactorPanel({
       if (res.ok) {
         setCodes(res.backupCodes);
         setIsOn(true);
-        setUri(null);
+        setQr(null);
         setToken("");
       } else setError(res.error);
     });
@@ -248,19 +248,23 @@ export function TwoFactorPanel({
               </div>
             )}
           </div>
-        ) : uri ? (
+        ) : qr ? (
           <div className="mt-4 space-y-4">
             <div>
               <p className="text-sm font-medium">1. Scan this with your app</p>
               <p className="mt-1 text-xs text-neutral-500">
                 Google Authenticator, Authy, 1Password — any TOTP app.
               </p>
-              {/* QR rendered by a public API-free approach: the otpauth URI as a
-                  QR via an inline SVG service would need a dependency, so we
-                  show the URI and the manual key. Most apps accept either. */}
+              {/* The QR arrives as a data URL generated ON OUR SERVER by the
+                  enrolment action (qrcode package). It must never be built by
+                  an external image API: the otpauth URI it encodes CONTAINS
+                  the TOTP secret, and the old api.qrserver.com <img> was
+                  handing a staff account's second factor to a third party at
+                  the moment of its creation. */}
               <div className="mt-3 rounded-md border border-neutral-200 bg-white p-4 dark:border-neutral-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(uri)}`}
+                  src={qr}
                   alt="Two-factor QR code"
                   width={200}
                   height={200}
@@ -301,7 +305,7 @@ export function TwoFactorPanel({
               </button>
               <button
                 onClick={() => {
-                  setUri(null);
+                  setQr(null);
                   setToken("");
                   setError(null);
                 }}
