@@ -28,6 +28,7 @@ import { Protocol } from "pmtiles";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { placesNear, type NearbyPlace } from "./nearby-actions";
 import { MapControls } from "./MapControls";
+import { MapSearch } from "./MapSearch";
 import { NEARBY_RADIUS_M, NEARBY_SEARCH_RADIUS_KM } from "@/lib/constants";
 import { specimenLine } from "@/lib/category";
 import {
@@ -207,6 +208,25 @@ export function MapView({ places }: { places: MapPlace[] }) {
   // permission is a different state from a failed read: one is recoverable by
   // tapping again, the other needs browser settings.
   const [denied, setDenied] = useState(false);
+
+  // Search selection: fly to the chosen place and open its preview, the same
+  // end state a pin-tap produces. easeTo (not flyTo) because a search jump is
+  // usually short and a zoom-out-zoom-in arc would feel theatrical here; zoom
+  // 15 matches the marker-photo band so the place shows as a photo on arrival.
+  const flyToPlace = useCallback((place: MapPlace) => {
+    const map = mapRef.current;
+    if (map) {
+      map.easeTo({
+        center: [place.longitude, place.latitude],
+        zoom: Math.max(map.getZoom(), 14.5),
+        duration: 900,
+      });
+    }
+    // Clear any near-me sheet so the two don't stack, then select.
+    setNearby(null);
+    setLocateError(null);
+    setSelected(place);
+  }, []);
 
   const findNearMe = useCallback(() => {
     const map = mapRef.current;
@@ -965,6 +985,15 @@ export function MapView({ places }: { places: MapPlace[] }) {
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
+
+      {/* The search pill (UX §7b). Top-centre, between MapNav's wordmark (left)
+          and account affordance (right). Only meaningful once there are places
+          to find — on an empty map it would search nothing, so it's withheld
+          until the catalogue is non-empty (the FirstPlacesNote covers that
+          state instead). */}
+      {places.length > 0 && (
+        <MapSearch places={places} onSelect={flyToPlace} />
+      )}
 
       {/* Honest failure state — a blank grey box tells you nothing. */}
       {failed && (
