@@ -42,8 +42,10 @@ export function SiteHeader({ email }: { email: string | null }) {
   // The map is its own surface (see the note above). /signin and /signup are
   // thresholds; /request, /contributions, location and contribute pages are
   // destinations that carry their own quiet way back — a navbar on them
-  // stacks a second navigation system on pages that already have one.
-  // What remains of this header serves /places.
+  // stacks a second navigation system on pages that already have one. /privacy
+  // and /terms render their own wordmark header (LegalPage), so this one would
+  // stack a second header on top of it. What remains of this header serves
+  // /places.
   if (
     pathname === "/" ||
     pathname === "/signin" ||
@@ -51,6 +53,8 @@ export function SiteHeader({ email }: { email: string | null }) {
     pathname === "/request" ||
     pathname === "/help" ||
     pathname === "/contributions" ||
+    pathname === "/privacy" ||
+    pathname === "/terms" ||
     pathname.startsWith("/location/") ||
     pathname.startsWith("/contribute/")
   )
