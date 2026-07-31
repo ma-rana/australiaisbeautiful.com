@@ -175,8 +175,7 @@ export default function TermsPage() {
           <a href="/help">help &amp; feedback</a> page, or at:
         </p>
         <p>
-          {/* TODO: replace with your real contact email before launch. */}
-          <strong>hello@australiaisbeautiful.com</strong>
+          <strong>basanta.rana.ma@gmail.com</strong>
         </p>
       </div>
     </LegalPage>

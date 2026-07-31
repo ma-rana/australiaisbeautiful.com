@@ -214,8 +214,7 @@ export default function PrivacyPage() {
           your information:
         </p>
         <p>
-          {/* TODO: replace with your real contact email before launch. */}
-          <strong>privacy@australiaisbeautiful.com</strong>
+          <strong>basanta.rana.ma@gmail.com</strong>
         </p>
         <p>
           You can also reach us through the{" "}
