@@ -179,6 +179,27 @@ export function MapNav({ email }: { email: string | null }) {
                   there's no profile to open. */}
               <p className="truncate px-4 pb-1.5 text-xs text-[var(--muted)]">{email}</p>
 
+              {/* Policy links — the quiet, findable home for them. Small and at
+                  the foot of the menu, present without cluttering the map. */}
+              <div className="flex gap-3 px-4 pb-1.5 text-xs text-[var(--muted)]">
+                <Link
+                  href="/privacy"
+                  role="menuitem"
+                  className="underline underline-offset-2 hover:text-[var(--ink)]"
+                  onClick={() => setOpen(false)}
+                >
+                  Privacy
+                </Link>
+                <Link
+                  href="/terms"
+                  role="menuitem"
+                  className="underline underline-offset-2 hover:text-[var(--ink)]"
+                  onClick={() => setOpen(false)}
+                >
+                  Terms
+                </Link>
+              </div>
+
               <button
                 type="button"
                 role="menuitem"

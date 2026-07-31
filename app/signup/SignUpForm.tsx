@@ -86,6 +86,28 @@ export function SignUpForm() {
         <GoogleButton callbackUrl={callbackUrl} label="Sign up with Google" />
       </div>
 
+      {/* The consent line. Placed here so it's visible whichever way they sign
+          up (Google above, email below), and BEFORE the action — this is where
+          agreement to the terms and privacy policy actually happens, so the
+          links must be present and reachable at the moment of signing up. */}
+      <p className="mt-3 text-center text-xs leading-relaxed text-[var(--muted)]">
+        By creating an account you agree to our{" "}
+        <Link
+          href="/terms"
+          className="underline underline-offset-2 hover:text-[var(--ink)]"
+        >
+          terms of use
+        </Link>{" "}
+        and{" "}
+        <Link
+          href="/privacy"
+          className="underline underline-offset-2 hover:text-[var(--ink)]"
+        >
+          privacy policy
+        </Link>
+        .
+      </p>
+
       {showEmail ? (
         <>
           <OrDivider />
