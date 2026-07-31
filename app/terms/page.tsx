@@ -163,9 +163,8 @@ export default function TermsPage() {
 
       <h2>Governing law</h2>
       <p>
-        {/* TODO: set your state/territory, e.g. "the State of Victoria". */}
-        These terms are governed by the laws of Australia and the state or
-        territory in which the service is operated.
+        These terms are governed by the laws of the State of Victoria,
+        Australia, and you and we submit to the courts of that State.
       </p>
 
       <h2>Contact</h2>
